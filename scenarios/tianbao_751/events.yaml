@@ -73,7 +73,7 @@
   when: {turn: 1}
   conditions: {kind: flag, operator: eq, key: nanzhao_appeased, value: true}
   gravity: 0.7
-  text: 南诏遣使谢罪，请还所掠，复修职贡。西南暂安。
+  text: 南诏遣使谢罪，请还所掠，复修职贡。使者已至京师，待命于鸿胪。西南暂安。
   effects:
     - {op: adjust_resource, resource: frontier_pressure, delta: -4, reason: 南诏归附}
     - {op: adjust_relation, a: tang, b: nanzhao, delta: 20}
@@ -102,6 +102,8 @@
       - {kind: turn, operator: gte, value: 2}
       - {kind: flag, operator: eq, key: xier_defeat, value: true}
       - {not: {kind: flag, operator: eq, key: guozhong_restrained, value: true}}
+      # 西洱河败报已「追究败责」者，不再有掩败之事
+      - {not: {kind: flag, operator: eq, key: "memorial:t1_xier_report", value: peace}}
   gravity: 0.7
   text: 杨国忠为鲜于仲通掩其败状，仍叙其战功。朝野皆知其非，莫敢言者。
   effects:
@@ -110,6 +112,7 @@
   choices:
     - id: punish
       text: 追究仲通，罢其节度
+      memory: {character: xianyu_zhongtong, text: 西洱河败后，陛下不纳国忠之掩饰，罢我剑南节度}
       effects:
         - {op: dismiss, character: xianyu_zhongtong, office: jiannan_jds}
         - {op: adjust_resource, resource: authority, delta: 3, reason: 赏罚复明}
@@ -153,16 +156,19 @@
   choices:
     - id: reprimand
       text: 遣使问罪
+      memory: {character: an_lushan, text: 土护真水兵败，朝廷遣使问罪}
       effects:
         - {op: adjust_resource, resource: authority, delta: 3, reason: 败军问罪}
         - {op: adjust_resource, resource: an_ambition, delta: 4, reason: 禄山惧罪}
     - id: console
       text: 优诏慰抚
+      memory: {character: an_lushan, text: 土护真水兵败，陛下不加罪，反下优诏慰抚}
       effects:
         - {op: adjust_resource, resource: an_ambition, delta: -2, reason: 感恩}
         - {op: adjust_resource, resource: authority, delta: -2, reason: 败而不罚}
     - id: split_pinglu
       text: 乘机分平卢，另授节度
+      memory: {character: an_lushan, text: 土护真水兵败后，朝廷乘机夺我平卢一镇}
       effects:
         - {op: dismiss, character: an_lushan, office: pinglu_jds}
         - {op: set_army_commander, army: pinglu_army, character: null}
@@ -177,23 +183,27 @@
   title: 东宫被构
   kind: scheduled
   when: {turn: 3}
+  # 夏季奏疏 t1_donggong 已处置（庇护或听推按）则不再重起；未处置者，此案自行推进。
   conditions:
     all:
       - {kind: resource, id: court_strife, operator: gte, value: 55}
       - {not: {kind: flag, operator: eq, key: donggong_protected, value: true}}
+      - {not: {kind: flag, operator: eq, key: donggong_isolated, value: true}}
   gravity: 0.7
-  text: 中书奏东宫属官与边将书信往还，请付有司推按。太子闻之，惶恐待罪。（本游戏仿天宝初东宫诸案而设。）
+  text: 东宫属官交结边将一案久置未决，狱词渐及太子妃家。太子闻之，惶恐待罪。（本游戏仿天宝初东宫诸案而设。）
   effects:
     - {op: adjust_resource, resource: court_strife, delta: 2, reason: 东宫疑案}
   choices:
     - id: protect
       text: 庇护东宫，交大理寺复核
+      memory: {character: li_heng, text: 东宫属官之狱，父皇出面庇护，交大理寺复核}
       effects:
         - {op: adjust_trait, character: li_heng, trait: loyalty, delta: 1}
         - {op: adjust_resource, resource: court_strife, delta: 1, reason: 右相不悦}
         - {op: set_flag, key: donggong_protected, value: true}
     - id: allow
       text: 听中书推按
+      memory: {character: li_heng, text: 东宫属官之狱，父皇听凭中书推按，儿臣几不自保}
       effects:
         - {op: adjust_trait, character: li_heng, trait: loyalty, delta: -1}
         - {op: adjust_resource, resource: court_strife, delta: 4, reason: 大狱复兴}
@@ -227,12 +237,14 @@
   choices:
     - id: to_an
       text: 准禄山收其部众
+      memory: {character: an_lushan, text: 阿布思叛去，陛下许我收其同罗部众}
       effects:
         - {op: adjust_resource, resource: fanzhen_power, delta: 4, reason: 同罗精骑归范阳}
         - {op: adjust_army, army: fanyang_army, delta: 5000, reason: 收阿布思余众}
         - {op: set_flag, key: abusi_to_an, value: true}
     - id: to_shuofang
       text: 令归朔方
+      memory: {character: an_lushan, text: 阿布思余众，朝廷不给范阳，令归朔方}
       effects:
         - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 部众不入范阳}
         - {op: adjust_army, army: shuofang_army, delta: 3000, reason: 收阿布思余众}
@@ -273,12 +285,14 @@
   choices:
     - id: protect
       text: 驳回告者，抚慰太子
+      memory: {character: li_heng, text: 又有人告东宫，父皇驳回告者，亲加抚慰}
       effects:
         - {op: adjust_trait, character: li_heng, trait: loyalty, delta: 1}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 处断有体}
         - {op: set_flag, key: donggong_protected, value: true}
     - id: allow
       text: 准太子所请
+      memory: {character: li_heng, text: 东宫再被构，儿臣上表请离婚自明，父皇准了}
       effects:
         - {op: adjust_trait, character: li_heng, trait: loyalty, delta: -1}
         - {op: adjust_trait, character: li_heng, trait: fear, delta: 1}
@@ -381,12 +395,14 @@
   choices:
     - id: approve
       text: 准奏，追削官爵
+      memory: {character: yang_guozhong, text: 追削李林甫官爵，陛下准了臣之所请}
       effects:
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 追罪故相}
         - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 兔死狐悲}
         - {op: adjust_resource, resource: authority, delta: -1, reason: 是非出于私怨}
     - id: reject
       text: 人死罪消，不许
+      memory: {character: yang_guozhong, text: 请追削李林甫，陛下以人死罪消不许}
       effects:
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 国忠失意}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 不兴死狱}
@@ -394,39 +410,32 @@
   choice_deadline: 1
   illustration: event.li_linfu_death
 
+# 奏疏 t8_zhenqing（春）先问去留；「准出」即由奏疏直接任命并启程。
+# 奏疏未处置者，次季依史事出守（本事件）；「留之」者不出。
 - id: zhenqing_to_pingyuan
   title: 颜真卿出守平原
   kind: scheduled
-  when: {turn: 8}
+  when: {turn: 9}
   conditions:
     all:
       - {kind: character_status, operator: eq, character: yan_zhenqing, value: alive}
+      - {kind: character_region, operator: eq, character: yan_zhenqing, region: jingji}
       - {not: {kind: flag, operator: eq, key: zhenqing_kept, value: true}}
-  gravity: 0.6
-  text: 颜真卿为权臣所忌，出为平原太守。（出守年份史无明文，本游戏置于此季。）
-  effects:
-    - {op: move_character, character: yan_zhenqing, to_region: hedong}
-    - {op: set_flag, key: zhenqing_out, value: true}
-  illustration: event.zhenqing_to_pingyuan
-
-- id: zhenqing_arrives
-  title: 颜真卿赴平原
-  kind: system
-  conditions:
-    all:
-      - {kind: flag_age, key: zhenqing_out, operator: gte, value: 1}
-      - {kind: character_region, operator: eq, character: yan_zhenqing, region: hedong}
-  gravity: 1.0
-  text: 颜真卿抵河北，视事平原。
+      - {not: {kind: flag, operator: eq, key: zhenqing_out, value: true}}
+  gravity: 0.85
+  text: 颜真卿为权臣所忌，出为平原太守，启程赴河北。（出守年份史无明文，本游戏置于此季。）
   effects:
     - {op: appoint, character: yan_zhenqing, office: pingyuan_taishou}
     - {op: move_character, character: yan_zhenqing, to_region: hebei}
+    - {op: set_flag, key: zhenqing_out, value: true}
+    - {op: remember, character: yan_zhenqing, fact: 为权臣所忌，出守平原}
+  illustration: event.zhenqing_to_pingyuan
 
 # ======================== 第三幕 754–755：将相交恶 ========================
 - id: an_sets_out
   title: 禄山应召入朝
   kind: scheduled
-  when: {turn: 11}
+  when: {turn: 10}
   conditions:
     all:
       - {kind: resource, id: rebellion_risk, operator: lt, value: 75}
@@ -437,6 +446,7 @@
   effects:
     - {op: move_character, character: an_lushan, to_region: jingji}
     - {op: set_flag, key: an_coming, value: true}
+    - {op: remember, character: an_lushan, fact: 国忠言我必反，陛下召我入朝以验之}
   illustration: event.an_court_visit
 
 - id: an_court_visit
@@ -455,6 +465,7 @@
   choices:
     - id: detain
       text: 留京授相，以他人代镇
+      memory: {character: an_lushan, text: 华清宫入朝，竟被留京，三镇尽付他人}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
         - {op: dismiss, character: an_lushan, office: pinglu_jds}
@@ -469,10 +480,12 @@
         - {op: set_flag, key: an_detained, value: true}
     - id: release
       text: 纵其归镇
+      memory: {character: an_lushan, text: 华清宫入朝，陛下慰谕之后放我归镇}
       effects:
         - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 疑惧未解}
     - id: honor
       text: 加左仆射，厚赐遣还
+      memory: {character: an_lushan, text: 华清宫入朝，陛下加我左仆射，厚赐遣还}
       effects:
         - {op: adjust_resource, resource: an_ambition, delta: -4, reason: 恩赐优渥}
         - {op: adjust_resource, resource: treasury, delta: -120, reason: 厚赐}
@@ -503,12 +516,15 @@
   kind: conditional
   conditions:
     all:
-      - {kind: flag, operator: eq, key: an_detained, value: true}
-      - {kind: flag_age, key: an_detained, operator: gte, value: 1}
+      - any:
+          - {kind: flag_age, key: an_detained, operator: gte, value: 1}
+          - all:
+              - {kind: flag_age, key: fanyang_restive, operator: gte, value: 1}
+              - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
       - {kind: resource, id: an_ambition, operator: gte, value: 55}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   gravity: 0.35
-  text: 范阳诸将闻主帅被留，鼓噪不受代，推史思明为帅，声言迎还东平郡王。（反事实）
+  text: 范阳诸将以主帅久留京师，鼓噪不受代，推史思明为帅，声言迎还东平郡王。（反事实）
   effects:
     - {op: set_flag, key: rebellion_started, value: true}
     - {op: set_flag, key: mutiny_rebellion, value: true}
@@ -528,6 +544,7 @@
     all:
       - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
       - {not: {kind: flag, operator: eq, key: nanzhao_peace, value: true}}
+      - {not: {kind: flag, operator: eq, key: "memorial:t12_limi", value: deny}}
   gravity: 0.6
   text: 李宓将兵七万再讨南诏，深入粮尽，疫疠大作，全军覆没。国忠隐其败。
   effects:
@@ -586,6 +603,7 @@
     all:
       - {kind: resource, id: rebellion_risk, operator: gte, value: 50}
       - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
   gravity: 0.85
   text: 安禄山遣副将何千年入奏，请以蕃将三十二人代汉将。韦见素以为必反之兆，请勿许。
   choices:
@@ -597,6 +615,7 @@
         - {op: set_flag, key: fanjiang_swapped, value: true}
     - id: reject
       text: 驳回，汉将留任
+      memory: {character: an_lushan, text: 请以蕃将代汉将，朝廷驳回不许}
       effects:
         - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 所请不遂}
         - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 猜嫌已见}
@@ -645,12 +664,14 @@
       - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
       - {not: {kind: flag, operator: eq, key: guozhong_restrained, value: true}}
       - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: character_region, operator: eq, character: an_lushan, region: jingji}}
   gravity: 0.6
   text: 杨国忠欲激禄山速反以取信于上，使京兆尹围其长安宅第，捕其门客送御史台狱，潜杀之。
   effects:
     - {op: adjust_resource, resource: rebellion_risk, delta: 8, reason: 门客被杀}
     - {op: adjust_resource, resource: court_strife, delta: 5, reason: 将相交恶}
     - {op: adjust_resource, resource: an_ambition, delta: 4, reason: 惧祸}
+    - {op: remember, character: an_lushan, fact: 国忠使京兆围我长安宅第，捕杀门客}
   illustration: event.guozhong_raid
 
 - id: horse_tribute
@@ -661,6 +682,7 @@
     all:
       - {kind: resource, id: rebellion_risk, operator: gte, value: 55}
       - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
   gravity: 0.8
   text: 安禄山表献马三千匹，欲以本军部送入京。河南尹达奚珣疑有变，奏请缓至冬日，由官中自备夫马。
   choices:
@@ -691,6 +713,7 @@
     - {op: adjust_resource, resource: authority, delta: -5, reason: 诏命不行}
     - {op: adjust_resource, resource: rebellion_risk, delta: 8, reason: 反形已露}
     - {op: set_flag, key: summon_refused, value: true}
+    - {op: remember, character: an_lushan, fact: 中使宣召入朝，我托辞不至}
   illustration: event.summon_refused
 
 - id: summon_obeyed
@@ -703,12 +726,114 @@
       - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
       - {not: {kind: flag, operator: eq, key: summon_refused, value: true}}
   gravity: 0.7
-  text: 安禄山奉诏入朝，留子弟守范阳。君臣相见，疑谤稍解。（反事实）
+  text: 安禄山奉诏，驰驿入朝，范阳军务暂付部将。疑谤稍解。（反事实）
   effects:
     - {op: move_character, character: an_lushan, to_region: jingji}
-    - {op: adjust_resource, resource: rebellion_risk, delta: -6, reason: 奉召而来}
+    - {op: adjust_resource, resource: rebellion_risk, delta: -4, reason: 奉召而来}
     - {op: adjust_resource, resource: an_ambition, delta: -3, reason: 君臣释疑}
-    - {op: set_flag, key: an_kept_in_capital, value: true}
+    - {op: set_flag, key: an_summon_arrived, value: true}
+    - {op: remember, character: an_lushan, fact: 陛下手诏相召，我奉诏入朝}
+  illustration: event.an_court_visit
+
+# ---- 禄山奉召在京（奏疏 p_an_capital 决其去留；未决则次季自行辞归） ----
+- id: an_leaves_capital
+  title: 禄山辞归
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag_age, key: an_summon_arrived, operator: gte, value: 3}  # 京畿—范阳约两季路程
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {kind: flag, operator: absent, key: "memorial:p_an_capital"}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_kept_in_capital, value: true}}
+  gravity: 1.0
+  text: 朝廷于禄山去留久无定议。禄山陛辞，驰驿还镇，出关即疾驰而去。
+  effects:
+    - {op: move_character, character: an_lushan, to_region: fanyang}
+    - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 去留不决，疑惧而归}
+    - {op: remember, character: an_lushan, fact: 奉召入京，朝廷去留不决，我自辞归范阳}
+  illustration: event.an_court_visit
+
+- id: fanyang_restive
+  title: 范阳诸将请还帅
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag_age, key: an_kept_in_capital, operator: gte, value: 1}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: flag, operator: eq, key: fanyang_restive, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 0.7
+  text: 范阳诸将久不见主帅，史思明等联名上表，请还东平郡王于镇。军中私议汹汹。（反事实）
+  choices:
+    - id: return
+      text: 许禄山还镇
+      memory: {character: an_lushan, text: 留京数月，诸将上表，陛下终许我还镇}
+      effects:
+        - {op: move_character, character: an_lushan, to_region: fanyang}
+        - {op: set_flag, key: an_kept_in_capital, value: false}
+        - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 留京之怨}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 3, reason: 归镇而疑}
+    - id: refuse
+      text: 不许，诏诸将各守本职
+      memory: {character: shi_siming, text: 诸将上表请还主帅，朝廷不许}
+      effects:
+        - {op: set_flag, key: fanyang_restive, value: true}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 5, reason: 范阳军心不安}
+        - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 久羁不归}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 诏令不移}
+  default_choice: return
+  choice_deadline: 1
+  illustration: event.summon_refused
+
+# ---- 中后期压力（【虚】数值；史事依据见 FACT_CHECK） ----
+- id: border_costs_rise
+  title: 边费岁增
+  kind: system
+  when: {turn: 8}
+  gravity: 1.0
+  text: 诸镇屡奏增兵，衣赐、军粮岁增，度支另立边费一项。
+  effects:
+    - {op: add_ledger, name: 边费岁增, category: treasury, amount: -35, kind: recurring, reason: 诸镇增兵（游戏折算）}
+
+- id: fanyang_rumor
+  title: 范阳流言
+  kind: random
+  repeatable: true
+  cooldown: 2
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 8}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+      - {kind: resource, id: rebellion_risk, operator: lt, value: 58}   # 已近山雨欲来，流言不再加码
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 0.4
+  text: 河北商旅传言范阳市马治甲，昼夜不息；朝中言禄山必反者日众。（本游戏设定）
+  effects:
+    - {op: adjust_resource, resource: rebellion_risk, delta: 10, reason: 流言四起}
+    - {op: set_flag, key: fanyang_rumor_recent, value: true}
+    - {op: adjust_resource, resource: court_strife, delta: 1, reason: 朝议汹汹}
+  illustration: event.horse_tribute
+
+- id: fanyang_calm
+  title: 范阳安堵
+  kind: random
+  repeatable: true
+  cooldown: 2
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 8}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 42}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - any:   # 同季已有流言则不报安堵
+          - {kind: flag, operator: absent, key: fanyang_rumor_recent}
+          - {kind: flag_age, key: fanyang_rumor_recent, operator: gte, value: 1}
+  gravity: 0.45
+  text: 河北道使者还奏，范阳兵马如常，市井安堵；朝中疑谤稍息。（本游戏设定）
+  effects:
+    - {op: adjust_resource, resource: rebellion_risk, delta: -8, reason: 疑谤稍息}
   illustration: event.an_court_visit
 
 # ======================== 第四幕：渔阳鼙鼓 ========================

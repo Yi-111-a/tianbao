@@ -1,5 +1,5 @@
 # 区域：stats 与坐标均为本游戏设定（【虚】）。坐标为底图百分比（x 向东，y 向南）。
-# jingji—fanyang 的 1 季邻接为驿路（人物驰驿用）；叛军 AI 行军只走 scenario.ai_routes。
+# 邻接按地理：京畿与范阳不直接相邻，人物往来经河东（引擎自动寻路，约两季）；叛军 AI 行军只走 scenario.ai_routes。
 # 收入公式 controlled_only：只计 controller = 唐廷 的地区；陷敌地区不再输送赋税。
 - id: jingji
   name: 京畿
@@ -7,7 +7,7 @@
   controller: tang
   note: 京师所在；北衙禁军与彍骑残部驻此
   map: {x: 67.5, y: 41.5, polygon: [[70.6, 42.9], [67.5, 44.4], [64.4, 42.9], [64.4, 40.1], [67.5, 38.6], [70.6, 40.1]]}
-  adjacency: [{to: tongguan, travel_turns: 1}, {to: shuofang, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: shannan, travel_turns: 1}, {to: longyou, travel_turns: 2}, {to: hexi, travel_turns: 2}, {to: jiannan, travel_turns: 2}, {to: fanyang, travel_turns: 1}]
+  adjacency: [{to: tongguan, travel_turns: 1}, {to: shuofang, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: shannan, travel_turns: 1}, {to: longyou, travel_turns: 2}, {to: hexi, travel_turns: 2}, {to: jiannan, travel_turns: 2}]
   stats: {prosperity: 80, order: 75, defense: 45, tax: 20, grain: 10}
 - id: tongguan
   name: 潼关
@@ -39,7 +39,7 @@
   controller: tang
   note: 东北重镇，安禄山根本之地
   map: {x: 82.8, y: 21.8, polygon: [[86.1, 23.3], [82.8, 24.8], [79.5, 23.3], [79.5, 20.3], [82.8, 18.8], [86.1, 20.3]]}
-  adjacency: [{to: hebei, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: pinglu, travel_turns: 1}, {to: khitan_xi, travel_turns: 1}, {to: jingji, travel_turns: 1}]
+  adjacency: [{to: hebei, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: pinglu, travel_turns: 1}, {to: khitan_xi, travel_turns: 1}]
   stats: {prosperity: 55, order: 70, defense: 80, tax: 8, grain: 6}
 - id: pinglu
   name: 平卢

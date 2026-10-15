@@ -70,7 +70,7 @@ formulas:
     tax: {resource: treasury, formula: "tax * 1.5", per_region: true, controlled_only: true, label: 诸道税入}
     grain: {resource: grain, formula: "grain * 1.0", per_region: true, controlled_only: true, label: 诸道租米}
   drift:
-    rebellion_risk: "0.3 + 0.06*max(0, an_ambition-40) + 0.04*max(0, fanzhen_power-60) + 0.04*max(0, court_strife-50) - 0.04*(authority-60)"
+    rebellion_risk: "0.3 + 0.07*max(0, turn-8) + 0.06*min(15, max(0, an_ambition-40)) + 0.04*min(15, max(0, fanzhen_power-60)) + 0.04*max(0, court_strife-49) - 0.03*(authority-60) - 0.2*max(0, rebellion_risk-72)"
     an_ambition: "0.5 + 0.02*(fanzhen_power-65) + 0.03*(court_strife-55) - 0.03*(authority-60)"
     authority: "-0.3 - max(0, court_strife-60)*0.03"
     morale: "-max(0, corruption-45)*0.04 - max(0, frontier_pressure-60)*0.03"
@@ -82,8 +82,9 @@ formulas:
     authority_factor: 0.0005
     corruption_factor: 0.001
 
-# 危机计：terms 与 drift.rebellion_risk 的五个分项一一对应（各项之和 = 每季漂移）。
-# 前三个压力项只计超出部分（max(0,…)），故一味示好不能把危机「存」成负数；君威为双向项。
+# 危机计：terms 与 drift.rebellion_risk 的六个分项一一对应（各项之和 = 每季漂移）。
+# 压力项只计超出部分（max(0,…)）且异志、外重两项有上限，故一味示好不能把危机「存」成负数，一味放任也不会无限加速；
+# 君威为双向项；「朝野戒备」在 70 以上抑制增势（放任之局 T19 约 75–95，而非顶格）。
 # an 项引用隐藏资源 an_ambition，公开视图中应以区间显示（uses_hidden 为提示字段）。
 crisis:
   resource: rebellion_risk
@@ -94,11 +95,34 @@ crisis:
     - {max: 79, name: 山雨欲来}
     - {max: 100, name: 鼙鼓动地}
   terms:
-    - {id: base, label: 春秋渐高, expr: "0.3"}
-    - {id: an, label: 禄山异志, expr: "0.06*max(0, an_ambition-40)"}   # 引擎按风闻区间显示此项
-    - {id: fanzhen, label: 外重内轻, expr: "0.04*max(0, fanzhen_power-60)"}
-    - {id: strife, label: 朝堂倾轧, expr: "0.04*max(0, court_strife-50)"}
-    - {id: authority, label: 君威, expr: "-0.04*(authority-60)"}
+    - {id: base, label: 春秋渐高, expr: "0.3 + 0.07*max(0, turn-8)"}   # 天宝十二载以后逐季加重：君老、相争、边将坐大
+    - {id: an, label: 禄山异志, expr: "0.06*min(15, max(0, an_ambition-40))"}   # 引擎按风闻区间显示此项
+    - {id: fanzhen, label: 外重内轻, expr: "0.04*min(15, max(0, fanzhen_power-60))"}
+    - {id: strife, label: 朝堂倾轧, expr: "0.04*max(0, court_strife-49)"}
+    - {id: authority, label: 君威, expr: "-0.03*(authority-60)"}
+    - {id: watch, label: 朝野戒备, expr: "-0.2*max(0, rebellion_risk-72)"}   # 人人言其必反之后，朝野自戒，增势放缓
+# 难度档（CONTRACT §1.12）。drift_scale 乘漂移量；gravity_scale 乘事件概率（截到 1；"*" 作用于全部事件，故只用 ≥ 1 的值）；
+# start 改开局资源；delay_scale 乘诏令延期概率。平衡实测：tools/sim_policies.py --backend engine --difficulty <id> --seeds 300。
+difficulties:
+  - id: yanyi
+    label: 演义
+    description: 宽和之局。范阳异志滋长较慢，流言少，府库稍丰，诏令少有稽迟。适合初识天宝局势。
+    drift_scale: {rebellion_risk: 0.9, an_ambition: 0.8}
+    gravity_scale: {fanyang_rumor: 0.5, guozhong_raid: 0.5}
+    start: {treasury: 3400, authority: 72}
+    delay_scale: 0.5
+  - id: shishi
+    label: 史实
+    description: 依史事设定的常例。明君善处可弭兵祸，然鼙鼓之声中局必起，须时时经营。
+  - id: diyu
+    label: 地狱
+    description: 多事之秋。异志与鼙鼓增势更急，流言倍起，君威易损，府库开局即紧，诏令多有稽迟。
+    drift_scale: {rebellion_risk: 1.1, an_ambition: 1.2, authority: 1.3}
+    gravity_scale: {fanyang_rumor: 1.3, fanyang_calm: 0.8, guozhong_raid: 1.3}
+    start: {treasury: 2600, rebellion_risk: 32}
+    delay_scale: 1.5
+default_difficulty: shishi
+
 counters:
   - id: bankrupt_streak
     mode: streak
@@ -336,6 +360,8 @@ settings:
   afterlife_chat: false
   history_gravity_default: 0.6
   max_concurrent_offices: 4   # 杨国忠拜相时已兼判度支、御史中丞、京兆尹
+  ruler_title: 陛下
+  bloc_names: {xiang: 相党, yang: 杨氏外戚, neiting: 内廷, donggong: 东宫, fanyang: 范阳, xibei: 西北边帅, qingliu: 清流}
   player_faction: tang
   player_character: xuanzong
   hidden_traits: [ambition, fear, loyalty]

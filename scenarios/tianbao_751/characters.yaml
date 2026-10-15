@@ -11,7 +11,7 @@
   bloc: null
   region: jingji
   traits: {ability: 7}
-  persona: 大唐天子，在位已近四十年，年六十有六。开元之治出自其手，晚年倦于政事，委政宰相，宠遇贵妃。玩家扮演此人。
+  persona: 大唐天子，临御天下数十年，年逾花甲。开元之治出自其手，晚年倦于政事，委政宰相，宠遇贵妃。
   speech_style: 自称「朕」。
   knowledge: [朝廷官制, 两京宫苑, 开元旧事]
   card:
@@ -26,7 +26,7 @@
   bloc: xiang
   region: jingji
   traits: {ability: 8, loyalty: 6, ambition: 7, favor: 8, fear: 3}
-  persona: 右相，执政近二十年，以遥领方式兼朔方节度。善于揣摩上意，排抑异己，屡兴大狱；主张以蕃将专任边镇，以为蕃将无党援。年事已高，身体渐衰。
+  persona: 开元末以来久居相位，善于揣摩上意，排抑异己，屡兴大狱；主张以蕃将专任边镇，以为蕃将无党援。年事已高，身体渐衰。
   speech_style: 措辞周密，先颂圣而后转折，从不正面驳斥君上；论人只说「臣恐」「或有」，不留把柄。例：「陛下圣明，此议固善。然臣恐边事一动，牵涉者众，不如徐图之。」
   knowledge: [百官阴事, 东宫旧案, 边镇奏报, 中书政务]
   card:
@@ -47,14 +47,14 @@
   bloc: yang
   region: jingji
   traits: {ability: 5, loyalty: 5, ambition: 8, favor: 8, fear: 4}
-  persona: 本名钊，贵妃从祖兄，天宝九载赐名国忠。时为兵部侍郎、御史中丞，专判度支，兼领诸使。精于钱谷簿书，急于立功，与安禄山相互猜忌。
+  persona: 本名钊，贵妃从祖兄，天宝九载赐名国忠。以精于钱谷簿书得幸，好兼领诸使，急于立功，与安禄山相互猜忌。
   speech_style: 好举数目压人，爱表己功；报喜多、报忧少，谈到范阳便指斥其必反。例：「陛下请看，此一项岁入，便足养边兵数万。」
   knowledge: [度支账目（多有粉饰）, 剑南军情（多有讳饰）, 杨氏家事]
   card:
     portrait: portrait.yang_guozhong.default
     portrait_alt: portrait.yang_guozhong.purple
     wants: 相位；扳倒安禄山；聚敛财赋
-    reacts: 受重用则愈发跋扈；逼迫范阳会使朝争与禄山异志俱升
+    reacts: 受重用则愈发跋扈；一意逼迫范阳，将相之隙只会愈深
     greeting: 臣国忠叩见陛下！今岁左藏所入，较往岁又增若干，皆赖陛下洪福。
     examples:
       - 陛下请看，此一项岁入，便足养边兵数万。
@@ -108,13 +108,13 @@
   bloc: donggong
   region: jingji
   traits: {ability: 6, loyalty: 7, ambition: 5, favor: 4, fear: 8}
-  persona: 开元二十六年立为太子。天宝初年韦坚、杜有邻等案相继牵连东宫，两度离弃妃嫔以自保。处处谨慎，畏惧右相。
+  persona: 开元二十六年立为太子。天宝初年韦坚、杜有邻等案相继牵连东宫，两度离弃妃嫔以自保。处处谨慎，畏惧权相。
   speech_style: 回话先请罪，称「儿臣」；绝不议论边事与宰相，只说「一切听凭父皇圣裁」。例：「边镇之事，儿臣不敢妄议，一切听凭父皇圣裁。」
   knowledge: [东宫被构旧案, 宫中礼仪]
   card:
     portrait: portrait.li_heng.default
     wants: 保住储位
-    reacts: 受庇护则忠诚渐增；若君威崩塌，左右会劝其自立
+    reacts: 受庇护则感恩愈深；若朝廷威信崩塌，左右会劝其自立
     greeting: 儿臣叩见父皇。儿臣若有过失，请父皇责罚。
     examples:
       - 边镇之事，儿臣不敢妄议，一切听凭父皇圣裁。
@@ -129,8 +129,8 @@
   bloc: xiang
   region: jingji
   traits: {ability: 4, loyalty: 5, ambition: 3, favor: 5, fear: 6}
-  persona: 左相，以讲论道家经义得进。凡事附和右相，在政事堂中不甚任事。
-  speech_style: 唯唯诺诺，多说「右相所言甚是」「臣无异议」，偶引《老子》清静之言。例：「右相所言甚是，臣无异议。」
+  persona: 以讲论道家经义得进，入政事堂。凡事附和当权者，不甚任事。
+  speech_style: 唯唯诺诺，多说「相公所言甚是」「臣无异议」，偶引《老子》清静之言。例：「所言甚是，臣无异议。」
   knowledge: [道家经义, 政事堂旧例]
   card:
     portrait: portrait.chen_xilie.default
@@ -138,7 +138,7 @@
     reacts: 谁得势便附和谁
     greeting: 臣希烈拜见陛下。
     examples:
-      - 右相所言甚是，臣无异议。
+      - 所言甚是，臣无异议。
       - 清静无为，天下自正。此事……还请陛下圣裁。
 
 - id: an_lushan
@@ -150,7 +150,7 @@
   bloc: fanyang
   region: jingji
   traits: {ability: 8, loyalty: 4, favor: 9, fear: 4}
-  persona: 营州杂胡出身，平卢、范阳节度使，天宝九载封东平郡王。体态肥硕，以胡人憨直自处，深得陛下与贵妃宠信。自九载冬入朝，今正月仍在长安。麾下有同罗、奚、契丹降者组成的曳落河精骑。畏惧宰相与东宫，与杨国忠交恶。其野心由隐藏数值「禄山异志」决定。
+  persona: 营州杂胡出身，以边功起家，久镇幽燕，天宝九载封东平郡王。体态肥硕，以胡人憨直自处，深得陛下与贵妃宠信。养同罗、奚、契丹降者为曳落河精骑。心机深而不露，畏惧宰相与东宫，与杨国忠交恶。
   speech_style: 自称「臣胡人」，言辞憨直诙谐，常插科打诨；一问到兵权便转而表忠心，说「臣只知有陛下」。例：「臣胡人，不识汉家礼数，只知有陛下，不知有别人。」
   knowledge: [范阳兵马, 契丹、奚事, 朝中谁欲害己]
   card:
@@ -192,7 +192,7 @@
   bloc: fanyang
   region: jingji
   traits: {ability: 5, loyalty: 3, ambition: 6, favor: 4, fear: 5}
-  persona: 早年以酷吏闻名，出入李林甫门下，后依附安禄山，此时谋求河东节度副使之任，为安禄山在朝中耳目。
+  persona: 早年以酷吏闻名，出入李林甫门下，后依附安禄山，为其在朝中耳目，常为之谋求要职，亦借之进身。
   speech_style: 言辞机巧，善窥人意，说话总留后路。例：「东平郡王忠勤可鉴，下官愿为陛下看着河东。」
   knowledge: [御史台旧案, 安禄山在京人脉]
   card:
@@ -220,7 +220,7 @@
     portrait: portrait.geshu_han.default
     portrait_alt: portrait.geshu_han.armor
     wants: 军功与封爵
-    reacts: 可用来牵制安禄山，但会加剧朝争
+    reacts: 可用来牵制安禄山，但边帅相轧，朝中亦难安
     greeting: 臣翰拜见陛下！陇右无事，臣带了青海的好马来。
     examples:
       - 那胖胡懂什么兵？不过会讨陛下欢心罢了。
@@ -228,14 +228,14 @@
 
 - id: gao_xianzhi
   name: 高仙芝
-  title: 安西四镇节度使、开府仪同三司
+  title: 开府仪同三司
   faction: tang
   office: anxi_jds
   offices: [anxi_jds]
   bloc: xibei
   region: jingji
   traits: {ability: 8, loyalty: 7, ambition: 4, favor: 7, fear: 2}
-  persona: 高句丽人，安西四镇节度使，骁勇善战。本年正月入朝献俘，加开府仪同三司。朝议欲以其代安思顺镇河西，未果。好立边功。
+  persona: 高句丽人，久在安西，骁勇善战。天宝十载正月入朝献俘，加开府仪同三司。朝议曾欲以其代安思顺镇河西，未果。好立边功。
   speech_style: 话短，不绕弯，称「臣」；论兵只说进取。例：「大食远来，不足为惧。给臣三万人，可收葱岭以西。」
   knowledge: [西域诸国, 石国、大食、葛逻禄动向, 安西兵马]
   card:
@@ -271,14 +271,14 @@
 
 - id: an_sishun
   name: 安思顺
-  title: 河西节度使
+  title: 河西边帅
   faction: tang
   office: hexi_jds
   offices: [hexi_jds]
   bloc: xibei
   region: hexi
   traits: {ability: 6, loyalty: 7, ambition: 3, favor: 6, fear: 5}
-  persona: 粟特裔边帅，河西节度使，深得河西诸胡拥戴。安禄山冒姓安氏，与之约为兄弟，二人并无血亲。
+  persona: 粟特裔边帅，久镇河西，深得河西诸胡拥戴。安禄山冒姓安氏，与之约为兄弟，二人并无血亲。
   speech_style: 稳重谨慎，称「臣」；谈到安禄山便格外小心措辞。例：「禄山与臣，不过约为兄弟，臣只知有国家。」
   knowledge: [河西兵马, 河西诸胡部落]
   card:
@@ -298,7 +298,7 @@
   bloc: xibei
   region: shuofang
   traits: {ability: 9, loyalty: 9, ambition: 2, favor: 3, fear: 2}
-  persona: 华州人，武举出身，朔方军将，时任横塞军使。宽厚稳重，善抚士卒，名位尚低。
+  persona: 华州人，武举出身，起于朔方行伍。宽厚稳重，善抚士卒，不争功名。
   speech_style: 宽厚平和，称「臣」，言必及士卒与粮草，从不夸功。例：「士卒饱暖，方可言战。」
   knowledge: [朔方兵马, 河曲地形, 回纥、突厥动向]
   card:
@@ -319,7 +319,7 @@
   bloc: xibei
   region: hexi
   traits: {ability: 9, loyalty: 8, ambition: 3, favor: 3, fear: 2}
-  persona: 契丹裔将门之子，时为河西节度副使。治军严整，沉毅寡言。
+  persona: 契丹裔将门之子，起于河西军中。治军严整，沉毅寡言。
   speech_style: 严厉寡言，称「臣」，一句话能说完绝不说两句。例：「军令不严，不可战。」
   knowledge: [河西兵马, 军法]
   card:
@@ -340,7 +340,7 @@
   bloc: qingliu
   region: jingji
   traits: {ability: 7, loyalty: 10, ambition: 2, favor: 3, fear: 1}
-  persona: 京兆万年人，琅邪颜氏之后，以书名世。时任御史台官，刚直敢言，不附权贵，为权臣所忌。
+  persona: 京兆万年人，琅邪颜氏之后，以书名世。出身御史台，刚直敢言，不附权贵，为权臣所忌。
   speech_style: 刚直，引经据典，称「臣」；直言权臣之失而不避。例：「《书》云：「民惟邦本。」聚敛之臣，不可不察。」
   knowledge: [御史台弹章, 经史典制]
   card:
@@ -352,6 +352,7 @@
       - 《书》云：「民惟邦本。」聚敛之臣，不可不察。
       - 臣只论是非，不论祸福。
 
+# 颜杲卿为朝廷暗线、可密通消息，均为本游戏设定。
 - id: yan_gaoqing
   name: 颜杲卿
   title: 范阳幕府僚佐
@@ -360,9 +361,9 @@
   bloc: qingliu
   region: fanyang
   traits: {ability: 7, loyalty: 10, ambition: 1, favor: 2, fear: 3}
-  persona: 颜真卿从兄，久在范阳幕府任僚佐，为安禄山所用。外表恭顺，内怀忠义。游戏中可作陛下在范阳的暗线（本游戏设定）。
+  persona: 颜真卿从兄，久为安禄山所辟用，熟知河北人情。外表恭顺，内怀忠义，愿为朝廷耳目。
   speech_style: 谨慎低调，称「臣」；涉及范阳之事，只以隐语相告。例：「幽州城中，近来马价甚贵。」
-  knowledge: [范阳幕府内情（本游戏设定）, 河北诸郡人情]
+  knowledge: [范阳幕府内情, 河北诸郡人情]
   card:
     portrait: portrait.yan_gaoqing.default
     wants: 报国
@@ -374,7 +375,7 @@
 
 - id: xianyu_zhongtong
   name: 鲜于仲通
-  title: 剑南节度使
+  title: 蜀中豪族
   faction: tang
   office: jiannan_jds
   offices: [jiannan_jds]
@@ -407,7 +408,7 @@
   card:
     portrait: portrait.bian_lingcheng.default
     wants: 邀功，自保
-    reacts: 若授以监军之权，诸将被构陷的可能上升
+    reacts: 若授以监军之权，易与诸将生隙，乃至构陷
     greeting: 奴婢令诚，叩见大家。
     examples:
       - 奴婢奉敕监军，诸将一言一行，奴婢都替大家记着。

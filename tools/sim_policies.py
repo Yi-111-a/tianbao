@@ -13,11 +13,14 @@
   pending_choices / outcome 等字段，脚本会说明缺什么并退出。
 
 策略：
-- do_nothing：不批奏疏，事件抉择到期走默认项（默认项即史事）。目标：T19 鼙鼓 75–90，多数走 E4。
+- do_nothing：不批奏疏，事件抉择到期走默认项（默认项即史事）。目标：E4 ≥ 80%，T19 鼙鼓 75–95。
 - historical：按史事批奏疏（准河东、征南诏、杨国忠拜相、遣中使……）。
 - wise：按「好诏」批奏疏，量入为出。目标：E1 可达。
 - half_wise：每条 wise 选择以 50% 概率采纳，用来看难度梯度。
 - defender / purge / chaos：结局可达性探针，分别瞄准 E3、E2、E5。它们不是玩家画像。
+- bankrupt / mawei_refuse：失败结局探针，分别瞄准「帑竭兵变」「龙驭宾天」。
+
+--difficulty yanyi|shishi|diyu 选难度档（scenario.yaml 的 difficulties）；引擎未原生支持时由本脚本改写剧本。
 
 输出：每种策略在 N 个种子上的结局分布，以及 T19（或终局）时渔阳鼙鼓的分布。
 --coverage 检查每季可见奏疏的最少条数（硬性要求为 ≥ 3）。
@@ -140,9 +143,9 @@ class Model:
             return _cmp(self.res[c["id"]]["amount"], c.get("operator", "gte"), float(c["value"]))
         if k == "flag":
             if op == "exists":
-                return c["key"] in self.flags
+                return self.flags.get(c["key"]) not in (None, False)
             if op == "absent":
-                return c["key"] not in self.flags
+                return self.flags.get(c["key"]) in (None, False)
             return self.flags.get(c["key"]) == c.get("value", True)
         if k == "flag_age":
             if c["key"] not in self.flag_turns or not self.flags.get(c["key"]):
@@ -239,14 +242,31 @@ class Model:
                 if a["commander"] == op["character"]:
                     a["commander"] = None
 
+    def _travel_turns(self, src: str, dst: str) -> int | None:
+        """最短路程（季数），Dijkstra；不可达为 None。"""
+        import heapq
+        best = {src: 0}
+        heap = [(0, src)]
+        while heap:
+            d, r = heapq.heappop(heap)
+            if r == dst:
+                return d
+            if d > best.get(r, 1 << 30):
+                continue
+            for n, w in self.regions[r]["adj"].items():
+                if d + w < best.get(n, 1 << 30):
+                    best[n] = d + w
+                    heapq.heappush(heap, (d + w, n))
+        return None
+
     def _op_move_character(self, op):
         ch = self.chars[op["character"]]
         if ch["status"] != "alive" or ch["transit"]:
             raise Rejected("人物不能行动")
-        adj = self.regions[ch["region"]]["adj"]
-        if op["to_region"] not in adj:
-            raise Rejected("不相邻")
-        ch["transit"] = {"to": op["to_region"], "eta": self.turn + adj[op["to_region"]]}
+        turns = self._travel_turns(ch["region"], op["to_region"])
+        if not turns:
+            raise Rejected("无路可达")
+        ch["transit"] = {"to": op["to_region"], "eta": self.turn + turns}
 
     def _op_move_army(self, op):
         a = self.armies[op["army"]]
@@ -393,8 +413,8 @@ class Model:
         self._battles(T)
         self._ai_march()
         # 9 漂移
-        values = {k: v["amount"] for k, v in self.res.items()}
         for rid, expr in self.sc["formulas"].get("drift", {}).items():
+            values = {"turn": T, **{k: v["amount"] for k, v in self.res.items()}}  # 与引擎一致：逐项取最新值
             self.res[rid]["amount"] = self._clamp(rid, self.res[rid]["amount"] + _eval(expr, values))
         # 10 事件
         for ev in self.pack["events"]:
@@ -538,20 +558,24 @@ HISTORICAL_MEMO = {
     "t2_west": "hold", "t2_shuofang": "sishun", "t2_census": "convert",
     "t3_an_tribute": "reward", "t3_review": "lenient", "t3_winter": "half",
     "t4_an_troops": "approve", "t4_haul": "convert", "t4_censorate": "quiet",
-    "t5_tubo": "strike", "t5_jingzhao": "approve", "t5_relief": "local",
-    "t6_successor": "guozhong", "t6_feast": "feast", "t6_autumn": "census",
+    "t5_tubo": "strike", "t5_jingzhao": "approve", "t5_wanghong": "purge",
+    "t6_successor": "guozhong", "t6_feast": "feast", "t6_tianchang": "feast", "t6_abusi": "an_pursue",
+    "t6_jiannan": "brief",
     "t7_anxi": "feng", "t7_winter": "yang", "t7_coin": "allow",
-    "t8_zhenqing": "send", "t8_an_accuse": "ignore", "t8_spring": "none",
-    "t9_jinjun_command": "keep", "t9_tubo": "fight", "t9_canal": "buy",
-    "t10_geshu": "grant", "t10_horses": "grant", "t10_harvest": "tax",
+    "t8_zhenqing": "send", "t8_an_accuse": "ignore", "t8_neishi": "expand", "t8_yangnu": "slave_only",
+    "t8_song": "allow",
+    "t9_jinjun_command": "keep", "t9_jiuqu": "strike", "t9_lychee": "send",
+    "t10_geshu": "grant", "t10_huihe": "reward", "t10_bolu": "reward",
     "t11_yang": "indulge", "t11_border_pay": "self",
-    "t12_chancellor": "refuse", "t12_an_away": "excuse", "t12_spring": "none",
-    "t13_lishi_warn": "noted", "t13_summer": "build", "t13_hedong": "keep",
-    "t14_rains": "silent", "t14_frontier": "reinforce",
+    "t12_chancellor": "refuse", "t12_an_away": "excuse", "t12_gaoshen": "grant", "t12_horses": "grant",
+    "t12_limi": "approve",
+    "t13_lishi_warn": "noted", "t13_hedong": "keep",
+    "t14_rains": "silent", "t14_frontier": "reinforce", "t14_zhiju": "poetry", "t14_shence": "establish",
     "t15_jiwen": "demote", "t15_winter": "grand",
-    "t16_court": "delegate", "t16_luoyang_haul": "all",
-    "t17_jingji": "calm", "t17_harvest": "keep",
-    "p_envoy": "eunuch",
+    "t16_court": "delegate", "t16_supi": "receive",
+    "t17_jingji": "calm", "t17_zanpu": "ignore", "t17_qingzong_far": "invite",
+    "t18_huaqing": "go",
+    "p_envoy": "eunuch", "p_an_capital": "release",
     "r_luoyang": "recruit", "r_tongguan": "jinjun", "r_trust": "supervise", "r_guo": "march", "r_shuofang_march": "march",
     "r_hebei": "hebei", "r_west": "call", "r_sortie": "sortie", "r_flight": "west", "r_tax": "merchants",
 }
@@ -577,21 +601,24 @@ WISE_MEMO = {
     "t3_an_tribute": "reward", "t3_review": "strict", "t3_winter": "direct",
     "p_gaoqing": "contact",
     "t4_an_troops": "half", "t4_haul": "boats", "t4_censorate": "punish",
-    "t5_tubo": "garrison", "t5_jingzhao": "deny", "t5_relief": "relief",
-    "t6_successor": "chen", "t6_feast": "apart", "t6_autumn": "audit",
+    "t5_tubo": "garrison", "t5_jingzhao": "deny", "t5_wanghong": "limit",
+    "t6_successor": "chen", "t6_feast": "apart", "t6_tianchang": "refuse", "t6_abusi": "shuofang",
+    "t6_jiannan": "brief",
     "t7_anxi": "feng", "t7_jinjun": "draft", "t7_winter": "troops", "t7_coin": "ban",
-    "t8_zhenqing": "keep", "t8_an_accuse": "hush", "t8_spring": "loan",
-    "t9_jinjun_command": "general", "t9_tubo": "soothe", "t9_canal": "haul",
-    "t10_geshu": "title_only", "t10_horses": "deny", "t10_harvest": "buy",
+    "t8_zhenqing": "keep", "t8_an_accuse": "hush", "t8_neishi": "cut", "t8_yangnu": "slave_only",
+    "t8_song": "deny",
+    "t9_jinjun_command": "general", "t9_jiuqu": "hold", "t9_lychee": "stop",
+    "t10_geshu": "title_only", "t10_huihe": "trade", "t10_bolu": "reward",
     "t11_hebei": "militia", "t11_yang": "curb", "t11_border_pay": "central",
-    "t12_chancellor": "refuse", "t12_tongguan": "fortify", "t12_spring": "relief", "t12_an_away": "excuse",
-    "t13_lishi_warn": "divide", "t13_hedong": "replace", "t13_summer": "stop", "t13_drill": "drill",
-    "t14_rains": "retake", "t14_frontier": "defend", "t14_shuofang_in": "move",
+    "t12_chancellor": "refuse", "t12_tongguan": "fortify", "t12_an_away": "excuse",
+    "t12_gaoshen": "court", "t12_horses": "deny", "t12_limi": "deny",
+    "t13_lishi_warn": "divide", "t13_hedong": "replace", "t13_drill": "drill", "t13_shuofang_in": "move",
+    "t14_rains": "retake", "t14_frontier": "defend", "t14_zhiju": "strict", "t14_shence": "capital",
     "t15_jiwen": "demote", "t15_luoyang": "stock", "t15_winter": "simple",
-    "t16_longyou": "li", "t16_luoyang_haul": "split", "t16_court": "attend", "t16_famine": "relief",
-    "t17_fanyang": "envoy", "t17_jingji": "levy", "t17_harvest": "grain",
-    "t18_hebei_watch": "permit", "t18_tongguan": "jinjun",
-    "p_restrain_guozhong": "restrain", "p_abdicate": "rouse",
+    "t16_longyou": "li", "t16_supi": "receive", "t16_court": "attend", "t16_famine": "relief",
+    "t17_fanyang": "envoy", "t17_jingji": "levy", "t17_zanpu": "condole", "t17_qingzong_near": "plain",
+    "t18_hebei_watch": "permit", "t18_tongguan": "jinjun", "t18_huaqing": "stay",
+    "p_restrain_guozhong": "restrain", "p_abdicate": "rouse", "p_an_capital": "honor",
     "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei",
     "r_west": "part", "r_sortie": "hold", "r_flight": "west", "r_relief": "relief", "r_tax": "palace",
 }
@@ -622,6 +649,8 @@ def wise(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
             oid = "summon" if m.r("rebellion_risk") < 52 else None
         if memo["id"] == "t18_last":
             oid = "hereditary" if m.r("rebellion_risk") >= 52 else "preempt"
+        if memo["id"] == "t17_qingzong_far":
+            oid = "invite" if m.r("rebellion_risk") < 52 else "hostage"
         if memo["id"] == "r_tongguan":
             oid = "hedong" if m.armies["hedong_army"]["faction"] == m.main and m.armies["hedong_army"]["strength"] > 0 else "jinjun"
         if not oid:
@@ -645,7 +674,7 @@ def half_wise(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
 DEFENDER_MEMO = {  # 不阻止起兵，专修守备：目标 E3
     **{k: v for k, v in HISTORICAL_MEMO.items() if not k.startswith("r_")},
     "t0_huaqing": "train", "t2_shuofang": "guo", "t2_east": "walls", "t7_jinjun": "draft",
-    "t9_jinjun_command": "general", "t12_tongguan": "fortify", "t14_shuofang_in": "stay",
+    "t9_jinjun_command": "general", "t12_tongguan": "fortify", "t13_shuofang_in": "stay",
     "t15_luoyang": "troops", "t17_jingji": "levy", "t18_tongguan": "hedong", "t13_hedong": "replace",
     "p_gaoqing": "contact",
     "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei", "r_tongguan": "jinjun",
@@ -660,8 +689,10 @@ def defender(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
 PURGE_MEMO = {  # 一味削藩、不顾边防：目标 E2
     **WISE_MEMO, "t3_winter": "half", "t5_tubo": "envoy", "t7_jinjun": "draft", "t9_tubo": "fight",
     "t10_geshu": "deny", "t11_border_pay": "central", "t13_drill": "self", "t14_frontier": "reinforce",
-    "t14_shuofang_in": "move", "t16_longyou": "wait", "t8_an_accuse": "cut", "t2_west_calm": "reward",
+    "t13_shuofang_in": "move", "t16_longyou": "wait", "t8_an_accuse": "cut", "t2_west_calm": "reward",
     "t0_anxi": "campaign", "t0_nanzhao": "campaign", "t1_xier_report": "conscript", "t2_west": "avenge",
+    "t9_jiuqu": "soothe", "t14_shence": "capital", "t17_zanpu": "ignore", "t16_supi": "return",
+    "t12_gaoshen": "court", "p_an_capital": "detain",
 }
 
 
@@ -693,20 +724,86 @@ def chaos(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     return picks, {k: v for k, v in choices.items() if v}
 
 
+def _cost(opt: dict) -> float:
+    """选项的钱粮花费（粮按 0.5 折钱），用于「挥霍」探针。"""
+    cost = _treasury_cost(opt)
+    for op in opt.get("ops", []):
+        if op.get("op") == "adjust_resource" and op.get("resource") == "grain":
+            cost -= 0.5 * float(op["delta"])
+    return cost
+
+
+def bankrupt(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
+    """挥霍探针：每条奏疏都挑最花钱粮的选项（不传位），目标：帑竭兵变。"""
+    picks = []
+    for memo in visible:
+        opts = [o for o in memo["options"] if not (memo["id"] == "p_abdicate" and o["id"] == "abdicate")]
+        if opts:
+            picks.append((memo["id"], max(opts, key=_cost)["id"]))
+    return picks, {}
+
+
+def mawei_refuse(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
+    """史事路线，但马嵬驿拒绝诛杨：目标：龙驭宾天。"""
+    picks, _ = historical(m, visible, pending)
+    return picks, {p["id"]: "refuse" for p in pending if p["event_id"] == "mawei"}
+
+
 POLICIES: dict[str, Callable[[Model, list, list], Decision]] = {
     "do_nothing": do_nothing, "historical": historical, "wise": wise, "half_wise": half_wise,
-    "defender": defender, "purge": purge, "chaos": chaos,
+    "defender": defender, "purge": purge, "chaos": chaos, "bankrupt": bankrupt, "mawei_refuse": mawei_refuse,
 }
+
+
+# ============================================================================
+# 难度档（scenario.yaml 的 difficulties，CONTRACT §1.12）。引擎后端交给引擎；model 后端由本脚本按同一约定改写剧本：
+#   drift_scale {资源: 倍数}        → 该资源漂移公式整体乘以倍数
+#   gravity_scale {事件 id 或 "*": 倍数} → 事件 gravity 乘以倍数（上限 1）；"*" 作用于全部事件，故只宜 ≥ 1
+#   start {资源: 值}                → 开局初值
+#   delay_scale                     → 诏令延误参数倍数（本脚本不模拟延误，忽略）
+# ============================================================================
+def difficulty_def(scenario_def: dict, diff_id: str | None) -> dict | None:
+    rows = scenario_def.get("difficulties") or []
+    diff_id = diff_id or scenario_def.get("default_difficulty")
+    if not diff_id:
+        return None
+    row = next((r for r in rows if r.get("id") == diff_id), None)
+    if row is None:
+        raise SystemExit(f"难度不存在：{diff_id}（可选：{', '.join(r['id'] for r in rows)}）")
+    return row
+
+
+def apply_difficulty(scenario_def: dict, events: list[dict], diff: dict | None) -> None:
+    """就地改写剧本定义与事件表。"""
+    if not diff:
+        return
+    drift = scenario_def.setdefault("formulas", {}).setdefault("drift", {})
+    for rid, factor in (diff.get("drift_scale") or {}).items():
+        if rid in drift and float(factor) != 1.0:
+            drift[rid] = f"({drift[rid]}) * {float(factor)}"
+    gscale = diff.get("gravity_scale") or {}
+    for ev in events:
+        g = float(ev.get("gravity", 1))
+        factor = gscale.get(ev["id"], gscale.get("*", 1.0))
+        ev["gravity"] = min(1.0, g * float(factor))
+    starts = diff.get("start") or {}
+    for res in scenario_def.get("resources", []):
+        if res["id"] in starts:
+            res["initial"] = starts[res["id"]]
 
 
 # ============================================================================
 # 运行
 # ============================================================================
-def play_model(pack: dict, policy: Callable, seed: int, trace: bool = False) -> dict[str, Any]:
+def play_model(pack: dict, policy: Callable, seed: int, trace: bool = False, on_turn: Callable | None = None) -> dict[str, Any]:
     m = Model(pack, seed)
     risk_at_19 = None
+    peak = m.r("rebellion_risk")
     while m.outcome is None and m.turn < 40:
-        memos, choices = policy(m, m.visible_memorials(), list(m.pending))
+        visible = m.visible_memorials()
+        if on_turn:
+            on_turn(m.turn, visible)
+        memos, choices = policy(m, visible, list(m.pending))
         for mid, oid in memos:
             memo = next(x for x in m.pack["memorials"] if x["id"] == mid)
             m.adopt(memo, oid)
@@ -716,35 +813,19 @@ def play_model(pack: dict, policy: Callable, seed: int, trace: bool = False) -> 
         if trace:
             print(f"T{m.turn:>2} 鼙鼓{m.r('rebellion_risk'):5.1f} 异志{m.r('an_ambition'):5.1f} 外重{m.r('fanzhen_power'):5.1f} "
                   f"朝争{m.r('court_strife'):5.1f} 君威{m.r('authority'):5.1f} 国库{m.r('treasury'):6.0f} 太仓{m.r('grain'):6.0f} "
-                  f"边患{m.r('frontier_pressure'):5.1f} 民心{m.r('morale'):5.1f} 积弊{m.r('corruption'):5.1f} 奏疏{len(m.visible_memorials())}")
+                  f"边患{m.r('frontier_pressure'):5.1f} 民心{m.r('morale'):5.1f} 积弊{m.r('corruption'):5.1f} 奏疏{len(visible)}")
         m.resolve()
+        if m.turn <= 18:
+            peak = max(peak, m.r("rebellion_risk"))
         if m.turn == 19:
             risk_at_19 = m.r("rebellion_risk")
     if trace:
         for line in m.log:
             print("   ", line)
         print("结局", m.outcome)
-    return {"outcome": m.outcome["id"] if m.outcome else "none", "turn": m.turn,
+    return {"outcome": m.outcome["id"] if m.outcome else "none", "turn": m.turn, "peak": peak,
             "risk19": risk_at_19 if risk_at_19 is not None else m.r("rebellion_risk"),
-            "rebellion": bool(m.flags.get("rebellion_started")), "min_items": None}
-
-
-def check_memorial_coverage(pack: dict, seeds: int = 30) -> dict[int, int]:
-    """每季可见奏疏条数的最小值（跨策略、跨种子），用于验证「每季至少 3 条」。"""
-    worst: dict[int, int] = {}
-    for name, pol in POLICIES.items():
-        for seed in range(seeds):
-            m = Model(pack, seed)
-            while m.outcome is None and m.turn < 40:
-                vis = m.visible_memorials()
-                worst[m.turn] = min(worst.get(m.turn, 99), len(vis))
-                memos, choices = pol(m, vis, list(m.pending))
-                for mid, oid in memos:
-                    m.adopt(next(x for x in pack["memorials"] if x["id"] == mid), oid)
-                for cid, oid in choices.items():
-                    m.try_apply({"op": "choose_event_option", "choice_id": cid, "option_id": oid})
-                m.resolve()
-    return dict(sorted(worst.items()))
+            "rebellion": bool(m.flags.get("rebellion_started"))}
 
 
 # ---------------- 引擎后端 ----------------
@@ -759,25 +840,50 @@ class EngineView:
         return self.st.resources[rid].amount
 
 
-def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False) -> dict[str, Any]:
+_ENGINE: dict[str, Any] = {}
+
+
+def engine_scenario(pack: dict, diff_id: str | None) -> tuple[dict, bool, str | None]:
+    """载入引擎剧本（缓存），并按难度改写。引擎若原生支持难度（build_initial_state 有 difficulty 参数），交给引擎。"""
     sys.path.insert(0, str(ROOT / "engine" / "backend"))
     from simcore.domain import models as M  # noqa: E402
     missing = [f for f in ("pending_choices", "outcome", "counters", "flag_turns") if f not in M.WorldState.model_fields]
     if missing:
         raise SystemExit(f"引擎尚未实现 CONTRACT §1 字段：{', '.join(missing)}。请先用 --backend model。")
+    import inspect  # noqa: E402
+    from simcore.scenario.loader import build_initial_state, load_scenario  # noqa: E402
+    key = f"scenario:{diff_id}"
+    if key not in _ENGINE:
+        scenario = load_scenario(PACK)
+        scenario.setdefault("memorials", pack["memorials"])
+        sdef = scenario.get("scenario", scenario)
+        diff = difficulty_def(sdef, diff_id)
+        native = "difficulty" in inspect.signature(build_initial_state).parameters
+        if not native:
+            scenario = copy.deepcopy(scenario)
+            sdef = scenario.get("scenario", scenario)
+            apply_difficulty(sdef, scenario.get("events", []), diff)
+        _ENGINE[key] = (scenario, native, diff["id"] if diff else None)
+    return _ENGINE[key]
+
+
+def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False, on_turn: Callable | None = None,
+                diff_id: str | None = None) -> dict[str, Any]:
+    scenario, native, did = engine_scenario(pack, diff_id)
     from simcore.domain.apply import apply  # noqa: E402
     from simcore.domain.memorials import adopted_ops, is_visible, memorial_flag  # noqa: E402
     from simcore.domain.turn import resolve_turn  # noqa: E402
-    from simcore.scenario.loader import build_initial_state, load_scenario  # noqa: E402
+    from simcore.scenario.loader import build_initial_state  # noqa: E402
 
-    scenario = load_scenario(PACK)
-    scenario.setdefault("memorials", pack["memorials"])
-    state = build_initial_state(scenario)
+    state = build_initial_state(scenario, difficulty=did) if native and did else build_initial_state(scenario)
     rng = random.Random(seed)
     main = pack["scenario"].get("settings", {}).get("player_faction", "tang")
     risk19 = None
+    peak = state.resources["rebellion_risk"].amount
     while state.outcome is None and state.turn < 40:
         visible = [mm for mm in scenario["memorials"] if is_visible(mm, state)]
+        if on_turn:
+            on_turn(state.turn, visible)
         pending = [{"id": p.id, "event_id": p.event_id} for p in state.pending_choices]
         memos, choices = policy(EngineView(state, seed, main), visible, pending)
         for mid, oid in memos:
@@ -797,20 +903,35 @@ def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False) ->
         if trace:
             g = lambda k: state.resources[k].amount  # noqa: E731
             print(f"T{state.turn:>2} 鼙鼓{g('rebellion_risk'):5.1f} 异志{g('an_ambition'):5.1f} 外重{g('fanzhen_power'):5.1f} "
-                  f"朝争{g('court_strife'):5.1f} 君威{g('authority'):5.1f} 国库{g('treasury'):6.0f} 太仓{g('grain'):6.0f}")
+                  f"朝争{g('court_strife'):5.1f} 君威{g('authority'):5.1f} 国库{g('treasury'):6.0f} 太仓{g('grain'):6.0f} "
+                  f"边患{g('frontier_pressure'):5.1f} 奏疏{len(visible)} 禄山@{state.characters['an_lushan'].region}")
         state, report = resolve_turn(state, rng, scenario)
         if trace:
             for w in report.warnings:
-                print("   ⚠", w)
+                print("   !", w)
             if report.events_fired:
                 print("   事件", report.events_fired)
+        if state.turn <= 18:
+            peak = max(peak, state.resources["rebellion_risk"].amount)
         if state.turn == 19:
             risk19 = state.resources["rebellion_risk"].amount
     if trace:
         print("结局", state.outcome)
-    return {"outcome": state.outcome.id if state.outcome else "none", "turn": state.turn,
+    return {"outcome": state.outcome.id if state.outcome else "none", "turn": state.turn, "peak": peak,
             "risk19": risk19 if risk19 is not None else state.resources["rebellion_risk"].amount,
             "rebellion": bool(state.flags.get("rebellion_started"))}
+
+
+def check_memorial_coverage(pack: dict, play: Callable, seeds: int = 30) -> dict[int, tuple[int, str]]:
+    """每季可见奏疏条数的最小值（跨策略、跨种子），用于验证「每季至少 3 条」。返回 {季: (最少条数, 策略)}。"""
+    worst: dict[int, tuple[int, str]] = {}
+    for name, pol in POLICIES.items():
+        def note(turn: int, visible: list, name: str = name) -> None:
+            if turn not in worst or len(visible) < worst[turn][0]:
+                worst[turn] = (len(visible), name)
+        for seed in range(seeds):
+            play(pack, pol, seed, on_turn=note)
+    return dict(sorted(worst.items()))
 
 
 def main() -> None:
@@ -819,28 +940,42 @@ def main() -> None:
     ap.add_argument("--policy", choices=[*POLICIES, "all"], default="all")
     ap.add_argument("--seeds", type=int, default=200)
     ap.add_argument("--seed", type=int, default=None, help="只跑一个种子")
+    ap.add_argument("--difficulty", default=None, help="难度档 id（缺省为剧本 default_difficulty）")
     ap.add_argument("--trace", action="store_true")
-    ap.add_argument("--coverage", action="store_true", help="检查每季可见奏疏条数")
+    ap.add_argument("--coverage", action="store_true", help="检查每季可见奏疏条数（种子数取 --seeds，缺省 30）")
     args = ap.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     pack = load_pack()
+    if args.backend == "model":
+        pack = copy.deepcopy(pack)
+        apply_difficulty(pack["scenario"], pack["events"], difficulty_def(pack["scenario"], args.difficulty))
+
+        def play(pk, pol, seed, trace=False, on_turn=None):
+            return play_model(pk, pol, seed, trace, on_turn)
+    else:
+        def play(pk, pol, seed, trace=False, on_turn=None):
+            return play_engine(pk, pol, seed, trace, on_turn, diff_id=args.difficulty)
     if args.coverage:
-        print("每季最少可见奏疏条数：", check_memorial_coverage(pack))
+        cov = check_memorial_coverage(pack, play, seeds=args.seeds if args.seeds != 200 else 30)
+        print(f"每季最少可见奏疏条数（后端 {args.backend}）：", {k: v[0] for k, v in cov.items()})
+        low = {k: v for k, v in cov.items() if v[0] < 3}
+        print("不足 3 条：", low or "无")
         return
-    play = play_model if args.backend == "model" else play_engine
     names = list(POLICIES) if args.policy == "all" else [args.policy]
     seeds = [args.seed] if args.seed is not None else list(range(args.seeds))
     for name in names:
         results = [play(pack, POLICIES[name], s, args.trace) for s in seeds]
         dist = Counter(r["outcome"] for r in results)
         risks = [r["risk19"] for r in results]
+        peaks = [r["peak"] for r in results]
         rebel = sum(r["rebellion"] for r in results)
-        print(f"\n== {name}（{len(seeds)} 局，后端 {args.backend}）")
+        print(f"\n== {name}（{len(seeds)} 局，后端 {args.backend}，难度 {args.difficulty or '默认'}）")
         for k, v in dist.most_common():
             print(f"   {k:<18} {v:>4}  {v / len(seeds):6.1%}")
         print(f"   起兵 {rebel / len(seeds):.0%}；T19 鼙鼓 均值 {statistics.mean(risks):.1f}，"
-              f"中位 {statistics.median(risks):.1f}，范围 {min(risks):.1f}–{max(risks):.1f}")
+              f"中位 {statistics.median(risks):.1f}，范围 {min(risks):.1f}–{max(risks):.1f}；"
+              f"T1–T18 峰值 均值 {statistics.mean(peaks):.1f}")
 
 
 if __name__ == "__main__":
