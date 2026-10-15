@@ -25,7 +25,7 @@ ENGINE = Path(os.environ.get("TIANBAO_ENGINE_DIR", ROOT / "engine"))
 PROMPT = """你要完整地玩一局桌面策略游戏《天宝》：你扮演天宝十载（751 年）的唐玄宗。游戏通过名为 tianbao 的 MCP 服务提供工具。
 
 规则：
-1. 先调用 list_scenarios，再用 new_game 开局（scenario=tianbao_751，seed={seed}）。记下 session_id。
+1. 先调用 list_scenarios，再用 new_game 开局（scenario=tianbao_751，seed={seed}{difficulty_arg}）。记下 session_id。
 2. 每一季：调用 briefing 阅读局势；至少召见一位大臣（audience，你根据返回的人设和事实摘要自行扮演他回话，数字只能引用工具给出的值）；需要时开 court_debate；
    然后用 draft_edict 下诏（可以 adopted 采纳奏疏选项，也可以 ops 直接提出操作，op 格式见 op_reference），读回执后 confirm_edict；有待决事件就用 choose 选择；最后 end_turn。
 3. 一直玩到游戏给出 outcome（结局或失败）为止，不要中途停下，也不要提前问我。你的目标是取得最好的结局（阻止安史之乱、财政不枯竭、君威 ≥ 50）。
@@ -103,12 +103,14 @@ def main() -> int:
     parser.add_argument("--run", required=True)
     parser.add_argument("--model", default="gpt-6.1-sol")
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument("--difficulty", default="")
     args = parser.parse_args()
 
     run_dir = ROOT / "playtests" / args.agent / args.run
     (run_dir / "home").mkdir(parents=True, exist_ok=True)
     report = run_dir / "report.md"
-    prompt = PROMPT.format(seed=args.seed, report=report)
+    difficulty_arg = f"，difficulty={args.difficulty}" if args.difficulty else ""
+    prompt = PROMPT.format(seed=args.seed, report=report, difficulty_arg=difficulty_arg)
     cmd = run_codex(run_dir, args.model) if args.agent == "codex" else run_claude(run_dir, prompt)
 
     started = time.time()
