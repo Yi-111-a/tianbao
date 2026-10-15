@@ -1,0 +1,86 @@
+# QA log (all images viewed by the art producer)
+
+Checks: text-free / Tang-accurate / style-consistent. Rejection rule: any text-like glyph, dragon, Ming hat or mandarin square means regenerate (none needed; no retries used except the armor batch rerun after a CLI argument bug, not an image flaw).
+
+- map.base: text-free yes; Tang-accurate: no Taiwan/Japan, plain sea at E/S, Tibet snow edge at W, Western Regions desert + camel caravans, Yellow River/Bian canal/Yangtze/Qinling/Taihang/Tongguan gorge all present; style-consistent yes. Caveat: oblique 'bird's-eye' mountain rendering, not strictly flat; Beiting/Huihe strips thin at top.
+- title.scroll: text-free yes; Tang yes (ochre robe, futou-like cap, no dragon, smoke on NE horizon); style yes; left third busy with city (title can overlay sky at upper left).
+- ui.desk: text-free yes; Tang yes (baoxiang + cuancao border, brass paperweights); style yes; centre empty, usable.
+- ui.paper: text-free yes; plain deckled hemp paper; usable as scroll panel fill (edge is irregular, dark brown corners).
+- ui.silk: text-free yes; baoxiang/cuancao/pearl roundel tileable-ish (edges not verified seamless).
+- ui.edict_paper: text-free yes; yellow edict scroll with gold rollers; Tang yes; caveat: desk props (incense burner, candle, box) in top corners, crop before use.
+- ui.lacquer_bar: text-free yes; keyed to alpha and cropped; five empty sockets; style yes.
+- ui.ink_button: text-free yes; keyed, slight pale shadow fringe at the bottom edge; style yes.
+- ui.seal: text-free yes; keyed round cinnabar blob with dry-brush edge, blank centre.
+- ui.crisis_drum: text-free yes; no dragons; four quadrants green/gold/orange/red but quadrant order is not a gradient ring (green, gold, red, orange); keyed, faint pale shadow fringe. Frontend should overlay its own segment tint.
+- ui.ribbon_xiang: text-free yes; Tang yes (pearl roundels, baoxiang medallion left blank for frontend glyph); colour matches faction; keyed to alpha.
+- ui.ribbon_yang: text-free yes; Tang yes (pearl roundels, baoxiang medallion left blank for frontend glyph); colour matches faction; keyed to alpha.
+- ui.ribbon_fanyang: text-free yes; Tang yes (pearl roundels, baoxiang medallion left blank for frontend glyph); colour matches faction; keyed to alpha.
+- ui.ribbon_neiting: text-free yes; Tang yes (pearl roundels, baoxiang medallion left blank for frontend glyph); colour matches faction; keyed to alpha.
+- icon.sheet (+ 10 icon.* splits): text-free yes; 10 round medallion icons in requested order, keyed and split into icon.<resource>.webp 256px. Caveat: copper coins show faint pseudo-legend marks (illegible at 256px).
+- portrait.xuanzong.default: text-free yes; ochre-yellow robe, white beard; subtle rosette embroidery only, no dragons.
+- portrait.li_linfu.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.yang_guozhong.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.yang_guifei.default: text-free yes; high-waisted skirt, pibo, high bun, huadian: all present; low neckline is Tang-accurate.
+- portrait.gao_lishi.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.li_heng.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.chen_xilie.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.an_lushan.default: text-free yes; very obese Sogdian-Turkic face, purple robe, gold fish pouch.
+- portrait.shi_siming.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.ji_wen.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.geshu_han.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.gao_xianzhi.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.feng_changqing.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.an_sishun.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.guo_ziyi.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.li_guangbi.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.yan_zhenqing.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.yan_gaoqing.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.xianyu_zhongtong.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.bian_lingcheng.default: text-free yes; Tang-accurate (round-collar robe, soft futou, rank colour); style consistent with set; background faded; framing knee-up rather than strict half-length.
+- portrait.an_lushan.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.geshu_han.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.gao_xianzhi.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.guo_ziyi.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.li_guangbi.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.shi_siming.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- event.hedong_grant: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.xi_er: text-free yes; festive palace scene with court ladies carrying large embroidered litter, nothing grotesque.
+- event.xier_defeat: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.talas: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.khitan_defeat: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.li_linfu_death: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.guozhong_chancellor: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.an_court_visit: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.autumn_rains: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.fanjiang_swap: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.horse_tribute: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.fanyang_uprising: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.tongguan_battle: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.mawei: text-free yes; restrained: closed carriage, soldiers, yellow shawl, no death shown.
+- ending.e1_zhongxing: text-free yes; Tang yes; style consistent; restrained.
+- ending.e2_frontier_lost: text-free yes; Tang yes; style consistent; restrained.
+- ending.e3_restoration: text-free yes; Tang yes; style consistent; restrained.
+- ending.e4_history: text-free yes; Tang yes; style consistent; restrained.
+- ending.e5_yang: text-free yes; empty throne scene with whispering courtiers; no dragon on throne (rosettes, cranes).
+- ending.e6_abdication: text-free yes; Tang yes; style consistent; restrained.
+- event.abusi_revolt: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.changshan_rising: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.donggong_framed: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.duji_falls: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.feng_gao_executed: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.frontier_raid: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.geshu_an_quarrel: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.guozhong_raid: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.li_mi_disaster: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.nanzhao_tribute: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.summon_refused: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- event.zhenqing_to_pingyuan: text-free yes (banners plain); Tang yes, no dragons/Ming hats; style consistent; restrained (no gore).
+- ending.e5_beisi: text-free yes; Tang yes; style consistent; restrained.
+- ending.fail_changan: text-free yes; Tang yes; style consistent; restrained.
+- ending.fail_regicide: text-free yes; no violence shown.
+- ending.fail_bankrupt: text-free yes; Tang yes; style consistent; restrained.
+- ending.open_storm: text-free yes; Tang yes; style consistent; restrained.
+- portrait.feng_changqing.armor: text-free yes; face consistent with default via reference image; lamellar armour, no Ming elements; style yes.
+- portrait.yang_guozhong.purple: text-free yes; same face as scarlet version via reference; purple robe + gold fish pouch; style yes.
+- portrait.feng_changqing.armor: text-free yes; face consistent with default via reference, lamellar armour, green cloak, cane; style yes.
+- portrait.yang_guozhong.purple: text-free yes; same face as scarlet version via reference; purple robe + gold fish pouch; style yes.

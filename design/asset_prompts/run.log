@@ -1,0 +1,106 @@
+02:58:43 START 3 jobs: ['map.base', 'title.scroll', 'ui.desk']
+02:59:36 OK   ui.desk 53s attempt 1
+02:59:54 OK   title.scroll 71s attempt 1
+03:01:09 OK   map.base 146s attempt 1
+03:01:09 DONE ok=3 fail=[]
+03:01:14 START 14 jobs: ['title.scroll', 'ui.desk', 'ui.paper', 'ui.silk', 'ui.edict_paper', 'ui.lacquer_bar', 'ui.ink_button', 'ui.seal', 'ui.crisis_drum', 'ui.ribbon_xiang', 'ui.ribbon_yang', 'ui.ribbon_fanyang', 'ui.ribbon_neiting', 'icon.sheet']
+03:01:14 SKIP title.scroll
+03:01:14 SKIP ui.desk
+03:01:59 OK   ui.paper 45s attempt 1
+03:02:03 OK   ui.silk 49s attempt 1
+03:02:06 OK   ui.edict_paper 52s attempt 1
+03:02:41 OK   ui.lacquer_bar 42s attempt 1
+03:02:45 OK   ui.ink_button 42s attempt 1
+03:02:53 OK   ui.seal 47s attempt 1
+03:03:25 OK   ui.crisis_drum 44s attempt 1
+03:03:33 OK   ui.ribbon_xiang 47s attempt 1
+03:03:48 OK   ui.ribbon_yang 55s attempt 1
+03:04:09 OK   ui.ribbon_fanyang 44s attempt 1
+03:04:16 OK   ui.ribbon_neiting 43s attempt 1
+03:04:45 OK   icon.sheet 57s attempt 1
+03:04:45 DONE ok=14 fail=[]
+03:05:07 START 46 jobs: ['portrait.xuanzong.default', 'portrait.li_linfu.default', 'portrait.yang_guozhong.default', 'portrait.yang_guifei.default', 'portrait.gao_lishi.default', 'portrait.li_heng.default', 'portrait.chen_xilie.default', 'portrait.an_lushan.default', 'portrait.shi_siming.default', 'portrait.ji_wen.default', 'portrait.geshu_han.default', 'portrait.gao_xianzhi.default', 'portrait.feng_changqing.default', 'portrait.an_sishun.default', 'portrait.guo_ziyi.default', 'portrait.li_guangbi.default', 'portrait.yan_zhenqing.default', 'portrait.yan_gaoqing.default', 'portrait.xianyu_zhongtong.default', 'portrait.bian_lingcheng.default', 'event.hedong_grant', 'event.an_birthday', 'event.xier_defeat', 'event.talas', 'event.khitan_defeat', 'event.li_linfu_death', 'event.guozhong_chancellor', 'event.an_court_visit', 'event.autumn_rains', 'event.fanjiang_swap', 'event.horse_tribute', 'event.fanyang_uprising', 'event.tongguan_battle', 'event.mawei', 'portrait.an_lushan.armor', 'portrait.geshu_han.armor', 'portrait.gao_xianzhi.armor', 'portrait.guo_ziyi.armor', 'portrait.li_guangbi.armor', 'portrait.shi_siming.armor', 'ending.e1_zhongxing', 'ending.e2_xuefan', 'ending.e3_zaizao', 'ending.e4_yuyang', 'ending.e5_yangshi', 'ending.e6_chuanwei']
+03:06:00 OK   portrait.xuanzong.default 52s attempt 1
+03:06:15 OK   portrait.yang_guozhong.default 67s attempt 1
+03:06:17 OK   portrait.li_linfu.default 70s attempt 1
+03:06:57 OK   portrait.yang_guifei.default 57s attempt 1
+03:07:17 OK   portrait.li_heng.default 60s attempt 1
+03:07:22 OK   portrait.gao_lishi.default 67s attempt 1
+03:07:58 OK   portrait.chen_xilie.default 61s attempt 1
+03:08:21 OK   portrait.an_lushan.default 64s attempt 1
+03:08:23 OK   portrait.shi_siming.default 62s attempt 1
+03:08:50 OK   portrait.ji_wen.default 51s attempt 1
+03:09:25 OK   portrait.geshu_han.default 64s attempt 1
+03:09:31 OK   portrait.gao_xianzhi.default 68s attempt 1
+03:10:29 OK   portrait.an_sishun.default 64s attempt 1
+03:10:34 OK   portrait.guo_ziyi.default 63s attempt 1
+03:10:54 OK   portrait.feng_changqing.default 125s attempt 1
+03:11:31 OK   portrait.li_guangbi.default 62s attempt 1
+03:11:59 OK   portrait.yan_gaoqing.default 65s attempt 1
+03:12:21 OK   portrait.xianyu_zhongtong.default 50s attempt 1
+03:12:32 OK   portrait.yan_zhenqing.default 117s attempt 1
+03:12:52 OK   portrait.bian_lingcheng.default 53s attempt 1
+03:13:25 OK   event.hedong_grant 63s attempt 1
+03:13:49 OK   event.xier_defeat 57s attempt 1
+03:14:26 OK   event.talas 62s attempt 1
+03:14:40 OK   event.an_birthday 129s attempt 1
+03:14:58 OK   event.khitan_defeat 69s attempt 1
+03:15:23 OK   event.li_linfu_death 56s attempt 1
+03:15:44 OK   event.guozhong_chancellor 64s attempt 1
+03:16:04 OK   event.an_court_visit 67s attempt 1
+03:16:37 OK   event.autumn_rains 74s attempt 1
+03:17:08 OK   event.horse_tribute 64s attempt 1
+03:17:30 OK   event.fanyang_uprising 52s attempt 1
+03:17:49 OK   event.fanjiang_swap 126s attempt 1
+03:17:50 MISS portrait.an_lushan.armor 0s attempt 1
+03:17:50 MISS portrait.an_lushan.armor 0s attempt 2
+03:17:50 MISS portrait.geshu_han.armor 0s attempt 1
+03:17:50 MISS portrait.geshu_han.armor 0s attempt 2
+03:17:50 MISS portrait.gao_xianzhi.armor 0s attempt 1
+03:17:51 MISS portrait.gao_xianzhi.armor 0s attempt 2
+03:17:51 MISS portrait.guo_ziyi.armor 0s attempt 1
+03:17:51 MISS portrait.guo_ziyi.armor 0s attempt 2
+03:17:51 MISS portrait.li_guangbi.armor 0s attempt 1
+03:17:51 MISS portrait.li_guangbi.armor 0s attempt 2
+03:17:52 MISS portrait.shi_siming.armor 0s attempt 1
+03:17:52 MISS portrait.shi_siming.armor 0s attempt 2
+03:18:33 OK   event.mawei 63s attempt 1
+03:18:54 OK   ending.e1_zhongxing 62s attempt 1
+03:19:18 OK   event.tongguan_battle 130s attempt 1
+03:19:40 OK   ending.e2_xuefan 67s attempt 1
+03:19:57 OK   ending.e3_zaizao 63s attempt 1
+03:20:25 OK   ending.e4_yuyang 67s attempt 1
+03:20:41 OK   ending.e5_yangshi 61s attempt 1
+03:21:52 OK   ending.e6_chuanwei 114s attempt 1
+03:21:52 DONE ok=40 fail=['portrait.an_lushan.armor', 'portrait.geshu_han.armor', 'portrait.gao_xianzhi.armor', 'portrait.guo_ziyi.armor', 'portrait.li_guangbi.armor', 'portrait.shi_siming.armor']
+03:23:19 START 6 jobs: ['portrait.an_lushan.armor', 'portrait.geshu_han.armor', 'portrait.gao_xianzhi.armor', 'portrait.guo_ziyi.armor', 'portrait.li_guangbi.armor', 'portrait.shi_siming.armor']
+03:24:36 OK   portrait.geshu_han.armor 77s attempt 1
+03:25:30 OK   portrait.gao_xianzhi.armor 131s attempt 1
+03:25:31 OK   portrait.an_lushan.armor 133s attempt 1
+03:26:40 OK   portrait.guo_ziyi.armor 124s attempt 1
+03:26:42 OK   portrait.shi_siming.armor 71s attempt 1
+03:27:38 OK   portrait.li_guangbi.armor 128s attempt 1
+03:27:38 DONE ok=6 fail=[]
+03:30:54 START 17 jobs: ['event.abusi_revolt', 'event.changshan_rising', 'event.donggong_framed', 'event.duji_falls', 'event.feng_gao_executed', 'event.frontier_raid', 'event.geshu_an_quarrel', 'event.guozhong_raid', 'event.li_mi_disaster', 'event.nanzhao_tribute', 'event.summon_refused', 'event.zhenqing_to_pingyuan', 'ending.e5_beisi', 'ending.fail_changan', 'ending.fail_regicide', 'ending.fail_bankrupt', 'ending.open_storm']
+03:31:59 OK   event.changshan_rising 65s attempt 1
+03:31:59 OK   event.donggong_framed 65s attempt 1
+03:31:59 OK   event.abusi_revolt 66s attempt 1
+03:32:54 OK   event.frontier_raid 55s attempt 1
+03:33:07 OK   event.feng_gao_executed 68s attempt 1
+03:33:14 OK   event.duji_falls 75s attempt 1
+03:34:02 OK   event.geshu_an_quarrel 68s attempt 1
+03:34:09 OK   event.guozhong_raid 62s attempt 1
+03:35:08 OK   event.nanzhao_tribute 66s attempt 1
+03:35:08 OK   event.summon_refused 59s attempt 1
+03:35:35 OK   event.li_mi_disaster 141s attempt 1
+03:36:10 OK   event.zhenqing_to_pingyuan 62s attempt 1
+03:36:11 OK   ending.e5_beisi 64s attempt 1
+03:37:06 OK   ending.fail_bankrupt 55s attempt 1
+03:37:17 OK   ending.fail_regicide 67s attempt 1
+03:37:53 OK   ending.fail_changan 138s attempt 1
+03:38:08 OK   ending.open_storm 62s attempt 1
+03:38:08 DONE ok=17 fail=[]
+03:40:19 START 2 jobs: ['portrait.feng_changqing.armor', 'portrait.yang_guozhong.purple']
+03:42:25 OK   portrait.yang_guozhong.purple 126s attempt 1
+03:42:29 OK   portrait.feng_changqing.armor 130s attempt 1
+03:42:29 DONE ok=2 fail=[]
