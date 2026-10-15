@@ -1,0 +1,437 @@
+// Types for the 《天宝》 REST API — docs/CONTRACT.md §1–§2.
+// Fields the contract leaves open are typed as optional so the UI degrades gracefully
+// while the engine is still being built.
+
+export type ID = string;
+
+export interface Calendar {
+  year: number;
+  month?: number;
+  season?: string;
+  label?: string;
+}
+
+export interface PublicResource {
+  id: ID;
+  name: string;
+  amount?: number;
+  minimum?: number | null;
+  maximum?: number | null;
+  unit?: string;
+  hidden?: boolean;
+  /** Only for hidden resources in public_view: [lo, hi]. */
+  estimate?: [number, number];
+}
+
+export interface Region {
+  id: ID;
+  name: string;
+  x?: number;
+  y?: number;
+  polygon?: number[][];
+  adjacency?: Record<ID, number>;
+  stats?: Record<string, number>;
+  controller?: ID | null;
+  seat?: string;
+}
+
+export type CharacterStatus = 'alive' | 'dead' | 'imprisoned' | 'exiled' | 'retired';
+
+export interface Character {
+  id: ID;
+  name: string;
+  faction?: ID | null;
+  office?: ID | null;
+  offices?: ID[];
+  bloc?: string | null;
+  title?: string;
+  region: ID;
+  traits?: Record<string, number>;
+  persona?: string;
+  speech_style?: string;
+  knowledge?: string[];
+  status?: CharacterStatus;
+  in_transit?: Record<string, unknown> | null;
+  memories?: string[];
+}
+
+export interface Office {
+  id: ID;
+  name: string;
+  holder?: ID | null;
+  requires?: Record<string, unknown>;
+}
+
+export interface Faction {
+  id: ID;
+  name: string;
+  relations?: Record<ID, number>;
+}
+
+export interface Army {
+  id: ID;
+  name: string;
+  faction?: ID | null;
+  region: ID;
+  strength: number;
+  commander?: ID | null;
+  loyal_to?: ID | null;
+  quality?: number;
+  in_transit?: Record<string, unknown> | null;
+}
+
+export interface LedgerEntry {
+  id: ID;
+  name: string;
+  category: string;
+  amount: number;
+  kind: 'one_off' | 'recurring';
+  turns?: number | null;
+  reason?: string;
+  resource?: ID;
+}
+
+export interface Project {
+  id: ID;
+  name: string;
+  region: ID;
+  cost_per_turn?: Record<string, number>;
+  turns: number;
+  progress: number;
+  stalled?: boolean;
+}
+
+export interface StandingOrder {
+  id: ID;
+  text: string;
+  until_turn?: number | null;
+}
+
+export interface ChoiceOption {
+  id: ID;
+  text: string;
+  effects?: Op[];
+  conditions?: unknown;
+  hint?: string;
+}
+
+export interface PendingChoice {
+  id: ID;
+  event_id: ID;
+  title: string;
+  text: string;
+  options: ChoiceOption[];
+  default_option?: ID;
+  created_turn?: number;
+  deadline_turn?: number;
+  illustration?: string;
+}
+
+export interface Outcome {
+  kind: 'ending' | 'fail';
+  id: ID;
+  title: string;
+  text: string;
+  turn: number;
+}
+
+export interface PublicState {
+  scenario_id: ID;
+  turn: number;
+  calendar: Calendar;
+  resources: Record<ID, PublicResource>;
+  regions: Record<ID, Region>;
+  characters: Record<ID, Character>;
+  offices?: Record<ID, Office>;
+  factions?: Record<ID, Faction>;
+  armies?: Record<ID, Army>;
+  ledger?: LedgerEntry[];
+  projects?: Project[];
+  standing_orders?: StandingOrder[];
+  pending_clauses?: { id: ID; due_turn: number; source?: string; ops?: Op[] }[];
+  flags?: Record<string, unknown>;
+  counters?: Record<string, number>;
+  flag_turns?: Record<string, number>;
+  pending_choices?: PendingChoice[];
+  outcome?: Outcome | null;
+  rules?: Record<string, unknown>;
+}
+
+export type Op = Record<string, unknown> & { op?: string };
+
+export interface Objective {
+  id: ID;
+  title: string;
+  status: 'ok' | 'warn' | 'fail' | 'done' | 'pending' | string;
+  detail?: string;
+}
+
+export interface CrisisTerm {
+  id?: ID;
+  label: string;
+  /** a number, or [lo, hi] when the term depends on a hidden value */
+  value: number | [number, number];
+  estimated?: boolean;
+  display?: string;
+}
+
+export interface CrisisView {
+  value_or_estimate: number | [number, number];
+  display?: string;
+  band: string;
+  title?: string;
+  terms: CrisisTerm[];
+  bands?: { max: number; name: string }[];
+}
+
+export type Stance = 'support' | 'oppose' | 'neutral' | string;
+
+export interface MemorialAdvisor {
+  character: ID;
+  stance: Stance;
+  line: string;
+}
+
+export interface MemorialOption {
+  id: ID;
+  label: string;
+  ops?: Op[];
+  hint?: string;
+}
+
+export interface MemorialItem {
+  id: ID;
+  turn?: number;
+  title: string;
+  summary: string;
+  region?: ID;
+  advisors: MemorialAdvisor[];
+  options: MemorialOption[];
+  illustration?: string;
+}
+
+export interface Fact {
+  kind: string;
+  text: string;
+  entity?: string | null;
+  before?: unknown;
+  after?: unknown;
+  display?: string;
+  internal?: boolean;
+}
+
+export interface LedgerLine {
+  name: string;
+  amount: number;
+  kind: string;
+  resource: ID;
+  reason?: string;
+  display?: string;
+}
+
+export interface Battle {
+  region?: ID;
+  attacker?: ID | string;
+  defender?: ID | string;
+  winner?: ID | string;
+  attacker_loss?: number;
+  defender_loss?: number;
+  result?: string;
+  text?: string;
+}
+
+export interface CrisisReport {
+  value?: number;
+  value_or_estimate?: number | [number, number];
+  display?: string;
+  before?: number;
+  band?: string;
+  terms?: CrisisTerm[];
+}
+
+export interface TurnReport {
+  turn: number;
+  facts: Fact[];
+  ledger_lines: LedgerLine[];
+  events_fired: (ID | { id: ID; title?: string; text?: string; illustration?: string })[];
+  warnings?: string[];
+  state_hash?: string;
+  battles?: Battle[];
+  choices_opened?: (ID | PendingChoice)[];
+  outcome?: Outcome | null;
+  crisis?: CrisisReport | Record<string, unknown>;
+  resource_deltas?: Record<ID, number>;
+}
+
+export interface ViewResponse {
+  state: PublicState;
+  calendar_label: string;
+  objectives: Objective[];
+  crisis: CrisisView;
+  memorials: MemorialItem[];
+  pending_choices: PendingChoice[];
+  outcome: Outcome | null;
+  last_report: TurnReport | null;
+  can_advance: boolean;
+}
+
+export interface ScenarioInfo {
+  id: ID;
+  title: string;
+  era: string;
+  version?: string;
+  categories?: { id: ID; name: string; hint?: string }[];
+  calendar?: Record<string, unknown>;
+  asset_ids?: string[];
+  theme_css?: string;
+  valid?: boolean;
+  summary?: string;
+}
+
+export interface SessionSummary {
+  id: ID;
+  scenario: ID;
+  turn: number;
+  label?: string;
+  updated?: string;
+}
+
+export interface CreateSessionResponse {
+  id: ID;
+  scenario: ID;
+  state: PublicState;
+}
+
+export interface AdoptedOption {
+  memorial_id: ID;
+  option_id: ID;
+}
+
+export interface DraftEdictRequest {
+  sections: Record<string, string>;
+  adopted: AdoptedOption[];
+  ops?: Op[];
+}
+
+export type ClauseStatus = 'applied' | 'rejected' | 'delayed' | 'narrative_only' | 'needs_clarification';
+
+export interface Clause {
+  category: string;
+  text: string;
+  status: ClauseStatus;
+  op?: Op | null;
+  ops?: Op[];
+  reason?: string;
+  code?: string | null;
+  source?: 'memorial' | 'text' | 'client';
+  memorial_id?: ID;
+  option_id?: ID;
+  /** engine-rendered human summary of the op */
+  summary?: string;
+  label?: string;
+  group?: number | string;
+}
+
+export interface EdictReceipt {
+  id: ID;
+  clauses: Clause[];
+  execution_rate: number;
+  confirmed: boolean;
+  state?: PublicState;
+}
+
+export interface TurnResponse {
+  state: PublicState;
+  report: TurnReport;
+  memorial: string;
+  outcome: Outcome | null;
+}
+
+export interface DebateSpeech {
+  character: ID;
+  stance: Stance;
+  text: string;
+}
+
+export interface DebateResponse {
+  speeches: DebateSpeech[];
+  summary: string;
+}
+
+export interface Advice {
+  id?: ID;
+  character: ID;
+  text: string;
+  source: string;
+  turn?: number;
+}
+
+export interface HistoryEntry {
+  id: ID;
+  type: string;
+  turn: number;
+  label: string;
+  parentId: ID | null;
+  timestamp?: string;
+}
+
+export interface Health {
+  ok: boolean;
+  version: string;
+  scenarios: string[] | number;
+}
+
+export interface UsageRow {
+  id: ID;
+  kind: string;
+  provider: string;
+  model: string;
+  turn: number;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  estimated_cost: number;
+}
+
+export interface UsageResponse {
+  calls: UsageRow[];
+  total_tokens: number;
+  estimated_cost: number;
+  cost_rates_configured: boolean;
+}
+
+export interface RoleSetting {
+  provider: string;
+  model: string;
+}
+
+export interface Settings {
+  provider?: string;
+  base_url?: string;
+  model?: string;
+  api_key?: string;
+  image_provider?: string;
+  roles?: Record<string, RoleSetting>;
+  provider_configs?: Record<string, { api_key?: string; base_url?: string; model?: string }>;
+  input_cost_per_million?: number;
+  output_cost_per_million?: number;
+  presets?: Record<string, { base_url?: string; model?: string; api_key_url?: string; api_key_env?: string }>;
+  [key: string]: unknown;
+}
+
+export interface SettingsTestResult {
+  ok: boolean;
+  tool_calling?: boolean;
+  json_fallback?: boolean;
+  model?: string;
+}
+
+export interface ApiErrorBody {
+  detail?: { code?: string; message?: string } | string | { msg?: string }[];
+}
+
+export type ChatEvent =
+  | { type: 'status'; status: string }
+  | { type: 'message'; text: string }
+  | { type: 'done' }
+  | { type: 'error'; code?: string; message: string };

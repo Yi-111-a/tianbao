@@ -1,0 +1,366 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { api, IS_MOCK } from '../api/client';
+import type { Settings, UsageResponse } from '../api/types';
+import { Baoxiang } from '../components/Ornaments';
+import { Paper } from '../components/Paper';
+import { PanelShell } from '../components/PanelShell';
+import { useToast } from '../components/Toast';
+import { useGame } from '../store/game';
+import { cls } from '../lib/util';
+
+const ROLES: { id: string; name: string; note: string }[] = [
+  { id: 'edict_interpreter', name: '诏令解析', note: '把诏文拆为可执行条款' },
+  { id: 'character_chat', name: '群臣召对', note: '扮演召见之臣' },
+  { id: 'court_debate', name: '廷议', note: '撰写廷臣发言' },
+  { id: 'narrator', name: '史官纪事', note: '每季纪事' },
+  { id: 'edict_polish', name: '润色', note: '润色诏书文辞' },
+  { id: 'chronicler', name: '修史', note: '终局本纪' },
+];
+
+const PROVIDER_NAMES: Record<string, string> = {
+  mock: '演示（不联网）',
+  openai: 'OpenAI',
+  deepseek: 'DeepSeek',
+  qwen: '通义千问',
+  glm: '智谱 GLM',
+  ollama: 'Ollama 本地',
+};
+
+const CLAUDE_CMD = `claude mcp add tianbao --env SIM_MCP_MODE=client --env LLM_SIM_HOME="%APPDATA%\\tianbao" -- sim mcp`;
+const CODEX_TOML = `[mcp_servers.tianbao]
+command = "sim"
+args = ["mcp"]
+env = { SIM_MCP_MODE = "client", LLM_SIM_HOME = "C:\\\\Users\\\\<用户名>\\\\AppData\\\\Roaming\\\\tianbao" }`;
+
+type Tab = 'models' | 'mcp' | 'usage';
+
+export function SettingsPanel() {
+  const g = useGame();
+  const toast = useToast();
+  const [tab, setTab] = useState<Tab>('models');
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [form, setForm] = useState<Settings>({});
+  const [keys, setKeys] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState<'' | 'save' | 'test'>('');
+  const [test, setTest] = useState<string>('');
+  const [usage, setUsage] = useState<UsageResponse | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const s = await api.settings();
+      setSettings(s);
+      setForm({ provider: s.provider, base_url: s.base_url, model: s.model, roles: s.roles ?? {}, input_cost_per_million: s.input_cost_per_million, output_cost_per_million: s.output_cost_per_million });
+    } catch (err) {
+      toast.error(err, '设置未能读取');
+      setSettings({});
+    }
+  }, [toast]);
+  const loadUsage = useCallback(async () => {
+    try {
+      setUsage(await api.usage());
+    } catch (err) {
+      toast.error(err, '用量未能读取');
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+  useEffect(() => {
+    if (tab === 'usage') void loadUsage();
+  }, [tab, loadUsage]);
+
+  const presets = settings?.presets ?? {};
+  const providerIds = useMemo(() => Array.from(new Set(['mock', ...Object.keys(presets)])), [presets]);
+  const roleProviders = useMemo(
+    () => Array.from(new Set(Object.values(form.roles ?? {}).map((r) => r.provider).filter((p) => p && p !== 'default' && p !== form.provider && p !== 'mock'))),
+    [form],
+  );
+
+  const setRole = (role: string, field: 'provider' | 'model', value: string) =>
+    setForm((f) => ({ ...f, roles: { ...(f.roles ?? {}), [role]: { provider: 'default', model: 'default', ...(f.roles?.[role] ?? {}), [field]: value } } }));
+
+  const pickProvider = (p: string) => {
+    const preset = presets[p] ?? {};
+    setForm((f) => ({ ...f, provider: p, base_url: preset.base_url ?? f.base_url, model: preset.model ?? f.model }));
+  };
+
+  const save = async () => {
+    setBusy('save');
+    try {
+      const body: Partial<Settings> = { ...form };
+      if (keys.__global) body.api_key = keys.__global;
+      const cfgs: Settings['provider_configs'] = { ...(settings?.provider_configs ?? {}) };
+      let touched = false;
+      for (const [p, k] of Object.entries(keys)) {
+        if (p === '__global' || !k) continue;
+        cfgs[p] = { ...(cfgs[p] ?? {}), api_key: k };
+        touched = true;
+      }
+      if (touched) body.provider_configs = cfgs;
+      const s = await api.saveSettings(body);
+      setSettings(s);
+      setKeys({});
+      toast.success('设置已存。', '设置');
+    } catch (err) {
+      toast.error(err, '设置未能保存');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const runTest = async () => {
+    setBusy('test');
+    setTest('');
+    try {
+      const r = await api.testSettings();
+      setTest(r.ok ? `连接成功${r.model ? ` · ${r.model}` : ''} · ${r.tool_calling ? '支持工具调用' : '以 JSON 模式代替工具调用'}` : '连接失败');
+    } catch (err) {
+      toast.error(err, '连接测试未通过');
+      setTest('连接失败');
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const copy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('已抄录到剪贴板。', '复制');
+    } catch {
+      toast.info('剪贴板不可用，请手动选中复制。', '复制');
+    }
+  };
+
+  return (
+    <PanelShell screen="settings" onClose={g.closePanel}>
+      <Paper variant="paper" seed={515} className="settings-paper">
+        <header className="timeline-head">
+          <Baoxiang size={28} />
+          <h2 className="panel-title">设置</h2>
+          <Baoxiang size={28} />
+        </header>
+        <div className="tabs" role="tablist">
+          {(
+            [
+              ['models', '模型路由'],
+              ['mcp', 'MCP 接入'],
+              ['usage', '用量与花费'],
+            ] as [Tab, string][]
+          ).map(([id, name]) => (
+            <button key={id} role="tab" aria-selected={tab === id} className={cls('tab t-title', tab === id && 'is-on')} data-testid={`settings.tab.${id}`} disabled={tab === id} onClick={() => setTab(id)}>
+              {name}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'models' && (
+          <div className="settings-body" data-testid="settings.models">
+            {!settings ? (
+              <div className="ink-loader">
+                <i />
+                <i />
+                <i /> 读取设置
+              </div>
+            ) : (
+              <>
+                <div className="settings-grid">
+                  <label>
+                    <span className="t-title">默认模型服务</span>
+                    <select className="field" data-testid="settings.provider" value={form.provider ?? 'mock'} onChange={(e) => pickProvider(e.target.value)}>
+                      {providerIds.map((p) => (
+                        <option key={p} value={p}>
+                          {PROVIDER_NAMES[p] ?? p}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span className="t-title">接口地址</span>
+                    <input className="field" data-testid="settings.baseUrl" value={form.base_url ?? ''} onChange={(e) => setForm((f) => ({ ...f, base_url: e.target.value }))} placeholder="https://…/v1" />
+                  </label>
+                  <label>
+                    <span className="t-title">模型</span>
+                    <input className="field" data-testid="settings.model" value={form.model ?? ''} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} />
+                  </label>
+                  <label>
+                    <span className="t-title">密钥</span>
+                    <input
+                      className="field"
+                      type="password"
+                      autoComplete="off"
+                      data-testid="settings.apiKey"
+                      value={keys.__global ?? ''}
+                      placeholder={settings.api_key ? `已存：${String(settings.api_key)}（留空不改）` : '尚未填写'}
+                      onChange={(e) => setKeys((k) => ({ ...k, __global: e.target.value }))}
+                    />
+                    {presets[form.provider ?? '']?.api_key_url && <small className="muted">申请地址：{presets[form.provider ?? ''].api_key_url}</small>}
+                  </label>
+                </div>
+
+                <div className="section-label">按职分配模型</div>
+                <table className="role-table">
+                  <thead>
+                    <tr>
+                      <th>职司</th>
+                      <th>服务</th>
+                      <th>模型</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ROLES.map((r) => (
+                      <tr key={r.id}>
+                        <td>
+                          <b className="t-title">{r.name}</b>
+                          <small>{r.note}</small>
+                        </td>
+                        <td>
+                          <select className="field" data-testid={`settings.role.${r.id}.provider`} value={form.roles?.[r.id]?.provider ?? 'default'} onChange={(e) => setRole(r.id, 'provider', e.target.value)}>
+                            <option value="default">同默认</option>
+                            {providerIds.map((p) => (
+                              <option key={p} value={p}>
+                                {PROVIDER_NAMES[p] ?? p}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td>
+                          <input
+                            className="field"
+                            data-testid={`settings.role.${r.id}.model`}
+                            value={form.roles?.[r.id]?.model === 'default' ? '' : form.roles?.[r.id]?.model ?? ''}
+                            placeholder="同默认"
+                            onChange={(e) => setRole(r.id, 'model', e.target.value || 'default')}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {roleProviders.length > 0 && (
+                  <div className="settings-grid">
+                    {roleProviders.map((p) => (
+                      <label key={p}>
+                        <span className="t-title">{PROVIDER_NAMES[p] ?? p} 密钥</span>
+                        <input
+                          className="field"
+                          type="password"
+                          autoComplete="off"
+                          data-testid={`settings.providerKey.${p}`}
+                          value={keys[p] ?? ''}
+                          placeholder={settings.provider_configs?.[p]?.api_key ? `已存：${settings.provider_configs[p].api_key}` : '尚未填写'}
+                          onChange={(e) => setKeys((k) => ({ ...k, [p]: e.target.value }))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                <div className="settings-grid settings-grid--costs">
+                  <label>
+                    <span className="t-title">输入单价（每百万 token）</span>
+                    <input className="field t-num" type="number" step="0.01" data-testid="settings.inputCost" value={form.input_cost_per_million ?? 0} onChange={(e) => setForm((f) => ({ ...f, input_cost_per_million: Number(e.target.value) }))} />
+                  </label>
+                  <label>
+                    <span className="t-title">输出单价（每百万 token）</span>
+                    <input className="field t-num" type="number" step="0.01" data-testid="settings.outputCost" value={form.output_cost_per_million ?? 0} onChange={(e) => setForm((f) => ({ ...f, output_cost_per_million: Number(e.target.value) }))} />
+                  </label>
+                </div>
+
+                <div className="settings-actions">
+                  <span className="settings-test" data-testid="settings.testResult">
+                    {test}
+                  </span>
+                  <button className="btn btn-outline" data-testid="settings.test" disabled={busy !== ''} onClick={runTest}>
+                    {busy === 'test' ? '探测中…' : '测试连接'}
+                  </button>
+                  <button className="btn btn-ink" data-testid="settings.save" disabled={busy !== ''} onClick={save}>
+                    {busy === 'save' ? '存档中…' : '保存'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === 'mcp' && (
+          <div className="settings-body selectable" data-testid="settings.mcp">
+            <p>
+              《天宝》可作为 MCP 服务接入 Claude Code 或 Codex：由你所用的模型扮演群臣、解释诏令，引擎照常结算。存档与桌面版共用（<code>%APPDATA%\tianbao</code>）。
+            </p>
+            <div className="mcp-block">
+              <div className="section-label">Claude Code</div>
+              <pre className="code">{CLAUDE_CMD}</pre>
+              <button className="btn btn-outline btn-small" data-testid="settings.copy.claude" onClick={() => copy(CLAUDE_CMD)}>
+                复制命令
+              </button>
+            </div>
+            <div className="mcp-block">
+              <div className="section-label">Codex（~/.codex/config.toml）</div>
+              <pre className="code">{CODEX_TOML}</pre>
+              <button className="btn btn-outline btn-small" data-testid="settings.copy.codex" onClick={() => copy(CODEX_TOML)}>
+                复制配置
+              </button>
+            </div>
+            <p className="muted">
+              模式：<code>SIM_MCP_MODE=client</code>（默认）由调用方模型扮演；改为 <code>server</code> 则使用本页配置的模型服务。接入后对模型说「开一局天宝，先看简报」即可。<code>sim</code> 需在 PATH 中（引擎 backend 安装后提供）。
+            </p>
+          </div>
+        )}
+
+        {tab === 'usage' && (
+          <div className="settings-body" data-testid="settings.usage">
+            <div className="usage-summary">
+              <span>
+                调用 <b className="t-num">{usage?.calls.length ?? 0}</b> 次
+              </span>
+              <span>
+                合计 <b className="t-num">{(usage?.total_tokens ?? 0).toLocaleString('zh-CN')}</b> token
+              </span>
+              <span>
+                约 <b className="t-num">{(usage?.estimated_cost ?? 0).toFixed(4)}</b> 元{usage && !usage.cost_rates_configured ? '（未填单价）' : ''}
+              </span>
+              <button className="btn btn-outline btn-small" data-testid="settings.usage.refresh" onClick={loadUsage}>
+                刷新
+              </button>
+            </div>
+            <table className="usage-table">
+              <thead>
+                <tr>
+                  <th>职司</th>
+                  <th>模型</th>
+                  <th>季</th>
+                  <th>输入</th>
+                  <th>输出</th>
+                  <th>花费</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(usage?.calls ?? []).slice(-60).reverse().map((u) => (
+                  <tr key={u.id}>
+                    <td>{ROLES.find((r) => r.id === u.kind || (u.kind === 'minister_chat' && r.id === 'character_chat'))?.name ?? u.kind}</td>
+                    <td>
+                      {u.provider} · {u.model}
+                    </td>
+                    <td className="t-num">{u.turn + 1}</td>
+                    <td className="t-num">{u.input_tokens.toLocaleString('zh-CN')}</td>
+                    <td className="t-num">{u.output_tokens.toLocaleString('zh-CN')}</td>
+                    <td className="t-num">{u.estimated_cost.toFixed(4)}</td>
+                  </tr>
+                ))}
+                {(usage?.calls.length ?? 0) === 0 && (
+                  <tr>
+                    <td colSpan={6} className="muted">
+                      尚无模型调用记录{IS_MOCK ? '（演示模式）' : ''}。
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Paper>
+    </PanelShell>
+  );
+}

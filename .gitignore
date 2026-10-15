@@ -15,3 +15,5 @@ desktop/src-tauri/gen/
 test-results/
 playwright-report/
 design/asset_src/
+playtests/screens/**/*.png
+tests/node_modules
