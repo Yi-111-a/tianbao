@@ -547,6 +547,23 @@ def _eval(expr: str, values: dict[str, Any]) -> float:
 Decision = tuple[list[tuple[str, str]], dict[str, str]]  # ([(memorial_id, option_id)], {choice_id: option_id})
 
 
+# 同一奏疏的状态分支（剧本按局势写的不同版本，选项 id 相同）：策略表只写主条目，分支沿用其选择。
+VARIANT_BASE = {
+    "t4_an_troops_calm": "t4_an_troops", "t6_jiannan_vacant": "t6_jiannan", "t10_huihe_tribute": "t10_huihe",
+    "t13_lishi_warn_peace": "t13_lishi_warn", "t14_lishi": "t14_rains", "t14_frontier_peace": "t14_frontier",
+    "t15_luoyang_war": "t15_luoyang", "t16_court_war": "t16_court", "t16_famine_plain": "t16_famine",
+    "t18_hebei_watch_far": "t18_hebei_watch", "t18_tongguan_safe": "t18_tongguan", "r_tongguan_jinjun": "r_tongguan",
+}
+
+
+def lookup(table: dict[str, str], memo: dict) -> str | None:
+    """策略表中该奏疏（或其主条目）的选项；选项在本分支不存在时返回 None。"""
+    oid = table.get(memo["id"])
+    if oid is None:
+        oid = table.get(VARIANT_BASE.get(memo["id"], ""))
+    return oid if oid and any(o["id"] == oid for o in memo.get("options", [])) else None
+
+
 def do_nothing(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     """不批奏疏，事件抉择一律到期走默认项。"""
     return [], {}
@@ -584,7 +601,7 @@ HISTORICAL_MEMO = {
 def historical(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     picks = []
     for memo in visible:
-        oid = HISTORICAL_MEMO.get(memo["id"])
+        oid = lookup(HISTORICAL_MEMO, memo)
         if memo["id"] == "p_envoy" and m.turn < 16:
             continue  # 辅璆琳：十四载二月
         if memo["id"] == "p_summon" and m.turn == 18:
@@ -621,6 +638,9 @@ WISE_MEMO = {
     "p_restrain_guozhong": "restrain", "p_abdicate": "rouse", "p_an_capital": "honor",
     "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei",
     "r_west": "part", "r_sortie": "hold", "r_flight": "west", "r_relief": "relief", "r_tax": "palace",
+    "r_tongguan_jinjun": "jinjun", "p_fanyang_warn": "pay_amnesty",
+    "s_demobilize": "keep_best", "s_compensate": "honor", "s_canal": "repair", "s_finance": "abolish",
+    "s_rewards": "honor_recall", "s_hebei": "relief", "s_frontier": "garrison", "s_collaborators": "lenient",
 }
 WISE_CHOICE = {
     "guozhong_coverup": "punish", "khitan_defeat": "console", "donggong_framed_1": "protect",
@@ -642,7 +662,7 @@ def _treasury_cost(opt: dict) -> float:
 def wise(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     picks = []
     for memo in visible:
-        oid = WISE_MEMO.get(memo["id"])
+        oid = lookup(WISE_MEMO, memo)
         if memo["id"] == "p_envoy":
             oid = "eunuch" if m.r("corruption") < 50 else None
         if memo["id"] == "p_summon":
@@ -683,7 +703,7 @@ DEFENDER_MEMO = {  # 不阻止起兵，专修守备：目标 E3
 
 
 def defender(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
-    return [(x["id"], DEFENDER_MEMO[x["id"]]) for x in visible if x["id"] in DEFENDER_MEMO], {}
+    return [(x["id"], oid) for x in visible if (oid := lookup(DEFENDER_MEMO, x))], {}
 
 
 PURGE_MEMO = {  # 一味削藩、不顾边防：目标 E2
@@ -692,13 +712,13 @@ PURGE_MEMO = {  # 一味削藩、不顾边防：目标 E2
     "t13_shuofang_in": "move", "t16_longyou": "wait", "t8_an_accuse": "cut", "t2_west_calm": "reward",
     "t0_anxi": "campaign", "t0_nanzhao": "campaign", "t1_xier_report": "conscript", "t2_west": "avenge",
     "t9_jiuqu": "soothe", "t14_shence": "capital", "t17_zanpu": "ignore", "t16_supi": "return",
-    "t12_gaoshen": "court", "p_an_capital": "detain",
+    "t12_gaoshen": "court", "p_an_capital": "detain", "p_fanyang_warn": "all_three",
 }
 
 
 def purge(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     picks, choices = wise(m, visible, pending)
-    picks = [(x["id"], PURGE_MEMO[x["id"]]) for x in visible if x["id"] in PURGE_MEMO]
+    picks = [(x["id"], oid) for x in visible if (oid := lookup(PURGE_MEMO, x))]
     for p in pending:
         if p["event_id"] == "khitan_defeat":
             choices[p["id"]] = "split_pinglu"
@@ -712,12 +732,12 @@ CHAOS_MEMO = {  # 羁留禄山而放任朝争、外戚：目标 E5
     "t12_chancellor": "grant", "t17_fanyang": "envoy", "t18_last": "hereditary", "t9_jinjun_command": "eunuch",
     "t14_rains": "silent", "t16_court": "delegate", "t10_geshu": "grant", "t6_feast": "feast",
     "t11_yang": "indulge", "t3_review": "lenient", "p_summon": "soothe", "t13_lishi_warn": "noted",
-    "t12_an_away": "excuse",
+    "t12_an_away": "excuse", "p_fanyang_warn": "pay_amnesty",
 }
 
 
 def chaos(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
-    picks = [(x["id"], CHAOS_MEMO[x["id"]]) for x in visible if x["id"] in CHAOS_MEMO and not x["id"].startswith("p_envoy")]
+    picks = [(x["id"], oid) for x in visible if not x["id"].startswith("p_envoy") and (oid := lookup(CHAOS_MEMO, x))]
     choices = {p["id"]: {"khitan_defeat": "console", "fanjiang_swap": "approve",
                          "linfu_posthumous": "approve", "donggong_framed_1": "allow", "an_court_visit": "detain"}.get(p["event_id"], "")
                for p in pending}

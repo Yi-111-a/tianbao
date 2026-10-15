@@ -31,6 +31,7 @@ resources:
   # 渔阳鼙鼓本身也设为隐藏（窄区间）：其漂移含隐藏的禄山异志，若总值公开、其余分项公开，
   # 玩家可用「本季增量 − 公开分项」反推异志。设为隐藏后 UI 显示「约 a–b」与所在区段，区段名仍可读。
   # 区间半宽 = 3 ×（1 + 积弊/100），约 ±4–5 点；密结颜杲卿或中使实奏后（flag intel:rebellion_risk）减半。
+  # 情报上限：两路情报写同一 flag，只减半一次，不叠加（禄山异志同理：8 ×（1 + 积弊/100），积弊 50 时 ±12 → ±6）。
   - {id: rebellion_risk, name: 渔阳鼙鼓, initial: 30, min: 0, max: 100, unit: 点, hidden: true, estimate_width: 3}
 
 stats:
@@ -151,7 +152,10 @@ ai_routes:
 objectives:
   - id: peace
     title: 弭兵
-    detail: 天宝十四载冬（T19）范阳未起兵且渔阳鼙鼓 < 60；若乱已起，至 T23 京畿、潼关不失
+    detail: >-
+      未乱：至天宝十四载冬（T19）范阳未起兵且渔阳鼙鼓 < 60。
+      若乱已起，底线是潼关、京畿不失，且可提前终局：①叛军覆灭，或范阳收复、首逆（安禄山；兵变时为史思明）就擒或死且叛军余众 ≤ 2 万，即「乱平」，乱平后再善后两季以「再造唐室·乱平」终局；
+      ②自天宝十五载春（T20）起，东都光复或叛军总兵力 ≤ 6 万，以「再造唐室」终局；③否则守至 T23，以「潼关相持」终局。
     conditions:
       any:
         - all:
@@ -210,7 +214,7 @@ endings:
         - {kind: region_controller, operator: eq, region: jingji, faction: yan}
         - {kind: character_region, operator: eq, character: xuanzong, region: jingji}
         - {not: {kind: flag, operator: eq, key: court_fled, value: true}}
-    text: 潼关既破，叛军入苑。銮舆未及出延秋门，宫阙已非唐有。此为本游戏的失败结局，非史实。
+    text: 潼关既破，叛军入苑。銮舆未及出延秋门，宫阙已非唐有。此为本游戏的失败结局，非史实。【达成条件】叛军据京畿，而陛下未离长安。
   - id: fail_regicide
     kind: fail
     priority: 2
@@ -220,14 +224,14 @@ endings:
       all:
         - {kind: flag, operator: eq, key: mawei_refused, value: true}
         - {kind: resource, id: authority, operator: lt, value: 20}
-    text: 马嵬驿下，六军之怒无所收束。陛下执意不从，君威已不足以镇压禁旅，乱兵逼近行在。此为本游戏虚构的失败结局。
+    text: 马嵬驿下，六军之怒无所收束。陛下执意不从，君威已不足以镇压禁旅，乱兵逼近行在。此为本游戏虚构的失败结局。【达成条件】马嵬驿拒绝诛杨，且君威 < 20。
   - id: fail_bankrupt
     kind: fail
     priority: 3
     title: 帑竭兵变
     illustration: ending.fail_bankrupt
     conditions: {kind: counter, key: bankrupt_streak, operator: gte, value: 2}
-    text: 左藏空虚，太仓见底，连续两季禄廪不继。京师卫士鼓噪索饷，朝廷号令出不得宫门。此为本游戏虚构的失败结局。
+    text: 左藏空虚，太仓见底，连续两季禄廪不继。京师卫士鼓噪索饷，朝廷号令出不得宫门。此为本游戏虚构的失败结局。【达成条件】国库见底且太仓 ≤ 200，连续两季。
   # ---- 结局 ----
   - id: e6_abdication
     kind: ending
@@ -241,7 +245,7 @@ endings:
             - {kind: resource, id: authority, operator: lte, value: 15}
             - {kind: character_status, operator: eq, character: li_heng, value: alive}
             - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
-    text: 陛下倦于万机，下制传位皇太子，自居兴庆宫为太上皇。新君受命于承平未散之时，天宝之局由他人收拾。此为本游戏虚构的结局。
+    text: 陛下倦于万机，下制传位皇太子，自居兴庆宫为太上皇。新君受命于承平未散之时，天宝之局由他人收拾。此为本游戏虚构的结局。【达成条件】下制传位东宫；或未起兵而君威 ≤ 15、太子在世。
   - id: e4_history
     kind: ending
     priority: 5
@@ -256,10 +260,21 @@ endings:
             - all:
                 - {kind: turn, operator: gte, value: 23}
                 - {kind: flag, operator: eq, key: court_fled, value: true}
-    text: 潼关失守，銮舆西幸。马嵬驿前，六军不发，杨氏一门不能保全。太子北上，陛下入蜀，盛世自此终结。史实大略如此：天宝十五载六月潼关失守，玄宗出奔，马嵬兵变；七月太子即位于灵武。
-  - id: e3_restoration
+    text: 潼关失守，銮舆西幸。马嵬驿前，六军不发，杨氏一门不能保全。太子北上，陛下入蜀，盛世自此终结。史实大略如此：天宝十五载六月潼关失守，玄宗出奔，马嵬兵变；七月太子即位于灵武。【达成条件】潼关失守，且马嵬之变已起（诛杨或拒诛），或至 T23 车驾已西幸。
+  - id: e3_quelled
     kind: ending
     priority: 6
+    title: 再造唐室·乱平
+    illustration: ending.e3_restoration
+    conditions:
+      all:
+        - {kind: flag_age, key: rebellion_quelled, operator: gte, value: 2}
+        - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
+        - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
+    text: 叛军既平，首逆或擒或死；复员、抚恤、漕运、财计次第收拾，河北州县重归版籍。渔阳鼙鼓虽曾动地，终未动摇社稷。此为本游戏的反事实结局。【达成条件】叛乱已平（叛军覆灭，或范阳收复、首逆就擒或死且余众不足两万）；乱平后已善后两季；潼关未失；京畿未陷。
+  - id: e3_restoration
+    kind: ending
+    priority: 7
     title: 再造唐室
     illustration: ending.e3_restoration
     conditions:
@@ -271,10 +286,10 @@ endings:
         - any:
             - {kind: flag, operator: eq, key: duji_recovered, value: true}
             - {kind: army_strength, faction: yan, operator: lte, value: 60000}
-    text: 潼关固守，两京无恙；河北义旗与朔方之师断其归路，叛军日蹙。渔阳鼙鼓虽已动地，大唐终未倾覆。此为本游戏的反事实结局。
+    text: 潼关固守，两京无恙；河北义旗与朔方之师断其归路，叛军日蹙。渔阳鼙鼓虽已动地，大唐终未倾覆。此为本游戏的反事实结局。【达成条件】乱已起；已至天宝十五载春（T20）或以后；潼关未失；京畿未陷；东都已光复或叛军总兵力不足六万。
   - id: e3_standoff
     kind: ending
-    priority: 7
+    priority: 8
     title: 再造唐室·潼关相持
     illustration: ending.e3_restoration
     conditions:
@@ -283,10 +298,10 @@ endings:
         - {kind: turn, operator: gte, value: 23}
         - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
         - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
-    text: 潼关岿然，叛军顿兵关外，一年不得西进。天下虽未复旧观，社稷已然无虞，平乱只在时日之间。此为本游戏的反事实结局。
+    text: 潼关岿然，叛军顿兵关外，一年不得西进。天下虽未复旧观，社稷已然无虞，平乱只在时日之间。此为本游戏的反事实结局。【达成条件】乱已起；守至 T23；潼关未失；京畿未陷。
   - id: e5_yang
     kind: ending
-    priority: 8
+    priority: 9
     title: 杨氏擅国
     illustration: ending.e5_yang
     conditions:
@@ -299,10 +314,10 @@ endings:
                 - {kind: turn, operator: gte, value: 19}
                 - {kind: resource, id: authority, operator: lte, value: 40}
         - {kind: office_holder, operator: eq, office: you_xiang, character: yang_guozhong}
-    text: 鼙鼓未动，而政出杨门。右相兼领数十使，外戚列戟，百官侧目，陛下深居南内，诏敕皆由中书拟定。此为本游戏虚构的结局。
+    text: 鼙鼓未动，而政出杨门。右相兼领数十使，外戚列戟，百官侧目，陛下深居南内，诏敕皆由中书拟定。此为本游戏虚构的结局。【达成条件】未起兵；朝堂倾轧 ≥ 80；君威 ≤ 25（或 T19 时 ≤ 40）；杨国忠为右相。
   - id: e5_beisi
     kind: ending
-    priority: 9
+    priority: 10
     title: 北司掌兵
     illustration: ending.e5_beisi
     conditions:
@@ -315,10 +330,10 @@ endings:
                 - {kind: turn, operator: gte, value: 19}
                 - {kind: resource, id: authority, operator: lte, value: 40}
         - {kind: flag, operator: eq, key: eunuch_army, value: true}
-    text: 禁军尽归内侍，宦官监临诸镇，宰相不能与闻兵事。天宝之后，北司之势自此而起。此为本游戏虚构的结局。
+    text: 禁军尽归内侍，宦官监临诸镇，宰相不能与闻兵事。天宝之后，北司之势自此而起。此为本游戏虚构的结局。【达成条件】未起兵；朝堂倾轧 ≥ 80；君威 ≤ 25（或 T19 时 ≤ 40）；禁军归内侍监。
   - id: e1_zhongxing
     kind: ending
-    priority: 10
+    priority: 11
     title: 天宝中兴·消弭兵祸
     illustration: ending.e1_zhongxing
     conditions:
@@ -329,10 +344,10 @@ endings:
         - {kind: resource, id: authority, operator: gte, value: 50}
         - {kind: resource, id: treasury, operator: gt, value: 0}
         - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
-    text: 天宝十四载冬，范阳无事。边镇分权，禁旅渐整，朝堂不复相倾。渔阳鼙鼓终未响起，盛世得以延续。此为本游戏的反事实结局。
+    text: 天宝十四载冬，范阳无事。边镇分权，禁旅渐整，朝堂不复相倾。渔阳鼙鼓终未响起，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵；渔阳鼙鼓 < 60；君威 ≥ 50；国库有余；边患 < 80。
   - id: e2_frontier_lost
     kind: ending
-    priority: 11
+    priority: 12
     title: 削藩而边陲失
     illustration: ending.e2_frontier_lost
     conditions:
@@ -341,14 +356,14 @@ endings:
         - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
         - {kind: resource, id: fanzhen_power, operator: lte, value: 40}
         - {kind: resource, id: frontier_pressure, operator: gte, value: 80}
-    text: 节度分权，内地无忧，然边兵既撤，吐蕃、契丹交侵，西陲烽燧不绝。天下未乱于内，而困于外。此为本游戏虚构的结局。
+    text: 节度分权，内地无忧，然边兵既撤，吐蕃、契丹交侵，西陲烽燧不绝。天下未乱于内，而困于外。此为本游戏虚构的结局。【达成条件】至 T19 未起兵；外重内轻 ≤ 40；边患 ≥ 80。
   - id: open_storm
     kind: ending
     priority: 99
     title: 山雨欲来
     illustration: ending.open_storm
     conditions: {kind: turn, operator: gte, value: 999}   # 仅作 fallback_ending 使用
-    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局：可进入延长模式。）
+    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局：可进入延长模式。）【达成条件】至期限仍未满足其他任何结局。
 
 asset_requirements:
   # 本剧本的资产命名：立绘按用途分槽位，地区卡暂缺（舆图用 map.json 多边形）
@@ -368,3 +383,27 @@ settings:
   corruption_resource: corruption
   campaign_turns: 20
   epilogue_turns: 4
+  # 情报精度：不设 intel_min_width，引擎缺省 floor = 基础半宽 / 2，即情报只减半一次、多路情报不叠加（与奏疏提示一致）。
+  # 结局条件与复盘里的旗标 / 计数器显示名
+  flag_labels:
+    rebellion_started: 范阳已起兵
+    rebellion_quelled: 叛乱已平
+    mutiny_rebellion: 范阳旧部兵变
+    tongguan_lost: 潼关失守
+    duji_lost: 东都失守
+    duji_recovered: 东都光复
+    court_fled: 车驾西幸
+    capital_defended: 天子固守长安
+    mawei_mutiny: 马嵬之变
+    mawei_yang_executed: 马嵬诛杨
+    mawei_refused: 马嵬拒诛杨氏
+    abdicated: 传位东宫
+    eunuch_army: 禁军归内侍监
+    an_detained: 禄山留京解镇
+    hedong_to_an: 河东归禄山
+    hedong_secured: 河东归朝廷节制
+  counter_labels:
+    bankrupt_streak: 府库枯竭连续季数
+    alarm_seasons: 山雨欲来以上季数
+    strife_streak: 朝争高位连续季数
+    fanyang_measures: 安抚范阳旧部之策
