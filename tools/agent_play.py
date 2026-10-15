@@ -19,6 +19,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
+# A frozen engine checkout keeps long agent runs stable while engine/ is being edited.
+ENGINE = Path(os.environ.get("TIANBAO_ENGINE_DIR", ROOT / "engine"))
 
 PROMPT = """你要完整地玩一局桌面策略游戏《天宝》：你扮演天宝十载（751 年）的唐玄宗。游戏通过名为 tianbao 的 MCP 服务提供工具。
 
@@ -43,19 +45,22 @@ def mcp_env(home: Path) -> dict[str, str]:
     }
 
 
-def run_codex(run_dir: Path, prompt: str, model: str) -> list[str]:
+def run_codex(run_dir: Path, model: str) -> list[str]:
     env = mcp_env(run_dir / "home")
     server = f"mcp_servers.tianbao"
+    # Call codex.js through node directly: the npm .CMD shim goes through cmd.exe, whose
+    # code page mangles UTF-8 arguments. The prompt itself is sent on stdin (see main()).
+    codex_js = Path(os.environ["APPDATA"]) / "npm" / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
     cmd = [
-        shutil.which("codex") or "codex", "exec", "--skip-git-repo-check", "--json",
+        shutil.which("node") or "node", str(codex_js), "exec", "--skip-git-repo-check", "--json",
         "-m", model, "-C", str(run_dir),
         "-s", "workspace-write", "-c", 'windows.sandbox="unelevated"',
         "-c", f'{server}.command={json.dumps(str(PYTHON))}',
         "-c", f'{server}.args=["-m","cli.main","mcp"]',
-        "-c", f'{server}.cwd={json.dumps(str(ROOT / "engine" / "backend"))}',
+        "-c", f'{server}.cwd={json.dumps(str(ENGINE / "backend"))}',
         "-c", f"{server}.env={{{', '.join(f'{k}={json.dumps(v)}' for k, v in env.items())}}}",
         "-c", f"{server}.tool_timeout_sec=120",
-        prompt,
+        "-c", f'{server}.default_tools_approval_mode="approve"',
     ]
     return cmd
 
@@ -66,7 +71,7 @@ def run_claude(run_dir: Path, prompt: str) -> list[str]:
             "tianbao": {
                 "command": str(PYTHON),
                 "args": ["-m", "cli.main", "mcp"],
-                "cwd": str(ROOT / "engine" / "backend"),
+                "cwd": str(ENGINE / "backend"),
                 "env": mcp_env(run_dir / "home"),
             }
         }
@@ -82,6 +87,16 @@ def run_claude(run_dir: Path, prompt: str) -> list[str]:
     ]
 
 
+def _decode(data: bytes) -> str:
+    lines = []
+    for raw in data.splitlines():
+        try:
+            lines.append(raw.decode("utf-8"))
+        except UnicodeDecodeError:
+            lines.append(raw.decode("cp936", errors="replace"))
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("agent", choices=["codex", "claude"])
@@ -94,11 +109,15 @@ def main() -> int:
     (run_dir / "home").mkdir(parents=True, exist_ok=True)
     report = run_dir / "report.md"
     prompt = PROMPT.format(seed=args.seed, report=report)
-    cmd = run_codex(run_dir, prompt, args.model) if args.agent == "codex" else run_claude(run_dir, prompt)
+    cmd = run_codex(run_dir, args.model) if args.agent == "codex" else run_claude(run_dir, prompt)
 
     started = time.time()
-    with open(run_dir / "events.jsonl", "w", encoding="utf-8") as out, open(run_dir / "stderr.txt", "w", encoding="utf-8") as err:
-        proc = subprocess.run(cmd, cwd=run_dir, stdout=out, stderr=err, encoding="utf-8", errors="replace")
+    stdin_prompt = prompt.encode("utf-8") if args.agent == "codex" else None
+    proc = subprocess.run(cmd, cwd=run_dir, input=stdin_prompt, capture_output=True)
+    # On a Chinese-locale Windows, codex writes its JSON stream in the ANSI code page (cp936),
+    # not UTF-8; decode each line with whichever codec is valid.
+    (run_dir / "events.jsonl").write_text(_decode(proc.stdout), encoding="utf-8")
+    (run_dir / "stderr.txt").write_text(_decode(proc.stderr), encoding="utf-8")
     elapsed = time.time() - started
     summary = {"agent": args.agent, "run": args.run, "exit": proc.returncode, "seconds": round(elapsed), "report": report.exists()}
     (run_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
