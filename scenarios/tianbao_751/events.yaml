@@ -1,0 +1,1027 @@
+# 事件。语义见 CONTRACT §1.5：带 when 的事件只在该回合掷一次 gravity；
+# 不带 when 的条件事件每季重掷，直到触发（repeatable 事件按 cooldown 再次触发）。
+# 史实时点见 docs/FACT_CHECK.md；数值、概率与反事实分支为本游戏设计（【虚】）。
+# kind: system 为账目/控制权记账事件，不弹窗、不配图。
+
+# ======================== 开局记账 ========================
+- id: opening_ledger
+  title: 岁计定额
+  kind: system
+  when: {turn: 1}
+  gravity: 1.0
+  text: 度支定本年岁计：边镇军费、宫廷用度、京师禄米按季支出。
+  effects:
+    - {op: add_ledger, name: 边镇军费, category: treasury, amount: -165, kind: recurring, reason: 十节度镇兵衣赐（游戏折算）}
+    - {op: add_ledger, name: 宫廷用度, category: treasury, amount: -45, kind: recurring, reason: 内廷与宴赏（游戏折算）}
+    - {op: add_ledger, name: 京师禄米军粮, category: grain, amount: -125, kind: recurring, reason: 百官禄米与禁军口粮（游戏折算）}
+
+# ======================== 第一幕 751：三镇之始 ========================
+- id: hedong_grant
+  title: 河东归禄山
+  kind: scheduled
+  when: {turn: 1}
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: hedong_denied, value: true}}
+      - {not: {kind: flag, operator: eq, key: hedong_to_an, value: true}}
+  gravity: 0.95
+  text: 制以安禄山兼河东节度使，吉温为节度副使、知留后。平卢、范阳、河东三镇之兵，自此尽在一人。
+  effects:
+    - {op: appoint, character: an_lushan, office: hedong_jds}
+    - {op: set_army_commander, army: hedong_army, character: an_lushan}
+    - {op: adjust_resource, resource: fanzhen_power, delta: 8, reason: 安禄山兼领三镇}
+    - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 兵权日重}
+    - {op: set_flag, key: hedong_to_an, value: true}
+  illustration: event.hedong_grant
+
+- id: an_returns
+  title: 禄山辞归范阳
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 1}
+      - {kind: turn, operator: lte, value: 3}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_kept_in_capital, value: true}}
+  gravity: 0.9
+  text: 安禄山陛辞，驰驿还镇。
+  effects:
+    - {op: move_character, character: an_lushan, to_region: fanyang}
+  illustration: event.hedong_grant
+
+- id: xier_defeat
+  title: 西洱河之败
+  kind: scheduled
+  when: {turn: 1}
+  conditions: {not: {kind: flag, operator: eq, key: nanzhao_appeased, value: true}}
+  gravity: 0.8
+  text: 剑南节度使鲜于仲通将兵八万讨南诏，大败于泸南，士卒死者六万，仲通仅以身免。
+  effects:
+    - {op: adjust_resource, resource: grain, delta: -150, reason: 西南军资尽没}
+    - {op: adjust_resource, resource: morale, delta: -4, reason: 两京募兵，行者愁怨}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 6, reason: 南诏结怨}
+    - {op: adjust_army, army: jiannan_army, delta: -20000, reason: 西洱河之败}
+    - {op: adjust_relation, a: tang, b: nanzhao, delta: -40}
+    - {op: adjust_relation, a: nanzhao, b: tang, delta: -40}
+    - {op: set_flag, key: xier_defeat, value: true}
+  illustration: event.xier_defeat
+
+- id: nanzhao_tribute
+  title: 南诏请和
+  kind: scheduled
+  when: {turn: 1}
+  conditions: {kind: flag, operator: eq, key: nanzhao_appeased, value: true}
+  gravity: 0.7
+  text: 南诏遣使谢罪，请还所掠，复修职贡。西南暂安。
+  effects:
+    - {op: adjust_resource, resource: frontier_pressure, delta: -4, reason: 南诏归附}
+    - {op: adjust_relation, a: tang, b: nanzhao, delta: 20}
+    - {op: adjust_relation, a: nanzhao, b: tang, delta: 20}
+    - {op: set_flag, key: nanzhao_peace, value: true}
+  illustration: event.nanzhao_tribute
+
+- id: nanzhao_to_tubo
+  title: 南诏附吐蕃
+  kind: scheduled
+  when: {turn: 2}
+  conditions: {kind: flag, operator: eq, key: xier_defeat, value: true}
+  gravity: 0.8
+  text: 南诏北臣吐蕃，吐蕃以其王为「赞普钟」。西南自此多事。
+  effects:
+    - {op: adjust_relation, a: nanzhao, b: tubo, delta: 30}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 4, reason: 南诏与吐蕃合}
+    - {op: set_flag, key: nanzhao_tubo, value: true}
+  illustration: event.xier_defeat
+
+- id: guozhong_coverup
+  title: 掩败叙功
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 2}
+      - {kind: flag, operator: eq, key: xier_defeat, value: true}
+      - {not: {kind: flag, operator: eq, key: guozhong_restrained, value: true}}
+  gravity: 0.7
+  text: 杨国忠为鲜于仲通掩其败状，仍叙其战功。朝野皆知其非，莫敢言者。
+  effects:
+    - {op: adjust_resource, resource: corruption, delta: 3, reason: 掩败叙功}
+    - {op: adjust_resource, resource: authority, delta: -1, reason: 赏罚不明}
+  choices:
+    - id: punish
+      text: 追究仲通，罢其节度
+      effects:
+        - {op: dismiss, character: xianyu_zhongtong, office: jiannan_jds}
+        - {op: adjust_resource, resource: authority, delta: 3, reason: 赏罚复明}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 国忠衔恨}
+        - {op: adjust_resource, resource: corruption, delta: -2, reason: 掩败者受惩}
+        - {op: set_flag, key: zhongtong_punished, value: true}
+    - id: condone
+      text: 默许其奏
+      effects:
+        - {op: adjust_resource, resource: corruption, delta: 1, reason: 默许掩败}
+        - {op: set_flag, key: coverup_condoned, value: true}
+  default_choice: condone
+  choice_deadline: 1
+  illustration: event.xier_defeat
+
+- id: talas
+  title: 怛罗斯之战
+  kind: scheduled
+  when: {turn: 2}
+  conditions: {not: {kind: flag, operator: eq, key: anxi_restrained, value: true}}
+  gravity: 0.75
+  text: 高仙芝将蕃、汉兵三万深入，与大食战于怛罗斯，葛逻禄部众临阵倒戈，唐军大败。（《通鉴》系于是年夏，未详月日。）
+  effects:
+    - {op: adjust_army, army: anxi_army, delta: -12000, reason: 怛罗斯之败}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 5, reason: 西域震动}
+    - {op: adjust_resource, resource: authority, delta: -2, reason: 败报入朝}
+    - {op: set_flag, key: talas_defeat, value: true}
+  illustration: event.talas
+
+- id: khitan_defeat
+  title: 土护真水之败
+  kind: scheduled
+  when: {turn: 2}
+  conditions: {not: {kind: flag, operator: eq, key: an_forbidden_khitan, value: true}}
+  gravity: 0.7
+  text: 安禄山将三道兵六万讨契丹，以奚骑为向导，战于土护真水，大败，禄山仅以二十骑走免。范阳兵锐气顿挫。
+  effects:
+    - {op: adjust_army, army: fanyang_army, delta: -20000, reason: 土护真水之败}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 3, reason: 契丹气盛}
+    - {op: set_flag, key: an_weakened, value: true}
+  choices:
+    - id: reprimand
+      text: 遣使问罪
+      effects:
+        - {op: adjust_resource, resource: authority, delta: 3, reason: 败军问罪}
+        - {op: adjust_resource, resource: an_ambition, delta: 4, reason: 禄山惧罪}
+    - id: console
+      text: 优诏慰抚
+      effects:
+        - {op: adjust_resource, resource: an_ambition, delta: -2, reason: 感恩}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 败而不罚}
+    - id: split_pinglu
+      text: 乘机分平卢，另授节度
+      effects:
+        - {op: dismiss, character: an_lushan, office: pinglu_jds}
+        - {op: set_army_commander, army: pinglu_army, character: null}
+        - {op: adjust_resource, resource: fanzhen_power, delta: -8, reason: 平卢别授}
+        - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 禄山失镇而怨}
+        - {op: set_flag, key: pinglu_split, value: true}
+  default_choice: console
+  choice_deadline: 1
+  illustration: event.khitan_defeat
+
+- id: donggong_framed_1
+  title: 东宫被构
+  kind: scheduled
+  when: {turn: 3}
+  conditions: {kind: resource, id: court_strife, operator: gte, value: 55}
+  gravity: 0.7
+  text: 中书奏东宫属官与边将书信往还，请付有司推按。太子闻之，惶恐待罪。（本游戏仿天宝初东宫诸案而设。）
+  effects:
+    - {op: adjust_resource, resource: court_strife, delta: 2, reason: 东宫疑案}
+  choices:
+    - id: protect
+      text: 庇护东宫，交大理寺复核
+      effects:
+        - {op: adjust_trait, character: li_heng, trait: loyalty, delta: 1}
+        - {op: adjust_resource, resource: court_strife, delta: 1, reason: 右相不悦}
+        - {op: set_flag, key: donggong_protected, value: true}
+    - id: allow
+      text: 听中书推按
+      effects:
+        - {op: adjust_trait, character: li_heng, trait: loyalty, delta: -1}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 大狱复兴}
+        - {op: set_flag, key: donggong_isolated, value: true}
+  default_choice: allow
+  choice_deadline: 1
+  illustration: event.donggong_framed
+
+# ======================== 第二幕 752–753：相位更迭 ========================
+- id: an_rebuilds
+  title: 禄山补募骁骑
+  kind: scheduled
+  when: {turn: 4}
+  conditions: {kind: flag, operator: eq, key: an_weakened, value: true}
+  gravity: 0.8
+  text: 安禄山收聚散卒，又以同罗、奚、契丹降者补其部伍，范阳兵势渐复。
+  effects:
+    - {op: adjust_army, army: fanyang_army, delta: 15000, reason: 收降补伍}
+    - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 范阳兵复振}
+  illustration: event.khitan_defeat
+
+- id: abusi_revolt
+  title: 阿布思叛逃
+  kind: scheduled
+  when: {turn: 4}
+  gravity: 0.6
+  text: 朔方部将、同罗酋长阿布思畏安禄山相图，率部叛归漠北。其余众何所隶属，朝议未决。
+  effects:
+    - {op: adjust_resource, resource: frontier_pressure, delta: 5, reason: 阿布思叛去}
+    - {op: set_flag, key: abusi_gone, value: true}
+  choices:
+    - id: to_an
+      text: 准禄山收其部众
+      effects:
+        - {op: adjust_resource, resource: fanzhen_power, delta: 4, reason: 同罗精骑归范阳}
+        - {op: adjust_army, army: fanyang_army, delta: 5000, reason: 收阿布思余众}
+        - {op: set_flag, key: abusi_to_an, value: true}
+    - id: to_shuofang
+      text: 令归朔方
+      effects:
+        - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 部众不入范阳}
+        - {op: adjust_army, army: shuofang_army, delta: 3000, reason: 收阿布思余众}
+        - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 所求不遂}
+  default_choice: to_an
+  choice_deadline: 1
+  illustration: event.abusi_revolt
+
+- id: linfu_resigns_shuofang
+  title: 林甫辞朔方
+  kind: scheduled
+  when: {turn: 5}
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: shuofang_reliable, value: true}}
+      - {kind: office_holder, operator: eq, office: shuofang_jds, character: li_linfu}
+  gravity: 0.85
+  text: 李林甫辞遥领朔方节度，荐河西节度使安思顺自代。
+  effects:
+    - {op: dismiss, character: li_linfu, office: shuofang_jds}
+    - {op: appoint, character: an_sishun, office: shuofang_jds}
+    - {op: set_army_commander, army: shuofang_army, character: an_sishun}
+    - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 朔方、河西并于一人}
+  illustration: event.li_linfu_death
+
+- id: donggong_framed_2
+  title: 东宫再被构
+  kind: scheduled
+  when: {turn: 6}
+  conditions:
+    all:
+      - {kind: resource, id: court_strife, operator: gte, value: 60}
+      - {not: {kind: flag, operator: eq, key: donggong_protected, value: true}}
+  gravity: 0.6
+  text: 又有告东宫亲属交通术士者，事连太子妃家。太子上表请离婚以自明。（本游戏虚构情节，仿天宝初旧案。）
+  effects:
+    - {op: adjust_resource, resource: court_strife, delta: 2, reason: 东宫疑案再起}
+  choices:
+    - id: protect
+      text: 驳回告者，抚慰太子
+      effects:
+        - {op: adjust_trait, character: li_heng, trait: loyalty, delta: 1}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 处断有体}
+        - {op: set_flag, key: donggong_protected, value: true}
+    - id: allow
+      text: 准太子所请
+      effects:
+        - {op: adjust_trait, character: li_heng, trait: loyalty, delta: -1}
+        - {op: adjust_trait, character: li_heng, trait: fear, delta: 1}
+        - {op: adjust_resource, resource: court_strife, delta: 3, reason: 东宫孤危}
+        - {op: set_flag, key: donggong_isolated, value: true}
+  default_choice: allow
+  choice_deadline: 1
+  illustration: event.donggong_framed
+
+- id: geshu_an_quarrel
+  title: 哥安失和
+  kind: scheduled
+  when: {turn: 7}
+  conditions: {not: {kind: flag, operator: eq, key: geshu_an_kept_apart, value: true}}
+  gravity: 0.6
+  text: 哥舒翰、安禄山同时入朝，上使高力士设宴城东，欲令二人释怨。席间二人言语相激，几至失色，力士目止乃罢。
+  effects:
+    - {op: adjust_resource, resource: court_strife, delta: 4, reason: 边帅相仇}
+    - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 怨望}
+  illustration: event.geshu_an_quarrel
+
+- id: li_linfu_death
+  title: 李林甫薨
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 7}
+      - {kind: character_status, operator: eq, character: li_linfu, value: alive}
+  gravity: 0.9
+  text: 右相李林甫病卒。执政十九年，一朝去位，政事堂虚席以待。
+  effects:
+    - {op: set_character_status, character: li_linfu, status: dead, cause: 病卒}
+    - {op: adjust_resource, resource: court_strife, delta: 5, reason: 相位出缺}
+    - {op: set_flag, key: chancellor_vacant, value: true}
+  illustration: event.li_linfu_death
+
+- id: guozhong_chancellor
+  title: 杨国忠拜右相
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: chancellor_vacant, value: true}
+      - {not: {kind: flag, operator: eq, key: chancellor_chosen, value: true}}
+      - {kind: office_holder, operator: eq, office: you_xiang, character: null}
+      - {kind: character_status, operator: eq, character: yang_guozhong, value: alive}
+  gravity: 0.85
+  text: 以杨国忠为右相，兼文部尚书，所判诸使并如故。
+  effects:
+    - {op: appoint, character: yang_guozhong, office: you_xiang}
+    - {op: adjust_resource, resource: court_strife, delta: 8, reason: 外戚入相}
+    - {op: adjust_resource, resource: an_ambition, delta: 4, reason: 禄山素轻国忠}
+    - {op: set_flag, key: guozhong_in_power, value: true}
+  illustration: event.guozhong_chancellor
+
+- id: chen_promoted
+  title: 陈希烈进右相
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: chancellor_vacant, value: true}
+      - {kind: flag, operator: eq, key: chancellor_pick, value: chen_xilie}
+      - {kind: character_status, operator: eq, character: chen_xilie, value: alive}
+  gravity: 1.0
+  text: 依前旨，以陈希烈为右相。杨氏不得入政事堂，国忠怏怏。（反事实）
+  effects:
+    - {op: dismiss, character: chen_xilie, office: zuo_xiang}
+    - {op: appoint, character: chen_xilie, office: you_xiang}
+    - {op: adjust_resource, resource: court_strife, delta: 2, reason: 国忠失望}
+    - {op: set_flag, key: chancellor_vacant, value: false}
+  illustration: event.guozhong_chancellor
+
+- id: zhenqing_promoted
+  title: 擢颜真卿知政事
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: chancellor_vacant, value: true}
+      - {kind: flag, operator: eq, key: chancellor_pick, value: yan_zhenqing}
+      - {kind: character_status, operator: eq, character: yan_zhenqing, value: alive}
+  gravity: 1.0
+  text: 依前旨，超拜颜真卿为右相。清流相庆，权门侧目。（反事实）
+  effects:
+    - {op: appoint, character: yan_zhenqing, office: you_xiang}
+    - {op: adjust_resource, resource: court_strife, delta: 5, reason: 骤贵招忌}
+    - {op: adjust_resource, resource: corruption, delta: -4, reason: 清流秉政}
+    - {op: set_flag, key: chancellor_vacant, value: false}
+    - {op: set_flag, key: zhenqing_kept, value: true}
+  illustration: event.guozhong_chancellor
+
+- id: linfu_posthumous
+  title: 追削李林甫
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 8}
+      - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
+      - {kind: character_status, operator: eq, character: li_linfu, value: dead}
+  gravity: 0.7
+  text: 杨国忠使人诱安禄山奏李林甫与阿布思约为父子，请削其官爵。
+  choices:
+    - id: approve
+      text: 准奏，追削官爵
+      effects:
+        - {op: adjust_resource, resource: court_strife, delta: 3, reason: 追罪故相}
+        - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 兔死狐悲}
+        - {op: adjust_resource, resource: authority, delta: -1, reason: 是非出于私怨}
+    - id: reject
+      text: 人死罪消，不许
+      effects:
+        - {op: adjust_resource, resource: court_strife, delta: 2, reason: 国忠失意}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 不兴死狱}
+  default_choice: approve
+  choice_deadline: 1
+  illustration: event.li_linfu_death
+
+- id: zhenqing_to_pingyuan
+  title: 颜真卿出守平原
+  kind: scheduled
+  when: {turn: 8}
+  conditions:
+    all:
+      - {kind: character_status, operator: eq, character: yan_zhenqing, value: alive}
+      - {not: {kind: flag, operator: eq, key: zhenqing_kept, value: true}}
+  gravity: 0.6
+  text: 颜真卿为权臣所忌，出为平原太守。（出守年份史无明文，本游戏置于此季。）
+  effects:
+    - {op: move_character, character: yan_zhenqing, to_region: hedong}
+    - {op: set_flag, key: zhenqing_out, value: true}
+  illustration: event.zhenqing_to_pingyuan
+
+- id: zhenqing_arrives
+  title: 颜真卿赴平原
+  kind: system
+  conditions:
+    all:
+      - {kind: flag_age, key: zhenqing_out, operator: gte, value: 1}
+      - {kind: character_region, operator: eq, character: yan_zhenqing, region: hedong}
+  gravity: 1.0
+  text: 颜真卿抵河北，视事平原。
+  effects:
+    - {op: appoint, character: yan_zhenqing, office: pingyuan_taishou}
+    - {op: move_character, character: yan_zhenqing, to_region: hebei}
+
+# ======================== 第三幕 754–755：将相交恶 ========================
+- id: an_sets_out
+  title: 禄山应召入朝
+  kind: scheduled
+  when: {turn: 11}
+  conditions:
+    all:
+      - {kind: resource, id: rebellion_risk, operator: lt, value: 75}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.7
+  text: 杨国忠屡言禄山必反，请召之以验。诏下，安禄山即日驰驿入朝。
+  effects:
+    - {op: move_character, character: an_lushan, to_region: jingji}
+    - {op: set_flag, key: an_coming, value: true}
+  illustration: event.an_court_visit
+
+- id: an_court_visit
+  title: 禄山华清宫入朝
+  kind: scheduled
+  when: {turn: 12}
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_coming, value: true}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+  gravity: 1.0
+  text: 安禄山谒见于华清宫，自陈为国忠所忌。陛下慰谕之，议加其官。如何处置，在此一季。
+  effects:
+    - {op: set_flag, key: an_at_court, value: true}
+    - {op: adjust_resource, resource: rebellion_risk, delta: -4, reason: 奉召而至，疑谤稍息}
+  choices:
+    - id: detain
+      text: 留京授相，以他人代镇
+      effects:
+        - {op: dismiss, character: an_lushan, office: fanyang_jds}
+        - {op: dismiss, character: an_lushan, office: pinglu_jds}
+        - {op: dismiss, character: an_lushan, office: hedong_jds}
+        - {op: set_army_commander, army: fanyang_army, character: null}
+        - {op: set_army_commander, army: pinglu_army, character: null}
+        - {op: set_army_commander, army: hedong_army, character: null}
+        - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 三镇易帅}
+        - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 羁留京师}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
+        - {op: set_flag, key: an_detained, value: true}
+    - id: release
+      text: 纵其归镇
+      effects:
+        - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 疑惧未解}
+    - id: honor
+      text: 加左仆射，厚赐遣还
+      effects:
+        - {op: adjust_resource, resource: an_ambition, delta: -4, reason: 恩赐优渥}
+        - {op: adjust_resource, resource: treasury, delta: -120, reason: 厚赐}
+        - {op: adjust_resource, resource: fanzhen_power, delta: 3, reason: 宠任益隆}
+        - {op: set_flag, key: an_honored, value: true}
+  default_choice: release
+  choice_deadline: 1
+  illustration: event.an_court_visit
+
+- id: an_flees_back
+  title: 禄山疾驰归范阳
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 13}
+      - {kind: flag, operator: eq, key: an_at_court, value: true}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.8
+  text: 安禄山辞归，出关即疾驰而去，若恐追还。
+  effects:
+    - {op: move_character, character: an_lushan, to_region: fanyang}
+    - {op: adjust_resource, resource: rebellion_risk, delta: 3, reason: 归心似箭}
+  illustration: event.an_court_visit
+
+- id: fanyang_mutiny
+  title: 范阳兵变
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {kind: flag_age, key: an_detained, operator: gte, value: 1}
+      - {kind: resource, id: an_ambition, operator: gte, value: 55}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 0.35
+  text: 范阳诸将闻主帅被留，鼓噪不受代，推史思明为帅，声言迎还东平郡王。（反事实）
+  effects:
+    - {op: set_flag, key: rebellion_started, value: true}
+    - {op: set_flag, key: mutiny_rebellion, value: true}
+    - {op: set_army_faction, army: fanyang_army, faction: yan}
+    - {op: set_army_commander, army: fanyang_army, character: shi_siming}
+    - {op: adjust_army, army: fanyang_army, delta: -25000, reason: 诸将离心，部伍不全}
+    - {op: set_region_controller, region: fanyang, faction: yan}
+    - {op: adjust_resource, resource: authority, delta: -6, reason: 边兵哗变}
+    - {op: move_army, army: fanyang_army, to_region: hebei}
+  illustration: event.fanyang_uprising
+
+- id: li_mi_disaster
+  title: 李宓南诏覆没
+  kind: scheduled
+  when: {turn: 13}
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
+      - {not: {kind: flag, operator: eq, key: nanzhao_peace, value: true}}
+  gravity: 0.6
+  text: 李宓将兵七万再讨南诏，深入粮尽，疫疠大作，全军覆没。国忠隐其败。
+  effects:
+    - {op: adjust_resource, resource: grain, delta: -200, reason: 南征军资}
+    - {op: adjust_resource, resource: morale, delta: -6, reason: 道路怨嗟}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 6, reason: 西南再败}
+    - {op: adjust_resource, resource: corruption, delta: 2, reason: 讳败}
+    - {op: set_flag, key: li_mi_defeat, value: true}
+  illustration: event.li_mi_disaster
+
+- id: autumn_rains
+  title: 关中霖雨
+  kind: scheduled
+  when: {turn: 14}
+  gravity: 0.6
+  text: 自秋徂冬，霖雨不止，关中禾稼多损，物价腾踊。
+  effects:
+    - {op: adjust_resource, resource: grain, delta: -120, reason: 霖雨伤稼}
+    - {op: adjust_resource, resource: morale, delta: -3, reason: 米价腾贵}
+    - {op: set_flag, key: autumn_rains, value: true}
+    - {op: remember, character: gao_lishi, fact: 霖雨之季，陛下曾问老奴天变之由}
+  illustration: event.autumn_rains
+
+- id: xilie_dismissed
+  title: 陈希烈罢相
+  kind: scheduled
+  when: {turn: 14}
+  conditions:
+    all:
+      - {kind: office_holder, operator: eq, office: zuo_xiang, character: chen_xilie}
+      - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
+  gravity: 0.6
+  text: 陈希烈与国忠不协，罢知政事；以韦见素同平章事。
+  effects:
+    - {op: dismiss, character: chen_xilie, office: zuo_xiang}
+    - {op: adjust_resource, resource: court_strife, delta: 2, reason: 政事堂唯国忠一人}
+  illustration: event.guozhong_chancellor
+
+- id: geshu_stroke
+  title: 哥舒翰风疾
+  kind: scheduled
+  when: {turn: 16}
+  conditions: {kind: character_status, operator: eq, character: geshu_han, value: alive}
+  gravity: 0.7
+  text: 哥舒翰入朝途中得风疾，自此留居京师养病。
+  effects:
+    - {op: adjust_trait, character: geshu_han, trait: ability, delta: -3}
+    - {op: set_flag, key: geshu_ill, value: true}
+  illustration: event.geshu_an_quarrel
+
+- id: fanjiang_swap
+  title: 请以蕃将代汉将
+  kind: scheduled
+  when: {turn: 16}
+  conditions:
+    all:
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 50}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.85
+  text: 安禄山遣副将何千年入奏，请以蕃将三十二人代汉将。韦见素以为必反之兆，请勿许。
+  choices:
+    - id: approve
+      text: 准奏，付中书写告身
+      effects:
+        - {op: adjust_resource, resource: fanzhen_power, delta: 6, reason: 范阳尽用蕃将}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 6, reason: 部曲私属}
+        - {op: set_flag, key: fanjiang_swapped, value: true}
+    - id: reject
+      text: 驳回，汉将留任
+      effects:
+        - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 所请不遂}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 猜嫌已见}
+  default_choice: approve
+  choice_deadline: 1
+  illustration: event.fanjiang_swap
+
+- id: envoy_bribed
+  title: 中使受贿
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: resource, id: corruption, operator: gte, value: 50}
+      - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
+  gravity: 0.8
+  text: 察看范阳的中使受安禄山厚赂，还奏盛言禄山竭忠奉国，无二心。
+  effects:
+    - {op: set_flag, key: envoy_bribed, value: true}
+    - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 朝廷可欺}
+    - {op: adjust_resource, resource: corruption, delta: 1, reason: 中使纳贿}
+  illustration: event.horse_tribute
+
+- id: envoy_truth
+  title: 中使实奏
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: resource, id: corruption, operator: lt, value: 50}
+      - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
+  gravity: 0.8
+  text: 中使还自范阳，具言其兵马、仓储与将吏去就，朝廷始知其虚实。
+  effects:
+    - {op: set_flag, key: envoy_truth, value: true}
+    - {op: set_flag, key: "intel:an_ambition", value: true}
+    - {op: set_flag, key: "intel:rebellion_risk", value: true}
+  illustration: event.horse_tribute
+
+- id: guozhong_raid
+  title: 京兆围禄山宅
+  kind: scheduled
+  when: {turn: 17}
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
+      - {not: {kind: flag, operator: eq, key: guozhong_restrained, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.6
+  text: 杨国忠欲激禄山速反以取信于上，使京兆尹围其长安宅第，捕其门客送御史台狱，潜杀之。
+  effects:
+    - {op: adjust_resource, resource: rebellion_risk, delta: 8, reason: 门客被杀}
+    - {op: adjust_resource, resource: court_strife, delta: 5, reason: 将相交恶}
+    - {op: adjust_resource, resource: an_ambition, delta: 4, reason: 惧祸}
+  illustration: event.guozhong_raid
+
+- id: horse_tribute
+  title: 禄山献马三千
+  kind: scheduled
+  when: {turn: 18}
+  conditions:
+    all:
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 55}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.8
+  text: 安禄山表献马三千匹，欲以本军部送入京。河南尹达奚珣疑有变，奏请缓至冬日，由官中自备夫马。
+  choices:
+    - id: delay
+      text: 依达奚珣之议，缓至冬季
+      effects:
+        - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 谋泄而疑}
+    - id: accept
+      text: 受马，许其部送
+      effects:
+        - {op: adjust_region, region: jingji, stat: defense, delta: -10}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 4, reason: 胡骑近畿}
+  default_choice: delay
+  choice_deadline: 1
+  illustration: event.horse_tribute
+
+- id: summon_refused
+  title: 召而不至
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_summoned, value: true}
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 60}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+  gravity: 0.8
+  text: 中使宣旨召禄山入朝，禄山不拜，托辞不至。中使还，具奏其状。
+  effects:
+    - {op: adjust_resource, resource: authority, delta: -5, reason: 诏命不行}
+    - {op: adjust_resource, resource: rebellion_risk, delta: 8, reason: 反形已露}
+    - {op: set_flag, key: summon_refused, value: true}
+  illustration: event.summon_refused
+
+- id: summon_obeyed
+  title: 禄山奉召
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_summoned, value: true}
+      - {kind: resource, id: rebellion_risk, operator: lt, value: 60}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+      - {not: {kind: flag, operator: eq, key: summon_refused, value: true}}
+  gravity: 0.7
+  text: 安禄山奉诏入朝，留子弟守范阳。君臣相见，疑谤稍解。（反事实）
+  effects:
+    - {op: move_character, character: an_lushan, to_region: jingji}
+    - {op: adjust_resource, resource: rebellion_risk, delta: -6, reason: 奉召而来}
+    - {op: adjust_resource, resource: an_ambition, delta: -3, reason: 君臣释疑}
+    - {op: set_flag, key: an_kept_in_capital, value: true}
+  illustration: event.an_court_visit
+
+# ======================== 第四幕：渔阳鼙鼓 ========================
+- id: fanyang_uprising
+  title: 范阳起兵
+  kind: scheduled
+  when: {turn: 19}
+  conditions:
+    all:
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 60}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+  gravity: 0.9
+  text: 安禄山发所部及同罗、奚、契丹、室韦兵十五万，号二十万，诈称奉密旨讨杨国忠，反于范阳。河北州县望风瓦解。
+  effects:
+    - {op: set_flag, key: rebellion_started, value: true}
+    - {op: set_army_faction, army: fanyang_army, faction: yan}
+    - {op: set_region_controller, region: fanyang, faction: yan}
+    - {op: set_region_controller, region: hebei, faction: yan}
+    - {op: adjust_region, region: hebei, stat: order, delta: -30}
+    - {op: adjust_resource, resource: authority, delta: -10, reason: 渔阳鼙鼓动地来}
+    - {op: move_army, army: fanyang_army, to_region: hebei}
+  illustration: event.fanyang_uprising
+
+- id: early_uprising
+  title: 禄山提前举兵
+  kind: conditional
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 8}
+      - {kind: resource, id: rebellion_risk, operator: gte, value: 90}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
+  gravity: 0.5
+  text: 范阳惧祸已极，安禄山不待秋高马肥，仓卒举兵南下。（反事实）
+  effects:
+    - {op: set_flag, key: rebellion_started, value: true}
+    - {op: set_army_faction, army: fanyang_army, faction: yan}
+    - {op: set_region_controller, region: fanyang, faction: yan}
+    - {op: set_region_controller, region: hebei, faction: yan}
+    - {op: adjust_region, region: hebei, stat: order, delta: -30}
+    - {op: adjust_resource, resource: authority, delta: -10, reason: 鼙鼓早鸣}
+    - {op: move_army, army: fanyang_army, to_region: hebei}
+  illustration: event.fanyang_uprising
+
+- id: pinglu_follows
+  title: 平卢从乱
+  kind: system
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: pinglu_split, value: true}}
+      - {not: {kind: flag, operator: eq, key: mutiny_rebellion, value: true}}
+  gravity: 1.0
+  text: 平卢兵随范阳俱反。
+  effects:
+    - {op: set_army_faction, army: pinglu_army, faction: yan}
+    - {op: set_region_controller, region: pinglu, faction: yan}
+    - {op: move_army, army: pinglu_army, to_region: fanyang}
+
+- id: hedong_defects
+  title: 河东兵从乱
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: flag, operator: eq, key: hedong_to_an, value: true}
+      - {not: {kind: flag, operator: eq, key: hedong_secured, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+  gravity: 0.5
+  text: 河东兵马多为禄山部曲，一部东出从乱，余众溃散。太原城守尚在。
+  effects:
+    - {op: adjust_army, army: hedong_army, delta: -30000, reason: 溃散}
+    - {op: set_army_faction, army: hedong_army, faction: yan}
+    - {op: move_army, army: hedong_army, to_region: hebei}
+    - {op: set_flag, key: hedong_defected, value: true}
+  illustration: event.fanyang_uprising
+
+- id: hedong_holds
+  title: 太原拒命
+  kind: system
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: flag, operator: eq, key: hedong_to_an, value: true}
+      - {kind: flag, operator: eq, key: hedong_secured, value: true}
+  gravity: 1.0
+  text: 河东将吏拒受伪命，太原坚守。
+  effects:
+    - {op: set_army_commander, army: hedong_army, character: null}
+    - {op: set_flag, key: hedong_to_an, value: false}
+
+- id: duji_falls
+  title: 东都陷落
+  kind: conditional
+  conditions:
+    all:
+      - {kind: region_controller, operator: eq, region: duji, faction: yan}
+      - {not: {kind: flag, operator: eq, key: duji_lost, value: true}}
+  gravity: 1.0
+  text: 叛军渡河，连陷州郡，入东都洛阳。
+  effects:
+    - {op: set_flag, key: duji_lost, value: true}
+    - {op: adjust_resource, resource: authority, delta: -6, reason: 东都失守}
+    - {op: adjust_resource, resource: morale, delta: -5, reason: 两京震恐}
+  illustration: event.duji_falls
+
+- id: duji_recovered
+  title: 收复东都
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: duji_lost, value: true}
+      - {kind: region_controller, operator: eq, region: duji, faction: tang}
+      - {not: {kind: flag, operator: eq, key: duji_recovered, value: true}}
+  gravity: 1.0
+  text: 官军入洛阳，东都光复。（反事实）
+  effects:
+    - {op: set_flag, key: duji_recovered, value: true}
+    - {op: adjust_resource, resource: authority, delta: 8, reason: 东都光复}
+  illustration: event.duji_falls
+
+- id: hebei_recovered
+  title: 河北反正
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: region_controller, operator: eq, region: hebei, faction: tang}
+      - {not: {kind: flag, operator: eq, key: hebei_recovered, value: true}}
+      - {kind: flag_age, key: rebellion_started, operator: gte, value: 1}
+  gravity: 1.0
+  text: 官军出井陉，河北诸郡杀伪官，复为唐守。叛军归路已断。
+  effects:
+    - {op: set_flag, key: hebei_recovered, value: true}
+    - {op: adjust_region, region: hebei, stat: order, delta: 10}
+  illustration: event.changshan_rising
+
+- id: rebel_supply_cut
+  title: 叛军粮道断绝
+  kind: system
+  repeatable: true
+  cooldown: 0
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: region_controller, operator: eq, region: hebei, faction: tang}
+  gravity: 1.0
+  text: 河北在官军之手，叛军后路不通，逃亡日众。
+  effects:
+    - {op: adjust_army, army: fanyang_army, delta: -15000, reason: 粮道断绝}
+    - {op: adjust_army, army: pinglu_army, delta: -6000, reason: 粮道断绝}
+
+- id: canal_cut
+  title: 漕运阻绝
+  kind: system
+  repeatable: true
+  cooldown: 0
+  conditions:
+    any:
+      - {kind: region_controller, operator: eq, region: duji, faction: yan}
+      - {kind: region_controller, operator: eq, region: henan, faction: yan}
+  gravity: 1.0
+  text: 汴、洛为叛军所据，江淮漕米不能西上。
+  effects:
+    - {op: adjust_resource, resource: grain, delta: -60, reason: 漕运阻绝}
+
+- id: tongguan_falls
+  title: 潼关失守
+  kind: conditional
+  conditions:
+    all:
+      - {kind: region_controller, operator: eq, region: tongguan, faction: yan}
+      - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
+  gravity: 1.0
+  text: 潼关不守，关中门户洞开，京师大骇，百官逃散。
+  effects:
+    - {op: set_flag, key: tongguan_lost, value: true}
+    - {op: adjust_resource, resource: authority, delta: -12, reason: 潼关失守}
+    - {op: adjust_resource, resource: morale, delta: -8, reason: 关中大骇}
+  illustration: event.tongguan_battle
+
+- id: jingji_falls
+  title: 长安陷落
+  kind: system
+  conditions:
+    all:
+      - {kind: region_controller, operator: eq, region: jingji, faction: yan}
+      - {not: {kind: flag, operator: eq, key: jingji_lost, value: true}}
+  gravity: 1.0
+  text: 叛军入长安。
+  effects:
+    - {op: set_flag, key: jingji_lost, value: true}
+
+- id: feng_gao_executed
+  title: 边令诚构陷
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: duji_lost, value: true}
+      - {not: {kind: flag, operator: eq, key: commanders_trusted, value: true}}
+      - {kind: character_status, operator: eq, character: feng_changqing, value: alive}
+  gravity: 0.7
+  text: 监军边令诚入奏，诬封常清、高仙芝之罪。敕至军中，二将皆斩。
+  effects:
+    - {op: set_character_status, character: feng_changqing, status: dead, cause: 敕斩于军中}
+    - {op: set_character_status, character: gao_xianzhi, status: dead, cause: 敕斩于军中}
+    - {op: adjust_resource, resource: authority, delta: -4, reason: 自毁良将}
+    - {op: adjust_resource, resource: morale, delta: -3, reason: 军中寒心}
+  illustration: event.feng_gao_executed
+
+- id: changshan_rising
+  title: 颜杲卿常山举义
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: character_status, operator: eq, character: yan_gaoqing, value: alive}
+      - {not: {kind: flag, operator: eq, key: changshan_rising, value: true}}
+      - {not: {kind: flag, operator: eq, key: gaoqing_contacted, value: true}}
+  gravity: 0.5
+  text: 常山太守颜杲卿起兵讨贼，河北诸郡多有响应，叛军后方震动。
+  effects:
+    - {op: set_flag, key: changshan_rising, value: true}
+    - {op: adjust_region, region: hebei, stat: order, delta: 10}
+    - {op: adjust_army, army: fanyang_army, delta: -10000, reason: 后方分兵}
+  illustration: event.changshan_rising
+
+- id: changshan_rising_prepared
+  title: 常山暗线举义
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {kind: character_status, operator: eq, character: yan_gaoqing, value: alive}
+      - {not: {kind: flag, operator: eq, key: changshan_rising, value: true}}
+      - {kind: flag, operator: eq, key: gaoqing_contacted, value: true}
+  gravity: 0.95
+  text: 早受密旨的颜杲卿应时而起，常山、平原相约举兵，叛军归路受阻。
+  effects:
+    - {op: set_flag, key: changshan_rising, value: true}
+    - {op: adjust_region, region: hebei, stat: order, delta: 15}
+    - {op: adjust_army, army: fanyang_army, delta: -18000, reason: 后方分兵}
+  illustration: event.changshan_rising
+
+- id: changshan_falls
+  title: 常山陷落
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag_age, key: changshan_rising, operator: gte, value: 1}
+      - {not: {kind: flag, operator: eq, key: hebei_recovered, value: true}}
+      - {kind: character_status, operator: eq, character: yan_gaoqing, value: alive}
+  gravity: 0.7
+  text: 史思明等急攻常山，城陷，颜杲卿被执，送洛阳，骂贼而死。
+  effects:
+    - {op: set_character_status, character: yan_gaoqing, status: dead, cause: 骂贼殉国}
+    - {op: adjust_region, region: hebei, stat: order, delta: -10}
+    - {op: adjust_resource, resource: morale, delta: 2, reason: 忠烈之风}
+  illustration: event.changshan_rising
+
+- id: court_flees
+  title: 车驾西幸
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: tongguan_lost, value: true}
+      - {kind: character_region, operator: eq, character: xuanzong, region: jingji}
+      - {not: {kind: flag, operator: eq, key: court_fled, value: true}}
+      - {not: {kind: flag, operator: eq, key: capital_defended, value: true}}
+  gravity: 0.9
+  text: 潼关失守的消息传来，陛下与贵妃、皇子、杨国忠等出延秋门西行，百官多不知。
+  effects:
+    - {op: set_flag, key: court_fled, value: true}
+    - {op: move_character, character: xuanzong, to_region: jiannan}
+    - {op: adjust_resource, resource: authority, delta: -4, reason: 弃京师}
+  illustration: event.mawei
+
+- id: mawei
+  title: 马嵬驿
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: court_fled, value: true}
+      - {not: {kind: flag, operator: eq, key: mawei_mutiny, value: true}}
+  gravity: 0.95
+  text: 车驾西幸，至马嵬驿，将士饥疲，皆愤怒。龙武大将军陈玄礼以祸由杨国忠，欲诛之。六军不发。
+  effects:
+    - {op: set_flag, key: mawei_mutiny, value: true}
+  choices:
+    - id: execute
+      text: 诛国忠，赐贵妃自尽
+      effects:
+        - {op: set_character_status, character: yang_guozhong, status: dead, cause: 马嵬兵变}
+        - {op: set_character_status, character: yang_guifei, status: dead, cause: 赐死于马嵬}
+        - {op: set_flag, key: mawei_yang_executed, value: true}
+    - id: refuse
+      text: 拒绝，以君威镇抚六军
+      effects:
+        - {op: adjust_resource, resource: authority, delta: -8, reason: 拂逆众怒}
+        - {op: set_flag, key: mawei_refused, value: true}
+  default_choice: execute
+  choice_deadline: 1
+  illustration: event.mawei
+
+# ======================== 常设随机事件 ========================
+- id: frontier_raid
+  title: 吐蕃寇边
+  kind: random
+  repeatable: true
+  cooldown: 3
+  conditions: {kind: resource, id: frontier_pressure, operator: gte, value: 60}
+  gravity: 0.35
+  text: 吐蕃寇陇右、河西，掠人畜而去。边州告急。
+  effects:
+    - {op: adjust_resource, resource: grain, delta: -40, reason: 边州赈给}
+    - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 寇边}
+    - {op: adjust_region, region: longyou, stat: order, delta: -3}
+  illustration: event.frontier_raid

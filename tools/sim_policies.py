@@ -12,7 +12,15 @@
 - engine：调用 engine/backend/simcore 的 resolve_turn / apply / matches。若引擎尚不支持
   pending_choices / outcome 等字段，脚本会说明缺什么并退出。
 
-输出：每种策略在 N 个种子上的结局分布、T19（或终局）时渔阳鼙鼓的分布。
+策略：
+- do_nothing：不批奏疏，事件抉择到期走默认项（默认项即史事）。目标：T19 鼙鼓 75–90，多数走 E4。
+- historical：按史事批奏疏（准河东、征南诏、杨国忠拜相、遣中使……）。
+- wise：按「好诏」批奏疏，量入为出。目标：E1 可达。
+- half_wise：每条 wise 选择以 50% 概率采纳，用来看难度梯度。
+- defender / purge / chaos：结局可达性探针，分别瞄准 E3、E2、E5。它们不是玩家画像。
+
+输出：每种策略在 N 个种子上的结局分布，以及 T19（或终局）时渔阳鼙鼓的分布。
+--coverage 检查每季可见奏疏的最少条数（硬性要求为 ≥ 3）。
 """
 from __future__ import annotations
 
@@ -98,7 +106,7 @@ class Model:
             for a in pack["armies"]
         }
         self.factions = {f["id"]: dict(f.get("relations", {})) for f in pack["factions"]}
-        self.wars = {frozenset((w["a"], w["b"])) for w in sc.get("wars", [])}
+        self.wars = {frozenset(w.values() if isinstance(w, dict) else w) for w in sc.get("wars", [])}
         self.flags: dict[str, Any] = {}
         self.flag_turns: dict[str, int] = {}
         self.counters: dict[str, int] = {}
@@ -340,7 +348,7 @@ class Model:
             return False
         if frozenset((f1, f2)) in self.wars:
             return True
-        return self.factions.get(f1, {}).get(f2, 0) < 0
+        return self.factions.get(f1, {}).get(f2, 0) < 0 or self.factions.get(f2, {}).get(f1, 0) < 0
 
     def resolve(self) -> None:
         T = self.turn + 1
@@ -357,7 +365,10 @@ class Model:
                 self.ledger.remove(e)
         # 5 收入
         for key, inc in self.sc["formulas"].get("income", {}).items():
-            for reg in self.regions.values():
+            regions = list(self.regions.values()) if inc.get("per_region", True) else [{"stats": {}, "controller": self.main}]
+            for reg in regions:
+                if inc.get("controlled_only") and reg["controller"] != self.main:
+                    continue
                 val = _eval(inc["formula"], {**reg["stats"], "turn": T})
                 rid = inc["resource"]
                 self.res[rid]["amount"] = self._clamp(rid, self.res[rid]["amount"] + val)
@@ -481,6 +492,8 @@ class Model:
 
     def _ai_march(self) -> None:
         for route_def in self.sc.get("ai_routes", []):
+            if not self.matches(route_def.get("conditions"), self.turn + 1):
+                continue
             route, fac = route_def["route"], route_def["faction"]
             for a in self.armies.values():
                 if a["faction"] != fac or a["transit"] or a["strength"] <= 0 or a["region"] not in route:
@@ -539,7 +552,7 @@ HISTORICAL_MEMO = {
     "t16_court": "delegate", "t16_luoyang_haul": "all",
     "t17_jingji": "calm", "t17_harvest": "keep",
     "p_envoy": "eunuch",
-    "r_luoyang": "recruit", "r_tongguan": "jinjun", "r_trust": "supervise", "r_guo": "march",
+    "r_luoyang": "recruit", "r_tongguan": "jinjun", "r_trust": "supervise", "r_guo": "march", "r_shuofang_march": "march",
     "r_hebei": "hebei", "r_west": "call", "r_sortie": "sortie", "r_flight": "west", "r_tax": "merchants",
 }
 
@@ -579,7 +592,7 @@ WISE_MEMO = {
     "t17_fanyang": "envoy", "t17_jingji": "levy", "t17_harvest": "grain",
     "t18_hebei_watch": "permit", "t18_tongguan": "jinjun",
     "p_restrain_guozhong": "restrain", "p_abdicate": "rouse",
-    "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_hebei": "hebei",
+    "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei",
     "r_west": "part", "r_sortie": "hold", "r_flight": "west", "r_relief": "relief", "r_tax": "palace",
 }
 WISE_CHOICE = {
@@ -635,7 +648,7 @@ DEFENDER_MEMO = {  # 不阻止起兵，专修守备：目标 E3
     "t9_jinjun_command": "general", "t12_tongguan": "fortify", "t14_shuofang_in": "stay",
     "t15_luoyang": "troops", "t17_jingji": "levy", "t18_tongguan": "hedong", "t13_hedong": "replace",
     "p_gaoqing": "contact",
-    "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_hebei": "hebei", "r_tongguan": "jinjun",
+    "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei", "r_tongguan": "jinjun",
     "r_west": "part", "r_sortie": "hold", "r_relief": "enlist", "r_tax": "palace",
 }
 
@@ -735,6 +748,17 @@ def check_memorial_coverage(pack: dict, seeds: int = 30) -> dict[int, int]:
 
 
 # ---------------- 引擎后端 ----------------
+class EngineView:
+    """把引擎 WorldState 包成策略函数所需的最小接口（turn / seed / r() / armies / main）。"""
+
+    def __init__(self, state: Any, seed: int, main: str) -> None:
+        self.st, self.turn, self.seed, self.main = state, state.turn, seed, main
+        self.armies = {k: {"faction": a.faction, "strength": a.strength} for k, a in state.armies.items()}
+
+    def r(self, rid: str) -> float:
+        return self.st.resources[rid].amount
+
+
 def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False) -> dict[str, Any]:
     sys.path.insert(0, str(ROOT / "engine" / "backend"))
     from simcore.domain import models as M  # noqa: E402
@@ -742,49 +766,48 @@ def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False) ->
     if missing:
         raise SystemExit(f"引擎尚未实现 CONTRACT §1 字段：{', '.join(missing)}。请先用 --backend model。")
     from simcore.domain.apply import apply  # noqa: E402
-    from simcore.domain.events import matches  # noqa: E402
+    from simcore.domain.memorials import adopted_ops, is_visible, memorial_flag  # noqa: E402
     from simcore.domain.turn import resolve_turn  # noqa: E402
     from simcore.scenario.loader import build_initial_state, load_scenario  # noqa: E402
 
     scenario = load_scenario(PACK)
+    scenario.setdefault("memorials", pack["memorials"])
     state = build_initial_state(scenario)
     rng = random.Random(seed)
-    memorials = pack["memorials"]
+    main = pack["scenario"].get("settings", {}).get("player_faction", "tang")
     risk19 = None
-
-    class View:  # 让策略函数用同一接口读取引擎状态
-        def __init__(self, st):
-            self.st, self.turn, self.main = st, st.turn, "tang"
-            self.armies = {k: {"faction": a.faction, "strength": a.strength} for k, a in st.armies.items()}
-
-        def r(self, rid):
-            return self.st.resources[rid].amount
-
     while state.outcome is None and state.turn < 40:
-        visible = [
-            mm for mm in memorials
-            if f"memorial:{mm['id']}" not in state.flags
-            and ("turn" not in mm or mm["turn"] == state.turn)
-            and ("conditions" not in mm or matches(mm["conditions"], state))
-        ]
+        visible = [mm for mm in scenario["memorials"] if is_visible(mm, state)]
         pending = [{"id": p.id, "event_id": p.event_id} for p in state.pending_choices]
-        memos, choices = policy(View(state), visible, pending)
+        memos, choices = policy(EngineView(state, seed, main), visible, pending)
         for mid, oid in memos:
-            opt = next(o for o in next(x for x in memorials if x["id"] == mid)["options"] if o["id"] == oid)
-            for op in opt.get("ops", []):
+            for op in adopted_ops(scenario, state, mid, oid):
                 try:
                     state, _ = apply(op, state)
-                except ValueError:
-                    pass
-            state, _ = apply({"op": "set_flag", "key": f"memorial:{mid}", "value": oid}, state)
+                except ValueError as exc:
+                    if trace:
+                        print(f"   T{state.turn} 拒绝 {mid}/{oid} {op.get('op')}: {exc}")
+            state, _ = apply({"op": "set_flag", "key": memorial_flag(mid), "value": oid}, state)
         for cid, oid in choices.items():
             try:
                 state, _ = apply({"op": "choose_event_option", "choice_id": cid, "option_id": oid}, state)
-            except ValueError:
-                pass
+            except ValueError as exc:
+                if trace:
+                    print(f"   T{state.turn} 抉择失败 {cid}: {exc}")
+        if trace:
+            g = lambda k: state.resources[k].amount  # noqa: E731
+            print(f"T{state.turn:>2} 鼙鼓{g('rebellion_risk'):5.1f} 异志{g('an_ambition'):5.1f} 外重{g('fanzhen_power'):5.1f} "
+                  f"朝争{g('court_strife'):5.1f} 君威{g('authority'):5.1f} 国库{g('treasury'):6.0f} 太仓{g('grain'):6.0f}")
         state, report = resolve_turn(state, rng, scenario)
+        if trace:
+            for w in report.warnings:
+                print("   ⚠", w)
+            if report.events_fired:
+                print("   事件", report.events_fired)
         if state.turn == 19:
             risk19 = state.resources["rebellion_risk"].amount
+    if trace:
+        print("结局", state.outcome)
     return {"outcome": state.outcome.id if state.outcome else "none", "turn": state.turn,
             "risk19": risk19 if risk19 is not None else state.resources["rebellion_risk"].amount,
             "rebellion": bool(state.flags.get("rebellion_started"))}

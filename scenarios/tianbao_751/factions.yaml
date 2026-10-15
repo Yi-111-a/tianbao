@@ -1,0 +1,22 @@
+# 势力。朝内派系不建 faction，见 characters.yaml 的 bloc 字段。关系值为【虚】。
+- id: tang
+  name: 唐廷
+  relations: {yan: -100, tubo: -50, nanzhao: -20, khitan_xi: -60, dashi: -30, huihe: 20}
+- id: yan
+  name: 大燕  # 起兵后启用；起兵前无所属军队与疆土
+  relations: {tang: -100}
+- id: tubo
+  name: 吐蕃
+  relations: {tang: -50, nanzhao: 10}
+- id: nanzhao
+  name: 南诏
+  relations: {tang: -20, tubo: 10}
+- id: khitan_xi
+  name: 契丹·奚
+  relations: {tang: -60}
+- id: dashi
+  name: 大食  # 远在葱岭以西，无地图区域；以事件体现
+  relations: {tang: -30}
+- id: huihe
+  name: 回纥  # 延长模式启用
+  relations: {tang: 20}

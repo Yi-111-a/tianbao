@@ -1,0 +1,344 @@
+# 《天宝》剧本：天宝十载（751）
+# 依据 docs/TIANBAO_751_OUTLINE.md；史实核对见 docs/FACT_CHECK.md。
+# 所有数值、概率与反事实分支均为本游戏设计（【虚】）。
+id: tianbao_751
+manifest_version: 1
+version: "0.1.0"
+requires_engine: ">=0.2.0"   # 依赖 CONTRACT §1 的新机制
+title: 天宝十载
+era: 盛唐
+start_date: "0751-01-01"
+turn_unit: season
+currency: 贯
+calendar:
+  eras:
+    - {from_turn: 1, name: 天宝, start_year: 10}
+  seasons: [春, 夏, 秋, 冬]
+  turn_format: "{era}{year}载{season}"
+  number_system: chinese
+  pre_game_turns: 1
+
+resources:
+  - {id: treasury, name: 国库, initial: 3000, min: 0, unit: 万贯}
+  - {id: grain, name: 太仓粮储, initial: 2500, min: 0, unit: 万石}
+  - {id: authority, name: 君威, initial: 68, min: 0, max: 100, unit: 点}
+  - {id: morale, name: 民心, initial: 62, min: 0, max: 100, unit: 点}
+  - {id: corruption, name: 吏治积弊, initial: 55, min: 0, max: 100, unit: 点}
+  - {id: frontier_pressure, name: 边患, initial: 45, min: 0, max: 100, unit: 点}
+  - {id: an_ambition, name: 禄山异志, initial: 40, min: 0, max: 100, unit: 点, hidden: true, estimate_width: 8}
+  - {id: fanzhen_power, name: 外重内轻, initial: 70, min: 0, max: 100, unit: 点}
+  - {id: court_strife, name: 朝堂倾轧, initial: 50, min: 0, max: 100, unit: 点}
+  # 渔阳鼙鼓本身也设为隐藏（窄区间）：其漂移含隐藏的禄山异志，若总值公开、其余分项公开，
+  # 玩家可用「本季增量 − 公开分项」反推异志。设为隐藏后 UI 显示「约 a–b」与所在区段，区段名仍可读。
+  # 区间半宽 = 3 ×（1 + 积弊/100），约 ±4–5 点；密结颜杲卿或中使实奏后（flag intel:rebellion_risk）减半。
+  - {id: rebellion_risk, name: 渔阳鼙鼓, initial: 30, min: 0, max: 100, unit: 点, hidden: true, estimate_width: 3}
+
+stats:
+  - {id: prosperity, name: 繁荣, range: [0, 100]}
+  - {id: order, name: 治安, range: [0, 100]}
+  - {id: defense, name: 防务, range: [0, 100]}
+  - {id: tax, name: 税基, range: [0, 100]}
+  - {id: grain, name: 粮产, range: [0, 100]}
+
+offices:
+  - {id: emperor, name: 皇帝}
+  - {id: you_xiang, name: 右相, requires: {ability: 4}}
+  - {id: zuo_xiang, name: 左相, requires: {ability: 3}}
+  - {id: yushi_zhongcheng, name: 御史中丞, requires: {ability: 3}}
+  - {id: duzhi, name: 判度支, requires: {ability: 4}}
+  - {id: jingzhao_yin, name: 京兆尹, requires: {ability: 4}}
+  - {id: fanyang_jds, name: 范阳节度使, requires: {ability: 6}}
+  - {id: pinglu_jds, name: 平卢节度使, requires: {ability: 6}}
+  - {id: hedong_jds, name: 河东节度使, requires: {ability: 6}}
+  - {id: shuofang_jds, name: 朔方节度使, requires: {ability: 6}}
+  - {id: hexi_jds, name: 河西节度使, requires: {ability: 6}}
+  - {id: longyou_jds, name: 陇右节度使, requires: {ability: 6}}
+  - {id: anxi_jds, name: 安西四镇节度使, requires: {ability: 6}}
+  - {id: beiting_jds, name: 北庭节度使, requires: {ability: 6}}
+  - {id: jiannan_jds, name: 剑南节度使, requires: {ability: 4}}
+  - {id: pingyuan_taishou, name: 平原太守, requires: {ability: 4}}
+  - {id: changshan_taishou, name: 常山太守, requires: {ability: 4}}
+
+edict_categories:
+  - {id: military, name: 军务, hint: 节度、禁军、关防、征伐}
+  - {id: interior, name: 内政, hint: 任免、财赋、漕运、赈济、吏治}
+  - {id: diplomacy, name: 外交, hint: 吐蕃、南诏、契丹、大食、回纥}
+  - {id: other, name: 其他, hint: 宫廷、礼仪、东宫、密旨}
+
+formulas:
+  income:
+    tax: {resource: treasury, formula: "tax * 1.5", per_region: true, controlled_only: true, label: 诸道税入}
+    grain: {resource: grain, formula: "grain * 1.0", per_region: true, controlled_only: true, label: 诸道租米}
+  drift:
+    rebellion_risk: "0.3 + 0.06*max(0, an_ambition-40) + 0.04*max(0, fanzhen_power-60) + 0.04*max(0, court_strife-50) - 0.04*(authority-60)"
+    an_ambition: "0.5 + 0.02*(fanzhen_power-65) + 0.03*(court_strife-55) - 0.03*(authority-60)"
+    authority: "-0.3 - max(0, court_strife-60)*0.03"
+    morale: "-max(0, corruption-45)*0.04 - max(0, frontier_pressure-60)*0.03"
+    frontier_pressure: "0.02*(45-frontier_pressure) + 0.08*max(0, 50-fanzhen_power)"
+  execution:
+    authority_resource: authority
+    corruption_resource: corruption
+    base_delay: 0.05
+    authority_factor: 0.0005
+    corruption_factor: 0.001
+
+# 危机计：terms 与 drift.rebellion_risk 的五个分项一一对应（各项之和 = 每季漂移）。
+# 前三个压力项只计超出部分（max(0,…)），故一味示好不能把危机「存」成负数；君威为双向项。
+# an 项引用隐藏资源 an_ambition，公开视图中应以区间显示（uses_hidden 为提示字段）。
+crisis:
+  resource: rebellion_risk
+  title: 渔阳鼙鼓
+  bands:
+    - {max: 39, name: 承平}
+    - {max: 59, name: 风闻}
+    - {max: 79, name: 山雨欲来}
+    - {max: 100, name: 鼙鼓动地}
+  terms:
+    - {id: base, label: 春秋渐高, expr: "0.3"}
+    - {id: an, label: 禄山异志, expr: "0.06*max(0, an_ambition-40)"}   # 引擎按风闻区间显示此项
+    - {id: fanzhen, label: 外重内轻, expr: "0.04*max(0, fanzhen_power-60)"}
+    - {id: strife, label: 朝堂倾轧, expr: "0.04*max(0, court_strife-50)"}
+    - {id: authority, label: 君威, expr: "-0.04*(authority-60)"}
+counters:
+  - id: bankrupt_streak
+    mode: streak
+    conditions:
+      all:
+        - {kind: resource, id: treasury, operator: lte, value: 0}
+        - {kind: resource, id: grain, operator: lte, value: 200}
+  - id: alarm_seasons          # 危机计处于「山雨欲来」及以上的累计季数
+    mode: count
+    conditions: {kind: resource, id: rebellion_risk, operator: gte, value: 60}
+  - id: strife_streak          # 朝争连续高位
+    mode: streak
+    conditions: {kind: resource, id: court_strife, operator: gte, value: 75}
+
+wars:
+  - {a: tang, b: yan}
+  - {a: tang, b: tubo}
+  - {a: tang, b: khitan_xi}
+
+ai_routes:
+  - faction: yan
+    route: [fanyang, hebei, duji, tongguan, jingji]
+    hold_if_outnumbered: true
+    conditions: {kind: flag, key: rebellion_started, operator: eq, value: true}
+
+objectives:
+  - id: peace
+    title: 弭兵
+    detail: 天宝十四载冬（T19）范阳未起兵且渔阳鼙鼓 < 60；若乱已起，至 T23 京畿、潼关不失
+    conditions:
+      any:
+        - all:
+            - {not: {kind: flag, key: rebellion_started, operator: eq, value: true}}
+            - {kind: resource, id: rebellion_risk, operator: lt, value: 60}
+        - all:
+            - {kind: flag, key: rebellion_started, operator: eq, value: true}
+            - {not: {kind: flag, key: tongguan_lost, operator: eq, value: true}}
+    fail_conditions:
+      any:
+        - {kind: flag, key: tongguan_lost, operator: eq, value: true}
+        - {kind: region_controller, region: jingji, operator: eq, faction: yan}
+  - id: supply
+    title: 足食足兵
+    detail: 国库 > 0、太仓 > 500；二者同枯两季即败
+    conditions:
+      all:
+        - {kind: resource, id: treasury, operator: gt, value: 0}
+        - {kind: resource, id: grain, operator: gt, value: 500}
+    fail_conditions: {kind: counter, key: bankrupt_streak, operator: gte, value: 2}
+  - id: power
+    title: 皇权在握
+    detail: 终局君威 ≥ 50，未内禅，未遭马嵬之变
+    conditions: {kind: resource, id: authority, operator: gte, value: 50}
+    fail_conditions:
+      any:
+        - {kind: flag, key: abdicated, operator: eq, value: true}
+        - {kind: flag, key: mawei_mutiny, operator: eq, value: true}
+
+# 廷议议题建议：keywords 命中玩家所拟议题时，按 bloc 给出默认立场（引擎再按利益、忠诚修正）。
+debate_topics:
+  - {id: hedong, keywords: [河东, 三镇, 兼领], stances: {xiang: support, fanyang: support, yang: oppose, neiting: neutral, qingliu: oppose, xibei: oppose, donggong: neutral}}
+  - {id: fanjiang, keywords: [蕃将, 边帅, 节度], stances: {xiang: support, fanyang: support, yang: oppose, qingliu: oppose, xibei: oppose, neiting: neutral}}
+  - {id: nanzhao, keywords: [南诏, 云南, 剑南], stances: {yang: support, xiang: neutral, xibei: oppose, qingliu: oppose, neiting: neutral}}
+  - {id: chancellor, keywords: [右相, 宰相, 入相], stances: {yang: support, xiang: oppose, qingliu: oppose, neiting: oppose, donggong: neutral}}
+  - {id: an_court, keywords: [入朝, 召禄山, 留京], stances: {yang: support, fanyang: oppose, neiting: support, qingliu: support, xiang: neutral}}
+  - {id: donggong, keywords: [东宫, 太子], stances: {xiang: oppose, donggong: support, neiting: support, qingliu: support, yang: neutral}}
+  - {id: tongguan, keywords: [潼关, 出关, 守关], stances: {xibei: oppose, yang: support, neiting: neutral, qingliu: oppose}}
+  - {id: finance, keywords: [括户, 聚敛, 轻货, 度支], stances: {yang: support, qingliu: oppose, xiang: neutral, neiting: neutral}}
+
+game_length:
+  last_turn: 19
+  overtime_flag: rebellion_started
+  overtime_last_turn: 23
+  fallback_ending: open_storm
+
+endings:
+  # ---- 失败（立即终局） ----
+  - id: fail_changan
+    kind: fail
+    priority: 1
+    title: 长安不守
+    illustration: ending.fail_changan
+    conditions:
+      all:
+        - {kind: region_controller, operator: eq, region: jingji, faction: yan}
+        - {kind: character_region, operator: eq, character: xuanzong, region: jingji}
+        - {not: {kind: flag, operator: eq, key: court_fled, value: true}}
+    text: 潼关既破，叛军入苑。銮舆未及出延秋门，宫阙已非唐有。此为本游戏的失败结局，非史实。
+  - id: fail_regicide
+    kind: fail
+    priority: 2
+    title: 龙驭宾天
+    illustration: ending.fail_regicide
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: mawei_refused, value: true}
+        - {kind: resource, id: authority, operator: lt, value: 20}
+    text: 马嵬驿下，六军之怒无所收束。陛下执意不从，君威已不足以镇压禁旅，乱兵逼近行在。此为本游戏虚构的失败结局。
+  - id: fail_bankrupt
+    kind: fail
+    priority: 3
+    title: 帑竭兵变
+    illustration: ending.fail_bankrupt
+    conditions: {kind: counter, key: bankrupt_streak, operator: gte, value: 2}
+    text: 左藏空虚，太仓见底，连续两季禄廪不继。京师卫士鼓噪索饷，朝廷号令出不得宫门。此为本游戏虚构的失败结局。
+  # ---- 结局 ----
+  - id: e6_abdication
+    kind: ending
+    priority: 4
+    title: 传位东宫
+    illustration: ending.e6_abdication
+    conditions:
+      any:
+        - {kind: flag, operator: eq, key: abdicated, value: true}
+        - all:
+            - {kind: resource, id: authority, operator: lte, value: 15}
+            - {kind: character_status, operator: eq, character: li_heng, value: alive}
+            - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+    text: 陛下倦于万机，下制传位皇太子，自居兴庆宫为太上皇。新君受命于承平未散之时，天宝之局由他人收拾。此为本游戏虚构的结局。
+  - id: e4_history
+    kind: ending
+    priority: 5
+    title: 渔阳鼙鼓·历史重演
+    illustration: ending.e4_history
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: tongguan_lost, value: true}
+        - any:
+            - {kind: flag, operator: eq, key: mawei_yang_executed, value: true}
+            - {kind: flag, operator: eq, key: mawei_refused, value: true}
+            - all:
+                - {kind: turn, operator: gte, value: 23}
+                - {kind: flag, operator: eq, key: court_fled, value: true}
+    text: 潼关失守，銮舆西幸。马嵬驿前，六军不发，杨氏一门不能保全。太子北上，陛下入蜀，盛世自此终结。史实大略如此：天宝十五载六月潼关失守，玄宗出奔，马嵬兵变；七月太子即位于灵武。
+  - id: e3_restoration
+    kind: ending
+    priority: 6
+    title: 再造唐室
+    illustration: ending.e3_restoration
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: rebellion_started, value: true}
+        - {kind: turn, operator: gte, value: 20}
+        - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
+        - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
+        - any:
+            - {kind: flag, operator: eq, key: duji_recovered, value: true}
+            - {kind: army_strength, faction: yan, operator: lte, value: 60000}
+    text: 潼关固守，两京无恙；河北义旗与朔方之师断其归路，叛军日蹙。渔阳鼙鼓虽已动地，大唐终未倾覆。此为本游戏的反事实结局。
+  - id: e3_standoff
+    kind: ending
+    priority: 7
+    title: 再造唐室·潼关相持
+    illustration: ending.e3_restoration
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: rebellion_started, value: true}
+        - {kind: turn, operator: gte, value: 23}
+        - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
+        - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
+    text: 潼关岿然，叛军顿兵关外，一年不得西进。天下虽未复旧观，社稷已然无虞，平乱只在时日之间。此为本游戏的反事实结局。
+  - id: e5_yang
+    kind: ending
+    priority: 8
+    title: 杨氏擅国
+    illustration: ending.e5_yang
+    conditions:
+      all:
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: court_strife, operator: gte, value: 80}
+        - any:
+            - {kind: resource, id: authority, operator: lte, value: 25}
+            - all:
+                - {kind: turn, operator: gte, value: 19}
+                - {kind: resource, id: authority, operator: lte, value: 40}
+        - {kind: office_holder, operator: eq, office: you_xiang, character: yang_guozhong}
+    text: 鼙鼓未动，而政出杨门。右相兼领数十使，外戚列戟，百官侧目，陛下深居南内，诏敕皆由中书拟定。此为本游戏虚构的结局。
+  - id: e5_beisi
+    kind: ending
+    priority: 9
+    title: 北司掌兵
+    illustration: ending.e5_beisi
+    conditions:
+      all:
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: court_strife, operator: gte, value: 80}
+        - any:
+            - {kind: resource, id: authority, operator: lte, value: 25}
+            - all:
+                - {kind: turn, operator: gte, value: 19}
+                - {kind: resource, id: authority, operator: lte, value: 40}
+        - {kind: flag, operator: eq, key: eunuch_army, value: true}
+    text: 禁军尽归内侍，宦官监临诸镇，宰相不能与闻兵事。天宝之后，北司之势自此而起。此为本游戏虚构的结局。
+  - id: e1_zhongxing
+    kind: ending
+    priority: 10
+    title: 天宝中兴·消弭兵祸
+    illustration: ending.e1_zhongxing
+    conditions:
+      all:
+        - {kind: turn, operator: gte, value: 19}
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: rebellion_risk, operator: lt, value: 60}
+        - {kind: resource, id: authority, operator: gte, value: 50}
+        - {kind: resource, id: treasury, operator: gt, value: 0}
+        - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
+    text: 天宝十四载冬，范阳无事。边镇分权，禁旅渐整，朝堂不复相倾。渔阳鼙鼓终未响起，盛世得以延续。此为本游戏的反事实结局。
+  - id: e2_frontier_lost
+    kind: ending
+    priority: 11
+    title: 削藩而边陲失
+    illustration: ending.e2_frontier_lost
+    conditions:
+      all:
+        - {kind: turn, operator: gte, value: 19}
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: fanzhen_power, operator: lte, value: 40}
+        - {kind: resource, id: frontier_pressure, operator: gte, value: 80}
+    text: 节度分权，内地无忧，然边兵既撤，吐蕃、契丹交侵，西陲烽燧不绝。天下未乱于内，而困于外。此为本游戏虚构的结局。
+  - id: open_storm
+    kind: ending
+    priority: 99
+    title: 山雨欲来
+    illustration: ending.open_storm
+    conditions: {kind: turn, operator: gte, value: 999}   # 仅作 fallback_ending 使用
+    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局：可进入延长模式。）
+
+asset_requirements:
+  # 本剧本的资产命名：立绘按用途分槽位，地区卡暂缺（舆图用 map.json 多边形）
+  character: "portrait.{id}.default"
+  region: null
+  ui: [map.base, title.scroll, ui.desk, ui.paper, ui.edict_paper, ui.lacquer_bar]
+
+settings:
+  afterlife_chat: false
+  history_gravity_default: 0.6
+  max_concurrent_offices: 4   # 杨国忠拜相时已兼判度支、御史中丞、京兆尹
+  player_faction: tang
+  player_character: xuanzong
+  hidden_traits: [ambition, fear, loyalty]
+  corruption_resource: corruption
+  campaign_turns: 20
+  epilogue_turns: 4

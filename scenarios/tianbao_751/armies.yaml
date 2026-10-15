@@ -1,0 +1,17 @@
+# 军队。十节度兵数取《资治通鉴》卷215 天宝元年（742）条，751 年实数无可考，以此为初值（UI 注明）。
+# 京师禁军、东都留守兵、外族兵数及全部 quality 为本游戏设定（【虚】）。
+- {id: jinjun, name: 京师禁军, faction: tang, region: jingji, strength: 40000, quality: 0.6, commander: null, loyal_to: xuanzong}
+- {id: dongdu_army, name: 东都留守兵, faction: tang, region: duji, strength: 10000, quality: 0.6, commander: null, loyal_to: xuanzong}
+- {id: fanyang_army, name: 范阳军, faction: tang, region: fanyang, strength: 91400, quality: 1.15, commander: an_lushan, loyal_to: an_lushan}
+- {id: pinglu_army, name: 平卢军, faction: tang, region: pinglu, strength: 37500, quality: 1.1, commander: an_lushan, loyal_to: an_lushan}
+- {id: hedong_army, name: 河东军, faction: tang, region: hedong, strength: 55000, quality: 1.0, commander: null, loyal_to: null}
+- {id: shuofang_army, name: 朔方军, faction: tang, region: shuofang, strength: 64700, quality: 1.05, commander: null, loyal_to: null}
+- {id: hexi_army, name: 河西军, faction: tang, region: hexi, strength: 73000, quality: 1.0, commander: an_sishun, loyal_to: null}
+- {id: longyou_army, name: 陇右军, faction: tang, region: longyou, strength: 75000, quality: 1.05, commander: geshu_han, loyal_to: geshu_han}
+- {id: anxi_army, name: 安西四镇兵, faction: tang, region: anxi, strength: 24000, quality: 1.1, commander: gao_xianzhi, loyal_to: null}
+- {id: beiting_army, name: 北庭军, faction: tang, region: beiting, strength: 20000, quality: 1.0, commander: null, loyal_to: null}
+- {id: jiannan_army, name: 剑南军, faction: tang, region: jiannan, strength: 30900, quality: 0.85, commander: xianyu_zhongtong, loyal_to: null}
+- {id: lingnan_army, name: 岭南五府兵, faction: tang, region: lingnan, strength: 15400, quality: 0.7, commander: null, loyal_to: null}
+- {id: tubo_army, name: 吐蕃军, faction: tubo, region: tubo, strength: 80000, quality: 1.0, commander: null, loyal_to: null}
+- {id: nanzhao_army, name: 南诏军, faction: nanzhao, region: nanzhao, strength: 40000, quality: 0.9, commander: null, loyal_to: null}
+- {id: khitan_army, name: 契丹·奚兵, faction: khitan_xi, region: khitan_xi, strength: 50000, quality: 0.95, commander: null, loyal_to: null}

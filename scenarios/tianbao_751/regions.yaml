@@ -1,0 +1,179 @@
+# 区域：stats 与坐标均为本游戏设定（【虚】）。坐标为底图百分比（x 向东，y 向南）。
+# jingji—fanyang 的 1 季邻接为驿路（人物驰驿用）；叛军 AI 行军只走 scenario.ai_routes。
+# 收入公式 controlled_only：只计 controller = 唐廷 的地区；陷敌地区不再输送赋税。
+- id: jingji
+  name: 京畿
+  seat: 长安
+  controller: tang
+  note: 京师所在；北衙禁军与彍骑残部驻此
+  map: {x: 67.5, y: 41.5, polygon: [[70.6, 42.9], [67.5, 44.4], [64.4, 42.9], [64.4, 40.1], [67.5, 38.6], [70.6, 40.1]]}
+  adjacency: [{to: tongguan, travel_turns: 1}, {to: shuofang, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: shannan, travel_turns: 1}, {to: longyou, travel_turns: 2}, {to: hexi, travel_turns: 2}, {to: jiannan, travel_turns: 2}, {to: fanyang, travel_turns: 1}]
+  stats: {prosperity: 80, order: 75, defense: 45, tax: 20, grain: 10}
+- id: tongguan
+  name: 潼关
+  seat: 潼关
+  controller: tang
+  note: 黄河、秦岭之间的关隘，关中东门
+  map: {x: 71.3, y: 40.6, polygon: [[72.7, 41.2], [71.3, 41.9], [69.9, 41.2], [69.9, 40.0], [71.3, 39.3], [72.7, 40.0]]}
+  adjacency: [{to: jingji, travel_turns: 1}, {to: duji, travel_turns: 1}, {to: hedong, travel_turns: 1}]
+  stats: {prosperity: 30, order: 70, defense: 85, tax: 2, grain: 0}
+- id: duji
+  name: 都畿
+  seat: 洛阳
+  controller: tang
+  note: 东都；漕运自汴入洛，转输关中
+  map: {x: 75.0, y: 40.4, polygon: [[77.1, 41.4], [75.0, 42.3], [72.9, 41.4], [72.9, 39.4], [75.0, 38.5], [77.1, 39.4]]}
+  adjacency: [{to: tongguan, travel_turns: 1}, {to: henan, travel_turns: 1}, {to: hebei, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: shannan, travel_turns: 1}]
+  stats: {prosperity: 78, order: 70, defense: 40, tax: 16, grain: 12}
+- id: hedong
+  name: 河东
+  seat: 太原
+  controller: tang
+  note: 表里山河，北接范阳、南临潼关
+  map: {x: 75.0, y: 29.5, polygon: [[78.1, 30.9], [75.0, 32.4], [71.9, 30.9], [71.9, 28.1], [75.0, 26.6], [78.1, 28.1]]}
+  adjacency: [{to: jingji, travel_turns: 1}, {to: tongguan, travel_turns: 1}, {to: duji, travel_turns: 1}, {to: hebei, travel_turns: 1}, {to: fanyang, travel_turns: 1}, {to: shuofang, travel_turns: 1}]
+  stats: {prosperity: 60, order: 65, defense: 65, tax: 10, grain: 8}
+- id: fanyang
+  name: 范阳
+  seat: 幽州
+  controller: tang
+  note: 东北重镇，安禄山根本之地
+  map: {x: 82.8, y: 21.8, polygon: [[86.1, 23.3], [82.8, 24.8], [79.5, 23.3], [79.5, 20.3], [82.8, 18.8], [86.1, 20.3]]}
+  adjacency: [{to: hebei, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: pinglu, travel_turns: 1}, {to: khitan_xi, travel_turns: 1}, {to: jingji, travel_turns: 1}]
+  stats: {prosperity: 55, order: 70, defense: 80, tax: 8, grain: 6}
+- id: pinglu
+  name: 平卢
+  seat: 营州
+  controller: tang
+  note: 控扼奚、契丹
+  map: {x: 90.8, y: 15.7, polygon: [[93.7, 17.1], [90.8, 18.4], [87.9, 17.1], [87.9, 14.3], [90.8, 13.0], [93.7, 14.3]]}
+  adjacency: [{to: fanyang, travel_turns: 1}, {to: khitan_xi, travel_turns: 1}]
+  stats: {prosperity: 35, order: 65, defense: 70, tax: 3, grain: 3}
+- id: hebei
+  name: 河北诸郡
+  seat: 魏州
+  controller: tang
+  note: 常山、平原、魏郡等富庶之郡
+  map: {x: 81.0, y: 31.0, polygon: [[84.1, 32.4], [81.0, 33.9], [77.9, 32.4], [77.9, 29.6], [81.0, 28.1], [84.1, 29.6]]}
+  adjacency: [{to: fanyang, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: duji, travel_turns: 1}, {to: henan, travel_turns: 1}]
+  stats: {prosperity: 70, order: 68, defense: 30, tax: 14, grain: 12}
+- id: henan
+  name: 河南道
+  seat: 汴州
+  controller: tang
+  note: 汴河漕运要道，睢阳在焉
+  map: {x: 79.5, y: 41.0, polygon: [[82.3, 42.3], [79.5, 43.6], [76.7, 42.3], [76.7, 39.7], [79.5, 38.4], [82.3, 39.7]]}
+  adjacency: [{to: duji, travel_turns: 1}, {to: hebei, travel_turns: 1}, {to: huainan, travel_turns: 1}, {to: shannan, travel_turns: 1}]
+  stats: {prosperity: 72, order: 70, defense: 30, tax: 15, grain: 14}
+- id: huainan
+  name: 淮南
+  seat: 扬州
+  controller: tang
+  note: 江淮财赋转输之枢
+  map: {x: 88.0, y: 49.0, polygon: [[91.1, 50.4], [88.0, 51.9], [84.9, 50.4], [84.9, 47.6], [88.0, 46.1], [91.1, 47.6]]}
+  adjacency: [{to: henan, travel_turns: 1}, {to: jiangnan, travel_turns: 1}, {to: shannan, travel_turns: 1}]
+  stats: {prosperity: 75, order: 72, defense: 25, tax: 14, grain: 16}
+- id: jiangnan
+  name: 江南
+  seat: 润州
+  controller: tang
+  note: 东南财赋之区
+  map: {x: 84.5, y: 58.0, polygon: [[88.3, 59.8], [84.5, 61.5], [80.7, 59.8], [80.7, 56.2], [84.5, 54.5], [88.3, 56.2]]}
+  adjacency: [{to: huainan, travel_turns: 1}, {to: shannan, travel_turns: 2}, {to: lingnan, travel_turns: 2}]
+  stats: {prosperity: 70, order: 72, defense: 20, tax: 15, grain: 18}
+- id: shannan
+  name: 山南
+  seat: 襄阳
+  controller: tang
+  note: 汉水上下，通巴蜀与江汉
+  map: {x: 73.5, y: 50.0, polygon: [[77.0, 51.6], [73.5, 53.2], [70.0, 51.6], [70.0, 48.4], [73.5, 46.8], [77.0, 48.4]]}
+  adjacency: [{to: jingji, travel_turns: 1}, {to: duji, travel_turns: 1}, {to: henan, travel_turns: 1}, {to: huainan, travel_turns: 1}, {to: jiangnan, travel_turns: 2}, {to: jiannan, travel_turns: 2}]
+  stats: {prosperity: 55, order: 68, defense: 30, tax: 8, grain: 8}
+- id: jiannan
+  name: 剑南
+  seat: 成都
+  controller: tang
+  note: 蜀中，南防南诏、西备吐蕃
+  map: {x: 58.5, y: 54.5, polygon: [[62.5, 56.3], [58.5, 58.2], [54.5, 56.3], [54.5, 52.7], [58.5, 50.8], [62.5, 52.7]]}
+  adjacency: [{to: jingji, travel_turns: 2}, {to: shannan, travel_turns: 2}, {to: longyou, travel_turns: 2}, {to: nanzhao, travel_turns: 2}, {to: tubo, travel_turns: 2}]
+  stats: {prosperity: 65, order: 62, defense: 50, tax: 10, grain: 10}
+- id: longyou
+  name: 陇右
+  seat: 鄯州
+  controller: tang
+  note: 西备吐蕃，石堡、青海一线
+  map: {x: 53.5, y: 34.5, polygon: [[56.8, 36.0], [53.5, 37.5], [50.2, 36.0], [50.2, 33.0], [53.5, 31.5], [56.8, 33.0]]}
+  adjacency: [{to: jingji, travel_turns: 2}, {to: hexi, travel_turns: 1}, {to: tubo, travel_turns: 1}, {to: jiannan, travel_turns: 2}]
+  stats: {prosperity: 40, order: 65, defense: 75, tax: 4, grain: 4}
+- id: hexi
+  name: 河西
+  seat: 凉州
+  controller: tang
+  note: 断隔吐蕃、突厥
+  map: {x: 55.5, y: 27.5, polygon: [[58.8, 29.0], [55.5, 30.5], [52.2, 29.0], [52.2, 26.0], [55.5, 24.5], [58.8, 26.0]]}
+  adjacency: [{to: jingji, travel_turns: 2}, {to: longyou, travel_turns: 1}, {to: shuofang, travel_turns: 1}, {to: tubo, travel_turns: 1}, {to: beiting, travel_turns: 2}, {to: anxi, travel_turns: 3}]
+  stats: {prosperity: 45, order: 66, defense: 72, tax: 4, grain: 5}
+- id: shuofang
+  name: 朔方
+  seat: 灵州
+  controller: tang
+  note: 捍御北方，诸节度中的劲旅
+  map: {x: 63.0, y: 27.5, polygon: [[66.3, 29.0], [63.0, 30.5], [59.7, 29.0], [59.7, 26.0], [63.0, 24.5], [66.3, 26.0]]}
+  adjacency: [{to: jingji, travel_turns: 1}, {to: hedong, travel_turns: 1}, {to: hexi, travel_turns: 1}, {to: huihe, travel_turns: 1}]
+  stats: {prosperity: 40, order: 66, defense: 72, tax: 4, grain: 4}
+- id: anxi
+  name: 安西
+  seat: 龟兹
+  controller: tang
+  note: 安西四镇，抚宁西域
+  map: {x: 16.0, y: 15.5, polygon: [[20.3, 17.5], [16.0, 19.5], [11.7, 17.5], [11.7, 13.5], [16.0, 11.5], [20.3, 13.5]]}
+  adjacency: [{to: hexi, travel_turns: 3}, {to: beiting, travel_turns: 1}, {to: tubo, travel_turns: 2}]
+  stats: {prosperity: 35, order: 60, defense: 65, tax: 2, grain: 2}
+- id: beiting
+  name: 北庭
+  seat: 庭州
+  controller: tang
+  note: 防制突骑施、坚昆
+  map: {x: 28.0, y: 8.0, polygon: [[31.5, 9.6], [28.0, 11.2], [24.5, 9.6], [24.5, 6.4], [28.0, 4.8], [31.5, 6.4]]}
+  adjacency: [{to: hexi, travel_turns: 2}, {to: anxi, travel_turns: 1}]
+  stats: {prosperity: 30, order: 60, defense: 62, tax: 2, grain: 2}
+- id: lingnan
+  name: 岭南
+  seat: 广州
+  controller: tang
+  note: 绥静夷獠
+  map: {x: 76.5, y: 80.0, polygon: [[80.8, 82.0], [76.5, 84.0], [72.2, 82.0], [72.2, 78.0], [76.5, 76.0], [80.8, 78.0]]}
+  adjacency: [{to: jiangnan, travel_turns: 2}, {to: nanzhao, travel_turns: 3}]
+  stats: {prosperity: 55, order: 60, defense: 30, tax: 6, grain: 6}
+- id: tubo
+  name: 吐蕃
+  seat: 逻些
+  controller: tubo
+  note: 吐蕃之境（外）
+  map: {x: 36.0, y: 45.0, polygon: [[43.8, 48.6], [36.0, 52.2], [28.2, 48.6], [28.2, 41.4], [36.0, 37.8], [43.8, 41.4]]}
+  adjacency: [{to: jiannan, travel_turns: 2}, {to: longyou, travel_turns: 1}, {to: hexi, travel_turns: 1}, {to: anxi, travel_turns: 2}]
+  stats: {prosperity: 0, order: 0, defense: 60, tax: 0, grain: 0}
+- id: nanzhao
+  name: 南诏
+  seat: 太和城
+  controller: nanzhao
+  note: 南诏之境（外）
+  map: {x: 50.5, y: 71.0, polygon: [[54.8, 73.0], [50.5, 75.0], [46.2, 73.0], [46.2, 69.0], [50.5, 67.0], [54.8, 69.0]]}
+  adjacency: [{to: jiannan, travel_turns: 2}, {to: lingnan, travel_turns: 3}]
+  stats: {prosperity: 0, order: 0, defense: 55, tax: 0, grain: 0}
+- id: khitan_xi
+  name: 契丹·奚
+  seat: 松漠
+  controller: khitan_xi
+  note: 契丹、奚诸部（外）
+  map: {x: 90.0, y: 7.0, polygon: [[93.8, 8.8], [90.0, 10.5], [86.2, 8.8], [86.2, 5.2], [90.0, 3.5], [93.8, 5.2]]}
+  adjacency: [{to: fanyang, travel_turns: 1}, {to: pinglu, travel_turns: 1}]
+  stats: {prosperity: 0, order: 0, defense: 50, tax: 0, grain: 0}
+- id: huihe
+  name: 回纥
+  seat: 漠北
+  controller: huihe
+  note: 回纥牙帐（外，延长模式）
+  map: {x: 61.0, y: 6.0, polygon: [[66.2, 8.4], [61.0, 10.8], [55.8, 8.4], [55.8, 3.6], [61.0, 1.2], [66.2, 3.6]]}
+  adjacency: [{to: shuofang, travel_turns: 1}]
+  stats: {prosperity: 0, order: 0, defense: 50, tax: 0, grain: 0}
