@@ -18,6 +18,7 @@ def used_by(i):
     if p[0] == "map": return "map:base"
     if p[0] == "title": return "ui:title:background"
     if p[0] == "icon": return f"resource:{p[1]}:icon"
+    if i.startswith("ui.season."): return "ui:season:" + p[2]
     return "ui:" + p[1]
 
 def add(i, kind, prompt, ref=None):

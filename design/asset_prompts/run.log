@@ -104,3 +104,39 @@
 03:42:25 OK   portrait.yang_guozhong.purple 126s attempt 1
 03:42:29 OK   portrait.feng_changqing.armor 130s attempt 1
 03:42:29 DONE ok=2 fail=[]
+06:16:52 START 31 jobs: ['event.changan_falls', 'event.canal_cut', 'event.city_walls', 'event.winter_clothing', 'event.an_gallops_away', 'event.chancellor_appointed', 'event.zhengshi_hall', 'event.coverup_report', 'event.nanzhao_tubo', 'event.jiedu_appointment', 'event.luoyang_recovered', 'event.recruit_levy', 'event.loyalist_courier', 'event.refugees_granary', 'event.court_festival', 'event.lychee_courier', 'event.yang_cavalcade', 'event.censorate_inquiry', 'event.eunuch_overseer', 'event.huaqing_winter', 'event.tax_treasury', 'event.anxi_triumph', 'event.gao_lishi_counsel', 'event.fanyang_armoury', 'event.envoy_in_fanyang', 'event.princess_wedding', 'event.palace_exam', 'ui.season.spring', 'ui.season.summer', 'ui.season.autumn', 'ui.season.winter']
+06:17:52 OK   event.changan_falls 60s attempt 1
+06:17:53 OK   event.canal_cut 61s attempt 1
+06:18:51 OK   event.winter_clothing 58s attempt 1
+06:18:51 OK   event.city_walls 119s attempt 1
+06:18:54 OK   event.an_gallops_away 61s attempt 1
+06:19:51 OK   event.chancellor_appointed 60s attempt 1
+06:19:51 OK   event.zhengshi_hall 60s attempt 1
+06:20:52 OK   event.nanzhao_tubo 62s attempt 1
+06:20:53 OK   event.coverup_report 119s attempt 1
+06:21:50 OK   event.jiedu_appointment 119s attempt 1
+06:21:54 OK   event.recruit_levy 61s attempt 1
+06:22:54 OK   event.refugees_granary 61s attempt 1
+06:22:55 OK   event.loyalist_courier 65s attempt 1
+06:22:57 OK   event.luoyang_recovered 125s attempt 1
+06:23:58 OK   event.lychee_courier 64s attempt 1
+06:24:57 OK   event.court_festival 123s attempt 1
+06:25:01 OK   event.yang_cavalcade 124s attempt 1
+06:25:50 OK   event.censorate_inquiry 112s attempt 1
+06:25:57 OK   event.eunuch_overseer 59s attempt 1
+06:26:05 OK   event.huaqing_winter 64s attempt 1
+06:26:53 OK   event.tax_treasury 63s attempt 1
+06:27:03 OK   event.gao_lishi_counsel 58s attempt 1
+06:27:54 OK   event.fanyang_armoury 61s attempt 1
+06:27:54 OK   event.anxi_triumph 117s attempt 1
+06:28:07 OK   event.envoy_in_fanyang 64s attempt 1
+06:29:07 OK   ui.season.spring 60s attempt 1
+06:29:49 OK   event.palace_exam 115s attempt 1
+06:29:53 OK   ui.season.summer 46s attempt 1
+06:30:01 OK   event.princess_wedding 127s attempt 1
+06:30:35 OK   ui.season.autumn 45s attempt 1
+06:30:40 OK   ui.season.winter 47s attempt 1
+06:30:40 DONE ok=31 fail=[]
+06:30:58 START 1 jobs: ['event.zhengshi_hall']
+06:31:54 OK   event.zhengshi_hall 56s attempt 1
+06:31:54 DONE ok=1 fail=[]

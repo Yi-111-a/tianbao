@@ -92,7 +92,7 @@
     - {op: adjust_relation, a: nanzhao, b: tubo, delta: 30}
     - {op: adjust_resource, resource: frontier_pressure, delta: 4, reason: 南诏与吐蕃合}
     - {op: set_flag, key: nanzhao_tubo, value: true}
-  illustration: event.xier_defeat
+  illustration: event.nanzhao_tubo
 
 - id: guozhong_coverup
   title: 掩败叙功
@@ -126,7 +126,7 @@
         - {op: set_flag, key: coverup_condoned, value: true}
   default_choice: condone
   choice_deadline: 1
-  illustration: event.xier_defeat
+  illustration: event.coverup_report
 
 - id: talas
   title: 怛罗斯之战
@@ -223,7 +223,7 @@
   effects:
     - {op: adjust_army, army: fanyang_army, delta: 15000, reason: 收降补伍}
     - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 范阳兵复振}
-  illustration: event.khitan_defeat
+  illustration: event.fanyang_armoury
 
 - id: abusi_revolt
   title: 阿布思叛逃
@@ -268,7 +268,7 @@
     - {op: appoint, character: an_sishun, office: shuofang_jds}
     - {op: set_army_commander, army: shuofang_army, character: an_sishun}
     - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 朔方、河西并于一人}
-  illustration: event.li_linfu_death
+  illustration: event.jiedu_appointment
 
 - id: donggong_framed_2
   title: 东宫再被构
@@ -362,7 +362,7 @@
     - {op: appoint, character: chen_xilie, office: you_xiang}
     - {op: adjust_resource, resource: court_strife, delta: 2, reason: 国忠失望}
     - {op: set_flag, key: chancellor_vacant, value: false}
-  illustration: event.guozhong_chancellor
+  illustration: event.chancellor_appointed
 
 - id: zhenqing_promoted
   title: 擢颜真卿知政事
@@ -380,7 +380,7 @@
     - {op: adjust_resource, resource: corruption, delta: -4, reason: 清流秉政}
     - {op: set_flag, key: chancellor_vacant, value: false}
     - {op: set_flag, key: zhenqing_kept, value: true}
-  illustration: event.guozhong_chancellor
+  illustration: event.chancellor_appointed
 
 - id: linfu_posthumous
   title: 追削李林甫
@@ -509,7 +509,7 @@
   effects:
     - {op: move_character, character: an_lushan, to_region: fanyang}
     - {op: adjust_resource, resource: rebellion_risk, delta: 3, reason: 归心似箭}
-  illustration: event.an_court_visit
+  illustration: event.an_gallops_away
 
 - id: fanyang_mutiny
   title: 范阳兵变
@@ -581,7 +581,7 @@
   effects:
     - {op: dismiss, character: chen_xilie, office: zuo_xiang}
     - {op: adjust_resource, resource: court_strife, delta: 2, reason: 政事堂唯国忠一人}
-  illustration: event.guozhong_chancellor
+  illustration: event.zhengshi_hall
 
 - id: geshu_stroke
   title: 哥舒翰风疾
@@ -637,7 +637,7 @@
     - {op: set_flag, key: envoy_bribed, value: true}
     - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 朝廷可欺}
     - {op: adjust_resource, resource: corruption, delta: 1, reason: 中使纳贿}
-  illustration: event.horse_tribute
+  illustration: event.envoy_in_fanyang
 
 - id: envoy_truth
   title: 中使实奏
@@ -653,7 +653,7 @@
     - {op: set_flag, key: envoy_truth, value: true}
     - {op: set_flag, key: "intel:an_ambition", value: true}
     - {op: set_flag, key: "intel:rebellion_risk", value: true}
-  illustration: event.horse_tribute
+  illustration: event.envoy_in_fanyang
 
 - id: guozhong_raid
   title: 京兆围禄山宅
@@ -752,7 +752,7 @@
     - {op: move_character, character: an_lushan, to_region: fanyang}
     - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 去留不决，疑惧而归}
     - {op: remember, character: an_lushan, fact: 奉召入京，朝廷去留不决，我自辞归范阳}
-  illustration: event.an_court_visit
+  illustration: event.an_gallops_away
 
 - id: fanyang_restive
   title: 范阳诸将请还帅
@@ -814,7 +814,7 @@
     - {op: adjust_resource, resource: rebellion_risk, delta: 10, reason: 流言四起}
     - {op: set_flag, key: fanyang_rumor_recent, value: true}
     - {op: adjust_resource, resource: court_strife, delta: 1, reason: 朝议汹汹}
-  illustration: event.horse_tribute
+  illustration: event.fanyang_armoury
 
 - id: fanyang_calm
   title: 范阳安堵
@@ -834,7 +834,7 @@
   text: 河北道使者还奏，范阳兵马如常，市井安堵；朝中疑谤稍息。（本游戏设定）
   effects:
     - {op: adjust_resource, resource: rebellion_risk, delta: -8, reason: 疑谤稍息}
-  illustration: event.an_court_visit
+  illustration: event.horse_tribute
 
 # ======================== 第四幕：渔阳鼙鼓 ========================
 - id: fanyang_uprising
@@ -954,7 +954,7 @@
   effects:
     - {op: set_flag, key: duji_recovered, value: true}
     - {op: adjust_resource, resource: authority, delta: 8, reason: 东都光复}
-  illustration: event.duji_falls
+  illustration: event.luoyang_recovered
 
 - id: hebei_recovered
   title: 河北反正

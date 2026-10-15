@@ -84,3 +84,33 @@ Checks: text-free / Tang-accurate / style-consistent. Rejection rule: any text-l
 - portrait.yang_guozhong.purple: text-free yes; same face as scarlet version via reference; purple robe + gold fish pouch; style yes.
 - portrait.feng_changqing.armor: text-free yes; face consistent with default via reference, lamellar armour, green cloak, cane; style yes.
 - portrait.yang_guozhong.purple: text-free yes; same face as scarlet version via reference; purple robe + gold fish pouch; style yes.
+
+## Art round 2 (events3 + seasons) — all viewed at contact-sheet resolution
+- event.changan_falls: text-free yes (dark plain banners); Tang yes (lamellar armour, gate tower, lions, parasols); no dragons; restrained (dropped parasols/lanterns, a few dark cloths on the road, no bodies). Unassigned: jingji_falls is kind system (no art by contract); available for an ending/log use.
+- event.canal_cut: text-free yes; Tang yes (purple/scarlet/green robes, round collars); style consistent; idle grain barges, restrained.
+- event.city_walls: text-free yes; Tang yes (green robe officer, lamellar militia); scaffolding and crossbows, no violence.
+- event.winter_clothing: text-free yes; Tang yes; silk bolts and fur-lined coats, snow; style consistent.
+- event.an_gallops_away: text-free yes; purple robe on a large bearded rider with Hu escorts; no dragons; style consistent.
+- event.chancellor_appointed: text-free yes; purple robe + gold fish pouch, scarlet herald, green attendants; emperor in ochre in the background; no dragons on throne (rosettes).
+- event.zhengshi_hall: FIRST TRY rejected (a minister in ochre-yellow read as the emperor, plus a dragon-like bronze beast); regenerated once with "nobody in yellow": now five ministers in purple/scarlet/green futou, blank map scroll, text-free yes, Tang yes. Accepted.
+- event.coverup_report: text-free yes; emperor ochre-yellow on dais, kneeling official, hidden wounded soldier at pillar; landscape screen; no dragons; style consistent.
+- event.nanzhao_tubo: text-free yes; Nanzhao king and Tibetan envoy in felt hat and fur; yak-tail staffs; Erhai/Cangshan backdrop; style consistent.
+- event.jiedu_appointment: text-free yes; kneeling general in lamellar armour, scarlet envoy, yak-tail staff and axe, emperor in ochre in background; Tang yes; no dragons.
+- event.luoyang_recovered: text-free yes (gate plaque blank); Tang cavalry in lamellar, plain red banners; ruins restrained, no gore.
+- event.recruit_levy: text-free yes; green-robed registrars, recruits in plain tunics, armour racks; style consistent.
+- event.loyalist_courier: text-free yes; disguised courier, moonlit pass, tiny torch column; blue-silver night palette; style consistent.
+- event.refugees_granary: text-free yes; green-robed granary officials, refugees in rags; compassionate, no gore.
+- event.court_festival: text-free yes; multi-nation envoys, tribute, ochre emperor on distant dais, plain colour banners; no dragons on dais.
+- event.lychee_courier: text-free yes; green courier robe, basket of lychees, peasants scattering; Tang yes; style consistent.
+- event.yang_cavalcade: text-free yes; high-waisted skirts, pibo, high buns, huadian; peach blossom; no dragons; style consistent.
+- event.censorate_inquiry: text-free yes; green-robed censor, blue clerks, kneeling petitioner, scarlet official; blank ledger; Tang yes.
+- event.eunuch_overseer: text-free yes; scarlet-robed beardless eunuch with yellow tally, general in lamellar armour; ranks of soldiers; plain banners.
+- event.huaqing_winter: text-free yes; Huaqing in snow, palanquin, ladies in furs; style consistent.
+- event.tax_treasury: text-free yes; green-robed clerks, copper cash, silk bolts, blank ledger and counting rods; style consistent.
+- event.anxi_triumph: text-free yes; lamellar general + bound foreign king in white, ochre emperor on dais, purple/scarlet courtiers, tribute horses; restrained.
+- event.gao_lishi_counsel: text-free yes; aged ochre-robed emperor with soft futou, Gao Lishi in deep purple, rainy night window; style consistent.
+- event.fanyang_armoury: text-free yes; forge yard, lamellar plates, horses, grain storehouse; plain banners; red-black night palette.
+- event.envoy_in_fanyang: text-free yes; stout Hu general in purple pouring wine for scarlet eunuch envoy, lacquer chest of gold; no dragons; style consistent.
+- event.princess_wedding: text-free yes; red-and-gold bride with fan, palanquin, pipa/drums/flutes, groom in scarlet; lanterns; Tang yes.
+- event.palace_exam: text-free yes; white-robed candidates on mats with blank paper, green/scarlet examiners, ochre emperor on balcony; spring blossoms.
+- ui.season.spring|summer|autumn|winter: text-free yes; no people; empty imperial desk with blank scroll in each season (peach/peony; lotus + ice basin; maple + wild geese + sunset; brazier + snowy Chang'an); desk and carpet ornament Tang (baoxiang, cuancao); no dragons; open area for panels; 1536x1024 webp. Style consistent across the four.

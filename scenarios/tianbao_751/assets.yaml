@@ -1598,3 +1598,536 @@ entries:
   status: generated
   version: 1
   reference_image: portrait.yang_guozhong.default
+- id: event.changan_falls
+  kind: event
+  used_by: event:changan_falls:illustration
+  path: assets/event/event.changan_falls.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. Dawn at the great southern gate tower of Chang''an: the huge gate wide open, a long column of rebel horsemen
+    in dark lamellar armour with plain dark banners riding in along the empty avenue, a few abandoned lanterns and dropped parasols on the road, palace roofs in the haze behind with thin smoke, no people
+    harmed, hushed and ominous, cold grey-gold light. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 4860a48cc884846186e1e434cd8defd50150ab5b1dd48cc888b4c7547b40fb3d
+  status: generated
+  version: 1
+- id: event.canal_cut
+  kind: event
+  used_by: event:canal_cut:illustration
+  path: assets/event/event.canal_cut.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A great canal at the Bian waterway near the eastern capital: dozens of laden grain barges moored idle and
+    stuck in a long row beneath a stone bridge, boatmen sitting hopelessly on the decks, sacks of grain stacked on the bank, a broken chain barrier across the water and distant smoke on the horizon, evening
+    light. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 931e126fe0ccd13bd443b445cf6f0239e5da1e842f86fc149fc05e14eef018ad
+  status: generated
+  version: 1
+- id: event.city_walls
+  kind: event
+  used_by: event:city_walls:illustration
+  path: assets/event/event.city_walls.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A northern city wall being hastily repaired and manned: labourers hauling rammed-earth baskets and timbers
+    up scaffolding, militia in simple armour with spears, an officer in a green round-collar robe with a futou cap pointing at the gate tower, stacked stones and crossbows, plain banners, a hard bright
+    afternoon sky. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 42a868aeb906a12f6b9751dbb59ec20d7d32f2d92a8fec3da0800a2f22b61c19
+  status: generated
+  version: 1
+- id: event.winter_clothing
+  kind: event
+  used_by: event:winter_clothing:illustration
+  path: assets/event/event.winter_clothing.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A frontier depot in early winter: clerks and quartermaster officers in green robes handing out bolts of
+    silk and padded winter coats to rows of Tang soldiers in lamellar armour, stacked silk bundles tied with cord on a long table, braziers, first snow falling, warm yellow light against cold blue. Plain
+    banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 8c8518f91bc7db624c5f3ad3a77b2061c752f82ed7e672526da188824ffd15cf
+  status: generated
+  version: 1
+- id: event.an_gallops_away
+  kind: event
+  used_by: event:an_gallops_away:illustration
+  path: assets/event/event.an_gallops_away.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A mounted general of very large build in a purple round-collar robe galloping out of a mountain pass gate
+    on a strong horse with a small band of Hu riders, whipping the horse, cloaks streaming, the pass gate and towers behind, dust and low sun, a sense of escape. Plain banners and flags without any symbols
+    or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: d6175982be12aa681a47921d8b4073787ba2234ccdc4838ff85ba6f2157e0b44
+  status: generated
+  version: 1
+- id: event.chancellor_appointed
+  kind: event
+  used_by: event:chancellor_appointed:illustration
+  path: assets/event/event.chancellor_appointed.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A solemn hall interior with vermilion pillars: a kneeling official in a purple robe with a gold fish-pouch
+    holding up both hands to receive a yellow silk edict from a court herald, a eunuch holding a lacquer box seal beside him, rows of officials in scarlet and green bowing in the background, warm lamplight.
+    Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 886cedc736e2f000d1a5870f738779ab3626ed9c72b1d2200773c1f3ca80d21b
+  status: generated
+  version: 1
+- id: event.zhengshi_hall
+  kind: event
+  used_by: event:zhengshi_hall:illustration
+  path: assets/event/event.zhengshi_hall.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. The chancellors'' deliberation hall (Zhengshi Hall): a long lacquered table with five ministers seated
+    and standing around it, all wearing black futou caps and round-collar robes in ONLY purple, scarlet and green (nobody in yellow or gold, no emperor, no guards), conferring over an unrolled blank map
+    scroll, blank memorials and wooden counting rods, a large painted landscape screen behind them, grey light from lattice windows, tense heads close together, a plain bronze incense burner. Plain banners
+    and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: c29305be9c2d7612279dc4034a588770368fd61dcd9b5cc869ca9399d6a7632e
+  status: generated
+  version: 1
+- id: event.coverup_report
+  kind: event
+  used_by: event:coverup_report:illustration
+  path: assets/event/event.coverup_report.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A palace audience: an official in a scarlet-and-purple robe kneeling before an emperor in ochre-yellow
+    and holding up a glowing report tied with gold ribbon, while behind him a large painted map screen shows a rain-soaked southern mountain and in the shadowed corner by the pillar a wounded soldier on
+    crutches stands unseen by the throne, irony and concealment. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 38d2f87e55ce8d3cd3fff819395c570b64548b43a1f9e37f8ba19f8113134bd6
+  status: generated
+  version: 1
+- id: event.nanzhao_tubo
+  kind: event
+  used_by: event:nanzhao_tubo:illustration
+  path: assets/event/event.nanzhao_tubo.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A mountain-top highland hall of the Nanzhao kingdom in the southwest: a Nanzhao king in layered ethnic
+    robes with a gold-ornamented headband receiving a Tibetan envoy in a red felt hat and fur-trimmed robe who offers a golden seal on a cushion, misty Cangshan peaks and a lake outside the open hall, yak-tail
+    banners without symbols. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: b386dd0a796e640ebb4b3cc8d9a7df9db74efc8d70722d2a63a29164a4420923
+  status: generated
+  version: 1
+- id: event.jiedu_appointment
+  kind: event
+  used_by: event:jiedu_appointment:illustration
+  path: assets/event/event.jiedu_appointment.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A ceremony of appointing a military governor (jiedushi): a general in lamellar armour with a cloak kneeling
+    to receive the ceremonial tally (a pair of tiger-shaped bronze halves) and the staff of command (a pole hung with tiers of yak-tail tassels) and a ceremonial axe from a court envoy in a scarlet robe,
+    rows of soldiers with plain banners in a courtyard, bright morning. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: eb311fd19ecc8e66f51bbdee451beefd68eea8999dc324796ce64bb68461f3b1
+  status: generated
+  version: 1
+- id: event.luoyang_recovered
+  kind: event
+  used_by: event:luoyang_recovered:illustration
+  path: assets/event/event.luoyang_recovered.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. The recaptured eastern capital Luoyang at dawn: Tang cavalry in lamellar armour riding through a scorched
+    but standing city gate, townspeople emerging cautiously to watch from the ruins, smoke fading, a plain red banner rising on the gate tower, fragile relief. Plain banners and flags without any symbols
+    or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 2c79ad5c3905185f8f15340d9825a56a904bb618cf89604102493c7d42027670
+  status: generated
+  version: 1
+- id: event.recruit_levy
+  kind: event
+  used_by: event:recruit_levy:illustration
+  path: assets/event/event.recruit_levy.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A recruiting station in Chang''an: young city men in plain tunics lining up at long tables where officers
+    in green robes register names on blank paper rolls, new recruits being handed spears and leather armour, an officer drilling a small squad, plain banners, dusty warm afternoon. Plain banners and flags
+    without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 0937d125aa0045e9bed4976685575928210ddea291472fff4542ecbaec1cc174
+  status: generated
+  version: 1
+- id: event.loyalist_courier
+  kind: event
+  used_by: event:loyalist_courier:illustration
+  path: assets/event/event.loyalist_courier.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A lone messenger in plain disguised travel clothes, with a small sealed bamboo tube hidden in his bundle,
+    slipping along a moonlit mountain pass track at night toward a distant tiny fire-lit city wall, wary of a rebel patrol far in the valley below, dark blue and silver tones with one warm lantern glow.
+    Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 1ac527e97fef630ed54335e8df3f9a3fc06e17cd742d15bce02e63c894be2ab2
+  status: generated
+  version: 1
+- id: event.refugees_granary
+  kind: event
+  used_by: event:refugees_granary:illustration
+  path: assets/event/event.refugees_granary.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A public granary gate: crowds of refugees with bundles and children queuing before a government granary
+    where officials in green robes supervise sacks of millet being doled out into bowls, an old woman receiving a ladle of grain, a long tide of exhausted travellers on the road behind, grey sky, compassion
+    and strain. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 3e78f35cda5cbf6b75910f2be0441fae2275e47438f4e838cf430c245e986e0c
+  status: generated
+  version: 1
+- id: event.court_festival
+  kind: event
+  used_by: event:court_festival:illustration
+  path: assets/event/event.court_festival.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A grand imperial court reception in a vast palace courtyard: ambassadors from many lands in varied costume
+    (Turkic, Tibetan, Sogdian, Persian) presenting tribute of horses, ivory, brocade and golden vessels before a distant dais with the emperor in ochre-yellow, ceremonial fans and drums, banners of plain
+    colour, festive golden light. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 1748cd5913d093c649ce523fbc9af9e79e654e86c633f53c92b414a4e3a9180c
+  status: generated
+  version: 1
+- id: event.lychee_courier
+  kind: event
+  used_by: event:lychee_courier:illustration
+  path: assets/event/event.lychee_courier.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A rider in a green courier''s round-collar robe galloping at full speed along a dusty post road with a
+    lacquered basket of fresh lychees strapped to his back, a blown exhausted spare horse resting by the roadside and a peasant family scattering aside, lush southern green hills behind and a distant palace
+    roof on the horizon, urgent. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 31678ebff2d07c718785f36fcde487637778ee47f4222fc9f5897f842c7b5bca
+  status: generated
+  version: 1
+- id: event.yang_cavalcade
+  kind: event
+  used_by: event:yang_cavalcade:illustration
+  path: assets/event/event.yang_cavalcade.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A glamorous spring procession of the Yang sisters'' households: ladies in high-waisted skirts of vivid
+    silk and pibo shawls with high buns riding fine horses side by side with attendants and servants, their retinue taking the middle of a wide avenue, commoners stepping aside and a merchant''s cart pushed
+    to the gutter, bright peach blossoms, extravagant and a little arrogant. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in
+    the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 3154b87a68b79896c61a4e8af85e2d8f9664174d6803f37ed1f2b27764c6a19f
+  status: generated
+  version: 1
+- id: event.censorate_inquiry
+  kind: event
+  used_by: event:censorate_inquiry:illustration
+  path: assets/event/event.censorate_inquiry.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A tribunal hall of the Censorate: a senior censor in a green robe seated behind a long desk with a blank
+    ledger, clerks standing with documents, a petitioner kneeling before him and an official in scarlet standing aside uneasy, rows of document racks in the background, severe cold light. Plain banners
+    and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: ce5c9efe5d31b9b4b3614e004b187d2b458dfdd2c16d130eed5f0820d91e314a
+  status: generated
+  version: 1
+- id: event.eunuch_overseer
+  kind: event
+  used_by: event:eunuch_overseer:illustration
+  path: assets/event/event.eunuch_overseer.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. An imperial eunuch overseer-commissioner in a scarlet robe with a smooth beardless face and a black futou
+    cap standing at a military review beside a general in lamellar armour, holding a yellow silk tally and observing the ranks with a calculating gaze, the general stiff beside him, plain banners, afternoon
+    sun. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 944083abb196eceba130f935cbab0dc6f11763cc85aa8200fe25eb90d27123b1
+  status: generated
+  version: 1
+- id: event.huaqing_winter
+  kind: event
+  used_by: event:huaqing_winter:illustration
+  path: assets/event/event.huaqing_winter.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. Huaqing Palace on Mount Li in winter: terraced grey-tiled pavilions around steaming hot spring pools, white
+    mist, bare plum branches, a procession of palanquins and mounted attendants of the court arriving through the gate under plain banners, ladies in furs and silk, lamplight beginning to glow in the dusk.
+    Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 52eb67def9ad18395225c37aa3ebe99a12a1e9a5655f465a31e579b739000047
+  status: generated
+  version: 1
+- id: event.tax_treasury
+  kind: event
+  used_by: event:tax_treasury:illustration
+  path: assets/event/event.tax_treasury.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. The Zuozang treasury hall: officials in green robes counting strings of copper cash and stacked bolts of
+    silk, a clerk with a blank ledger and a row of counting rods, wooden crates and sacks of grain, shafts of light from high windows on piles of coin, a sense of abundance but careful accounts. Plain banners
+    and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: cede0765c10b9e70c820617af2bf948c889d804ccfa34b2539e37342703b334a
+  status: generated
+  version: 1
+- id: event.anxi_triumph
+  kind: event
+  used_by: event:anxi_triumph:illustration
+  path: assets/event/event.anxi_triumph.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A palace ceremony of presenting captives: a Tang general in lamellar armour and a purple cloak leading
+    a line of foreign prisoners (an unfamiliar king in Central Asian dress in white robes, hands bound) before the emperor on a dais, trophies of horses and gold vessels at the foot of the steps, rows of
+    courtiers in purple and scarlet, solemn triumphant light. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 144a6c4f0dca7592c37d0c278fca6e9f3192d3269f479d579a77beaf6672ede1
+  status: generated
+  version: 1
+- id: event.gao_lishi_counsel
+  kind: event
+  used_by: event:gao_lishi_counsel:illustration
+  path: assets/event/event.gao_lishi_counsel.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A late-night private audience in a lamp-lit palace study: the aged emperor in an ochre-yellow robe sitting
+    heavily by a lacquered desk looking out a window at rain, and beside him the elder eunuch Gao Lishi in a plain purple robe standing with folded hands and a concerned bow, a single lamp and a distant
+    dark sky, quiet intimacy and unease. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 6b41fa0115beff64a19256714e056196ac4d5bc57b191d0b34adf9f0485e51bd
+  status: generated
+  version: 1
+- id: event.fanyang_armoury
+  kind: event
+  used_by: event:fanyang_armoury:illustration
+  path: assets/event/event.fanyang_armoury.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A night forge yard in a northern fortress: armourers hammering lamellar plates by glowing furnaces, stacks
+    of helmets and halberds, a long line of fine horses being shod by torchlight, soldiers stacking sacks of grain in a storehouse, red glow and shadows, quietly threatening preparation, plain banners.
+    Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: e6624bd70c9b529ce635dfbcaae8faea2fa4ad747c6724a51b3339cce967ad65
+  status: generated
+  version: 1
+- id: event.envoy_in_fanyang
+  kind: event
+  used_by: event:envoy_in_fanyang:illustration
+  path: assets/event/event.envoy_in_fanyang.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A banquet in a northern fortress: a hugely stout Hu general in a purple round-collar robe lavishly pouring
+    wine for a smooth-faced eunuch envoy in a scarlet robe seated at the place of honour, a servant carrying a lacquered chest of gold and a bolt of silk toward the envoy''s side, armoured officers watching
+    in the shadows, warm candlelight, flattery and corruption. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 0dc41d90ec551c2e1dc4447404fb6b041f2d93577792874c1fa7311921edf5fd
+  status: generated
+  version: 1
+- id: event.princess_wedding
+  kind: event
+  used_by: event:princess_wedding:illustration
+  path: assets/event/event.princess_wedding.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A Tang wedding procession at dusk: a young bride in an ornate red-and-gold wedding gown with a fan veil
+    on a carried palanquin accompanied by torch-bearing attendants and musicians with pipa, drums and flutes, a young groom in a scarlet robe on horseback leading, lanterns lining the avenue of Chang''an,
+    festive but with a hint of political calculation. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 672786f1d9afb04057f879e4481fde23ac97d06d2620d9a0a49c5bd404ee85de
+  status: generated
+  version: 1
+- id: event.palace_exam
+  kind: event
+  used_by: event:palace_exam:illustration
+  path: assets/event/event.palace_exam.webp
+  size:
+  - 1344
+  - 896
+  format: webp
+  prompt: 'SUBJECT: Narrative game illustration, wide cinematic composition, painterly Tang style. A grand imperial examination in an open palace courtyard: dozens of candidates in plain white scholar robes
+    sitting in rows on mats, writing on blank paper with brushes, examiners in green and scarlet robes pacing the aisles, and the emperor in ochre-yellow high on a balcony tower overlooking them, bright
+    spring light. Plain banners and flags without any symbols or glyphs. Absolutely no text, no characters, no letters, no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: f07d6f8e23263c6cc56dc75d643b682d9f3d474f565e438b6029576e494e1ef8
+  status: generated
+  version: 1
+- id: ui.season.spring
+  kind: ui
+  used_by: ui:season:spring
+  path: assets/ui/ui.season.spring.webp
+  size:
+  - 1536
+  - 1024
+  format: webp
+  prompt: 'SUBJECT: Wide atmospheric scene illustration of the emperor''s seat of power in Chang''an, in painterly Tang style, no people, empty chair. Spring: the imperial desk by an open lattice window
+    in the Daming Palace, a lacquered desk with a blank unrolled scroll, brush rest, ink stone, a celadon vase with blooming peach and peony, pink petals drifting, soft green willow branches and a glimpse
+    of vermilion pillars and garden outside, fresh warm morning light. Calm composition with an open area suitable for overlaying game panels. Absolutely no text, no characters, no letters, no numbers anywhere
+    in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: db47c3339a564954f9ea5cff296d30502132a376fee7ce92711a917596bbde78
+  status: generated
+  version: 1
+- id: ui.season.summer
+  kind: ui
+  used_by: ui:season:summer
+  path: assets/ui/ui.season.summer.webp
+  size:
+  - 1536
+  - 1024
+  format: webp
+  prompt: 'SUBJECT: Wide atmospheric scene illustration of the emperor''s seat of power in Chang''an, in painterly Tang style, no people, empty chair. Summer: the imperial desk on a shaded palace veranda,
+    a lacquered desk with blank scrolls and an ink stone, a bronze basin of ice and a palm-leaf fan, lotus pond with pink lotus flowers beyond the railing, dense green plane trees and heat haze, a glimpse
+    of distant Chang''an rooftops, deep green and gold light. Calm composition with an open area suitable for overlaying game panels. Absolutely no text, no characters, no letters, no numbers anywhere in
+    the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 8725dec14657a09af5c39854c3d97ff37d2c26ba465c203930265f47887420b2
+  status: generated
+  version: 1
+- id: ui.season.autumn
+  kind: ui
+  used_by: ui:season:autumn
+  path: assets/ui/ui.season.autumn.webp
+  size:
+  - 1536
+  - 1024
+  format: webp
+  prompt: 'SUBJECT: Wide atmospheric scene illustration of the emperor''s seat of power in Chang''an, in painterly Tang style, no people, empty chair. Autumn: the imperial desk in the lamp-lit evening of
+    Daming Palace, a lacquered desk with blank scrolls and an ink stone, a gold-and-silver wine ewer, chrysanthemums in a bowl, red maple and ginkgo leaves drifting through an open window, flights of wild
+    geese in a copper sunset over distant rooftops, a faint sense of unease. Calm composition with an open area suitable for overlaying game panels. Absolutely no text, no characters, no letters, no numbers
+    anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: 6d581004ff67e33718a1ebe2cf428d12744f83fea12944a96727a29e43b9a9f6
+  status: generated
+  version: 1
+- id: ui.season.winter
+  kind: ui
+  used_by: ui:season:winter
+  path: assets/ui/ui.season.winter.webp
+  size:
+  - 1536
+  - 1024
+  format: webp
+  prompt: 'SUBJECT: Wide atmospheric scene illustration of the emperor''s seat of power in Chang''an, in painterly Tang style, no people, empty chair. Winter: the imperial desk in a warm palace room, a
+    lacquered desk with blank scrolls and an ink stone, a bronze brazier glowing with charcoal beside it, a plum blossom branch in a vase, lattice windows with snow falling outside on grey-tiled roofs and
+    a snowy Chang''an in the distance, silent cold blue dusk against warm lamp light. Calm composition with an open area suitable for overlaying game panels. Absolutely no text, no characters, no letters,
+    no numbers anywhere in the image.'
+  negative_prompt: text, characters, calligraphy, letters, numbers, watermark, logo, dragon, dragon robe, Ming wing hat, mandarin square, modern, photo, 3d render, anime
+  style_ref: design/STYLE_GUIDE.md §5 shared style block
+  model: codex-image
+  sha256: efec9eb7d3324cc9b74cbbca7c8a0cc47a15a9fe3ae8612d1df6b2d723b29a54
+  status: generated
+  version: 1
