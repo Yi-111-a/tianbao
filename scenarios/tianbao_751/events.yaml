@@ -177,7 +177,10 @@
   title: 东宫被构
   kind: scheduled
   when: {turn: 3}
-  conditions: {kind: resource, id: court_strife, operator: gte, value: 55}
+  conditions:
+    all:
+      - {kind: resource, id: court_strife, operator: gte, value: 55}
+      - {not: {kind: flag, operator: eq, key: donggong_protected, value: true}}
   gravity: 0.7
   text: 中书奏东宫属官与边将书信往还，请付有司推按。太子闻之，惶恐待罪。（本游戏仿天宝初东宫诸案而设。）
   effects:
