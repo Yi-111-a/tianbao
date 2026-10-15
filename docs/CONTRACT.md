@@ -264,6 +264,40 @@ default_difficulty: normal
 | POST | `/sessions/{id}/rewind` | body `{entry_id}` |
 | DELETE | `/sessions/{id}` | 删除存档 |
 | GET | `/health` | `{ok, version, scenarios}`，给桌面壳探活用 |
+| GET | `/integration` | 只读。本机让 Codex / Claude Code 经 MCP 玩同一份存档的现成命令，设置页照原样展示（每段可复制）。见下 |
+
+`GET /api/integration` 返回：
+
+```jsonc
+{
+  "name": "tianbao",                    // MCP 服务名（桌面版 / dev_backend 为 tianbao；裸引擎为 llm-sim）
+  "mode": "installed" | "source",       // 安装版：tianbao-server.exe mcp；源码：venv python -m cli.main mcp
+  "server": {"command": "C:\\...\\tianbao-server.exe", "args": ["mcp"], "env": {}, "cwd": null},
+  "home": "C:\\Users\\<you>\\AppData\\Roaming\\tianbao",   // 存档目录（LLM_SIM_HOME），与应用共用
+  "scenarios_dir": "...",
+  "codex": {
+    "add": "codex mcp add tianbao -- \"C:\\...\\tianbao-server.exe\" mcp",
+    "toml": "[mcp_servers.tianbao]\ncommand = '...'\nargs = [\"mcp\"]\nstartup_timeout_sec = 30\ntool_timeout_sec = 120\ndefault_tools_approval_mode = \"approve\"\n",
+    "exec_flags": ["mcp_servers.tianbao.command=\"...\"", "mcp_servers.tianbao.args=[\"mcp\"]", "mcp_servers.tianbao.default_tools_approval_mode=\"approve\""],
+    "note": "codex mcp add 不写 default_tools_approval_mode；codex exec 需要它……"
+  },
+  "claude": {
+    "add": "claude mcp add tianbao -- \"C:\\...\\tianbao-server.exe\" mcp",
+    "add_user": "claude mcp add tianbao --scope user -- \"C:\\...\\tianbao-server.exe\" mcp",
+    "mcp_json": "{\n  \"mcpServers\": {\n    \"tianbao\": {\"type\": \"stdio\", \"command\": \"...\", \"args\": [\"mcp\"]}\n  }\n}\n"
+  },
+  "setup": {                            // 安装目录（或源码）里有 integrations/setup_mcp.ps1 时给出，否则 null
+    "script": "C:\\...\\integrations\\setup_mcp.ps1",
+    "codex": "powershell -NoProfile -ExecutionPolicy Bypass -File \"...setup_mcp.ps1\" -ServerExe \"...\" -Codex",
+    "claude": "powershell ... -Claude"
+  }
+}
+```
+
+- 安装版里 `server.env` 通常为空：`tianbao-server.exe mcp` 自带与应用相同的默认值（`LLM_SIM_HOME=%APPDATA%/tianbao`、安装目录下的 `scenarios`）。应用以非默认的 `LLM_SIM_HOME` / `SIM_SCENARIOS_DIR` 启动时，差异会写进 `env`，命令里相应出现 `--env K=V`（codex）/ `-e K=V`（claude）。
+- 源码模式（`mode: "source"`）：`command` 是当前 venv 的 python，`args = ["-m","cli.main","mcp"]`，`cwd` 为 `engine/backend`，`env` 含 `LLM_SIM_HOME`、`SIM_SCENARIOS_DIR`（及 `SIM_GAME_ROOT`、`PYTHONUTF8`）。`cwd` 只出现在 `toml`/`exec_flags` 里（`mcp add` 与 `.mcp.json` 无此项，venv 中已安装引擎，不依赖 cwd）。
+- 所有字符串都是可直接粘贴的成品；命令行里含空格或非 ASCII 的参数用双引号括起（PowerShell / cmd / bash 通用）。
+- 桌面壳经环境变量 `SIM_MCP_LAUNCH`（JSON `{name, mode, command, args, env, cwd}`）告诉引擎精确的启动方式；`SIM_MCP_NAME` 改服务名。
 
 廷议立场（确定性），按优先级：
 1. 议题对应奏疏（`memorial_id`，或当季可见奏疏中标题互含 / `keywords` 命中 / 标题二字组被议题覆盖 ≥ 50%）：该奏疏 `advisors` 中的人用奏疏立场。
@@ -337,6 +371,7 @@ default_difficulty: normal
   - `LLM_SIM_HOME`：`%APPDATA%/tianbao`。
 - 启动后轮询 `/health`；应用退出时结束 sidecar 进程。
 - 安装包用 NSIS。
+- 同一个 `tianbao-server.exe` 也是 MCP 服务：`tianbao-server.exe mcp`（stdio，UTF-8），默认值与应用相同，所以外部模型与应用共用存档。安装目录另带 `integrations/`（`setup_mcp.ps1`、Claude Code 插件、Codex 的 `AGENTS.md`），见 `integrations/README.md`；本机的现成命令由 `GET /api/integration` 给出（见 2）。
 
 ## 6. 测试与门禁
 

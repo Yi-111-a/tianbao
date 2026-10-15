@@ -45,7 +45,8 @@
     ],
     "resources": {
       "resources/server": "server",
-      "../../scenarios": "scenarios"
+      "../../scenarios": "scenarios",
+      "../../integrations": "integrations"
     },
     "shortDescription": "天宝：盛唐天宝十载的施政推演",
     "windows": {

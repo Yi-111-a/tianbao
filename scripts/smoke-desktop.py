@@ -253,6 +253,72 @@ def run_main_checks(exe: Path, home: Path, scen_env: dict[str, str]) -> None:
             else:
                 print("   (no scenarios available to create a session)")
 
+            # ---- new game through the UI: title -> newgame -> desk
+            ui_session = None
+            try:
+                page.get_by_test_id("title.newGame").click()
+                page.get_by_test_id("newgame.root").wait_for(state="visible", timeout=15000)
+                page.get_by_test_id("newgame.start").click()
+                t_ng = time.time()
+                page.get_by_test_id("desk.root").wait_for(state="visible", timeout=60000)
+                ui_session = page.evaluate("JSON.parse(localStorage.getItem('tianbao.session') ?? 'null')")
+                check("UI new game: title -> newgame -> desk", bool(ui_session), f"{time.time() - t_ng:.1f}s, session {ui_session}")
+            except Exception as e:  # noqa: BLE001
+                check("UI new game: title -> newgame -> desk", False, str(e)[:300])
+            sess_dir = (home or Path(os.environ["APPDATA"]) / "tianbao") / "sessions"
+            if ui_session:
+                time.sleep(0.3)
+                check("UI save file in <home>/sessions", any(sess_dir.glob(f"{ui_session}*")), str(sess_dir))
+            check("no console errors after new game", not errors, "; ".join(errors)[:400])
+
+            # ---- /api/integration: exact MCP commands for this install
+            integ = page.evaluate("b => fetch(b + '/api/integration').then(async r => [r.status, await r.json()])", base)
+            server_exe = (exe.parent / "server" / "tianbao-server.exe").resolve()
+            info = integ[1] if integ[0] == 200 else {}
+            srv = info.get("server", {})
+            same_exe = bool(srv.get("command")) and os.path.normcase(str(Path(srv["command"]).resolve())) == os.path.normcase(str(server_exe))
+            check("GET /api/integration", integ[0] == 200 and info.get("mode") == "installed" and info.get("name") == "tianbao" and same_exe,
+                  f"{integ[0]} mode={info.get('mode')} command={srv.get('command')}")
+            add = info.get("codex", {}).get("add", "")
+            check("integration: codex/claude commands", add.startswith("codex mcp add tianbao ") and add.endswith(f' -- "{srv.get("command")}" mcp')
+                  and (not home or f"LLM_SIM_HOME={home}" in add)
+                  and info.get("claude", {}).get("add_user", "").startswith("claude mcp add tianbao --scope user")
+                  and 'default_tools_approval_mode = "approve"' in info.get("codex", {}).get("toml", ""), info.get("codex", {}).get("add", "")[:200])
+            if home:
+                check("integration: home is the app's LLM_SIM_HOME", srv.get("env", {}).get("LLM_SIM_HOME") == str(home), str(srv.get("env")))
+            setup = info.get("setup") or {}
+            check("integration: bundled setup_mcp.ps1", bool(setup) and Path(setup.get("script", "")).is_file(), str(setup.get("script")))
+            print("   INTEGRATION_CODEX_ADD=" + info.get("codex", {}).get("add", ""))
+
+            # ---- the installed exe as an MCP server (official client SDK), using exactly the advertised command
+            if srv.get("command"):
+                sys.path.insert(0, str(ROOT / "scripts"))
+                import asyncio
+
+                from mcp_selftest import play_one_season
+
+                try:
+                    from concurrent.futures import ThreadPoolExecutor
+
+                    coro = play_one_season(srv["command"], srv.get("args", ["mcp"]), srv.get("env") or {}, load_session=ui_session)
+                    with ThreadPoolExecutor(1) as pool:  # Playwright's sync API owns this thread's event loop
+                        mcp_res = pool.submit(asyncio.run, coro).result(timeout=300)
+                except Exception as e:  # noqa: BLE001
+                    mcp_res = {"ok": False, "steps": {}, "error": repr(e)[:300]}
+                print("   MCP_RESULT=" + json.dumps(mcp_res, ensure_ascii=False))
+                for step, ok in mcp_res.get("steps", {}).items():
+                    check(f"MCP {step}", ok)
+                check("MCP: new_game -> briefing -> end_turn via tianbao-server.exe mcp", mcp_res.get("ok", False),
+                      f"startup {mcp_res.get('startup_s')}s, total {mcp_res.get('seconds')}s {mcp_res.get('error', '')}")
+                if mcp_res.get("session_id"):
+                    listed = page.evaluate("b => fetch(b + '/api/sessions').then(r => r.json())", base)
+                    ids_seen = {str(x.get("id")) for x in listed} if isinstance(listed, list) else set()
+                    check("shared saves: MCP game listed by the app's /api/sessions", mcp_res["session_id"] in ids_seen, f"{len(ids_seen)} sessions")
+                    view = page.evaluate("([b, s]) => fetch(b + '/api/sessions/' + s + '/view').then(r => r.json())", [base, mcp_res["session_id"]])
+                    cal = str((view or {}).get("calendar_label", ""))
+                    turn = ((view or {}).get("state") or {}).get("turn")
+                    check("shared saves: app sees the MCP game after end_turn", turn == 1, f"turn={turn} {cal}")
+
             # ---- sidecar facts
             sidecars = tasklist("tianbao-server.exe")
             check("sidecar process running", len(sidecars) >= 1, str(sidecars))
@@ -282,6 +348,33 @@ def run_main_checks(exe: Path, home: Path, scen_env: dict[str, str]) -> None:
         subprocess.run(["taskkill", "/F", "/IM", "tianbao-server.exe"], capture_output=True)
 
 
+def find_claude() -> str | None:
+    exe = shutil.which("claude")
+    if exe:
+        return exe
+    found = sorted(Path(os.environ.get("APPDATA", "")).glob("Claude/claude-code/*/*/claude.exe"), key=lambda p: p.stat().st_mtime)
+    return str(found[-1]) if found else None
+
+
+def run_plugin_check(target: Path, home: Path | None, tmp: Path) -> None:
+    """The Claude Code plugin's .mcp.json points at ${LOCALAPPDATA}/天宝/server/tianbao-server.exe (default install)."""
+    claude = find_claude()
+    plugin = target / "integrations" / "claude-code"
+    if not claude or target.name != "天宝":
+        print("   (Claude Code CLI not found or non-default install dir name; plugin check skipped)")
+        return
+    check("plugin bundled in install", (plugin / ".claude-plugin" / "plugin.json").is_file(), str(plugin))
+    env = os.environ.copy()
+    env.update({"LOCALAPPDATA": str(target.parent), "CLAUDE_CONFIG_DIR": str(tmp / "claude-config")})
+    if home:
+        env["LLM_SIM_HOME"] = str(home)
+    out = subprocess.run([claude, "--plugin-dir", str(plugin), "mcp", "list"], env=env, capture_output=True, timeout=120)
+    text = out.stdout.decode("utf-8", errors="replace") + out.stderr.decode("utf-8", errors="replace")
+    line = next((ln for ln in text.splitlines() if "plugin:tianbao" in ln), text.strip()[-200:])
+    check("Claude Code plugin MCP server connects", "plugin:tianbao:tianbao" in text and "Connected" in line, line.strip()[:240])
+    subprocess.run(["taskkill", "/F", "/IM", "tianbao-server.exe"], capture_output=True)
+
+
 def run_crash_test(exe: Path, home: Path, scen_env: dict[str, str]) -> None:
     env = {"LLM_SIM_HOME": str(home)} if home else {}
     env.update(scen_env)
@@ -309,9 +402,10 @@ def main() -> int:
     ap.add_argument("--real-home", action="store_true", help="use the real %%APPDATA%%/tianbao")
     ap.add_argument("--scenarios-dir", type=Path, help="override SIM_SCENARIOS_DIR (use when the bundle has no scenarios yet)")
     args = ap.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
 
     tmp = Path(tempfile.mkdtemp(prefix="tianbao-smoke-"))
-    target = tmp / "app"
+    target = tmp / "天宝"  # same leaf name as the default %LOCALAPPDATA%\天宝 (plugin check relies on it)
     home = None if args.real_home else tmp / "home"
     scen_env: dict[str, str] = {}
     if args.scenarios_dir:
@@ -322,6 +416,8 @@ def main() -> int:
         else:
             exe = install(args.installer or newest_installer(), target)
         run_main_checks(exe, home, scen_env)
+        if not args.exe:
+            run_plugin_check(target, home, tmp)
         if not args.no_crash_test:
             run_crash_test(exe, home, scen_env)
     finally:

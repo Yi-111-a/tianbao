@@ -18,3 +18,6 @@ design/asset_src/
 playtests/screens/**/*.png
 tests/node_modules
 playtests/engine-*/
+playtests/**/home/
+playtests/**/events.jsonl
+playtests/**/stderr.txt

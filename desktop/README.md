@@ -8,7 +8,8 @@ desktop/
   package.json            @tauri-apps/cli (npm)
   placeholder-dist/       stand-in frontend, ONLY for smoke tests when app/dist is not built yet
   icon-src/               icon.svg / icon.png (original cinnabar seal + coin mark, no text); `tauri icon` output in src-tauri/icons
-  sidecar/entry.py        PyInstaller entry: `serve --host --port` (adds CORS for the webview), else delegates to `cli.main`
+  sidecar/entry.py        PyInstaller entry: `serve --host --port` (adds CORS for the webview), `mcp` (stdio MCP server),
+                          else delegates to `cli.main`; applies the app's env defaults in every mode
   sidecar/tianbao_server.spec
   src-tauri/
     tauri.conf.json       window/CSP/NSIS/resources
@@ -16,7 +17,8 @@ desktop/
     src/lib.rs            port pick, sidecar spawn + job object, splash, health poll, get_api_base
     resources/server/     staged PyInstaller onedir (generated, git-ignored)
 ../scripts/
-  build-sidecar.ps1  build-desktop.ps1  dev-desktop.ps1  smoke-desktop.py
+  build-sidecar.ps1  build-desktop.ps1  dev-desktop.ps1  smoke-desktop.py  mcp_selftest.py
+../integrations/          bundled as resource `integrations/`: setup_mcp.ps1/.py, Claude Code plugin, Codex AGENTS.md
 ```
 
 ## How it runs
@@ -37,7 +39,13 @@ desktop/
    engine writes JSONL one record at a time.)
 6. `sidecar/entry.py` handles `serve` itself (no uvicorn string import, so PyInstaller sees every module) and adds CORS for
    `http://tauri.localhost` and `http://127.0.0.1|localhost:<any>` if the engine app has none. Other subcommands
-   (`mcp`, `validate`, ...) go to the engine CLI, so `tianbao-server.exe mcp` works from the installed folder too.
+   (`validate`, ...) go to the engine CLI.
+7. **MCP mode**: `<install>\server\tianbao-server.exe mcp [--mode client|server]` is a stdio MCP server for Codex /
+   Claude Code. Without any env it uses the same defaults as the app (`LLM_SIM_HOME=%APPDATA%\tianbao`,
+   `SIM_SCENARIOS_DIR=<install>\scenarios`, `SIM_GAME_ROOT=<install>`, resolved from the exe path), so saves are shared.
+   stdio is UTF-8 regardless of the console code page (the MCP SDK re-wraps fd 0/1 as UTF-8; stderr is reconfigured).
+   In `serve` mode the entry publishes `SIM_MCP_LAUNCH` so `GET /api/integration` returns the exact
+   `codex mcp add` / `claude mcp add` / TOML / `.mcp.json` for this install (see CONTRACT section 2). Setup: `../integrations/README.md`.
 
 Frontend in the webview: bundled files are served from `http://tauri.localhost`; CSP (see `tauri.conf.json`) allows
 `connect-src` / `img-src` / `media-src` to `http://127.0.0.1:*`, `font-src 'self' data:`, `script-src 'self'`.
@@ -48,6 +56,8 @@ Prereqs: Rust 1.77+ (MSVC), VS 2022 Build Tools, Node, the shared venv `../.venv
 NSIS 3.13 + nsis_tauri_utils from GitHub (needs network once).
 
 ```powershell
+pwsh scripts/build-desktop.ps1 -Snapshot       # release: scenarios + frontend from a temp `git worktree` of HEAD (working
+                                               # app/ sources overlaid, falls back to committed app/), engine from working tree
 pwsh scripts/build-desktop.ps1                 # sidecar -> npm --prefix app run build -> tauri build
 pwsh scripts/build-desktop.ps1 -Placeholder    # use desktop/placeholder-dist instead of app/dist (smoke only)
 pwsh scripts/build-desktop.ps1 -SkipSidecar    # reuse staged sidecar
@@ -79,8 +89,11 @@ Overrides (any build): `TIANBAO_SERVER_EXE=<path>` (custom sidecar), `SIM_SCENAR
 ```
 Launches with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9229`, attaches Playwright over CDP and checks:
 splash text, title screen (`[data-testid^="title."]`), native window title, `get_api_base`, `/api/health` + CORS from the
-page, zero console errors across a reload, no mojibake (DOM + server.log), session file under `<home>/sessions`, graceful
-close leaves no `tianbao-server.exe`, and hard-killing the shell also takes the sidecar down. Uses a temp `LLM_SIM_HOME`
+page, zero console errors across a reload, no mojibake (DOM + server.log), a new game through the UI
+(title -> newgame -> desk), `/api/integration` (installed mode, exe path, shared home), the installed
+`tianbao-server.exe mcp` driven by the `mcp` client SDK (new_game -> briefing -> end_turn, Chinese intact) and that save
+showing up in the app's `/api/sessions` (shared saves), graceful close leaves no `tianbao-server.exe`, and hard-killing
+the shell also takes the sidecar down. Uses a temp `LLM_SIM_HOME`
 unless `--real-home`. Needs no browser download (CDP to WebView2).
 
 ## Troubleshooting
