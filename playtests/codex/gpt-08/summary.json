@@ -1,0 +1,7 @@
+{
+  "agent": "codex",
+  "run": "gpt-08",
+  "exit": 0,
+  "seconds": 566,
+  "report": true
+}
