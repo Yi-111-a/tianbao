@@ -427,3 +427,37 @@ default_difficulty: normal
 | G3 | API 契约测试、仿 OpenAI 服务器测试、MCP 工具测试 |
 | G4 | 乱码扫描：DOM、日志、存档中不允许出现 `�`、`锟斤拷`，以及 `Ã` `å` `æ` `ç` `è` 后跟 0x80–0xBF 字节的典型 mojibake；静态文案和剧本文字必须 100% 被打包字体覆盖 |
 | G5 / G6 | 自玩与 GPT 玩的日志存入 `playtests/` |
+
+## 7. 第 9 轮：朝会日程、在场限制、驿传、政令卡、军令
+
+用户反馈：召对无限次；拟诏太自由，新玩家无从下手；千里之外的人能直接廷议；远方奏疏没有时间延迟；打仗缺少直接指挥手段。本节为本轮约定，引擎保持场景无关，具体数值由剧本配置。
+
+### 7.1 朝会日程（agenda）
+- scenario `settings.agenda: {audience_per_season: 3, debate_per_season: 1}`（缺省不限）。计数存 `WorldState.counters` 的 `_agenda:audience` / `_agenda:debate`，每季结算时清零（属状态，进入哈希）。
+- 面见、书面奏对与遣使问对都计一次召对。超出时 `/chat`、MCP `audience` 返回 `AGENDA_EXHAUSTED`（中文说明剩余与上限）。`/view.agenda` 与 briefing 显示「召对 已用/上限、廷议 已用/上限」。
+- **遣使问对**（人物不在京城）：不当场回话。client 模式下 MCP `audience` 返回「使者已发，回奏于下季送达」，并在下季 briefing「回奏」一节给出该人物的人设卡与事实摘要，由调用方扮演；server 模式与 REST `/chat` 在下季结算时生成回奏，进入下季的「回奏」列表（`/view.replies`）。
+
+### 7.2 廷议在场限制
+- 只有人在京城（`settings.capital_region`，缺省为玩家人物所在地）且不在途的人物能当场廷议；其他人 `NOT_PRESENT`（说明其所在与行程）。
+- `/debate` 与 MCP `court_debate` 新增 `written: [id]`：不在京者递「书面议状」，其立场与理由于下季送达，作为谏言（advice，来源「书面议状」）进入谏言库，不参与当场辩论。
+- 引擎给出 `/sessions/{id}/present`：在京可廷议的名单，以及在外者的所在、行程。
+
+### 7.3 驿传（奏到与令达）
+- 地区新字段 `courier_days`（驿程日数，剧本可写；未写时按到京城的行程季数估算：0 季 → 3 日，1 季 → 15 日，2 季 → 40 日，3 季及以上 → 70 日）。
+- **奏到**：奏疏条目若带 `region`，显示「某月某日自某地奏到」（月日由季首加驿程推算）；`courier_days > 60` 的地区，其奏疏与该地区事件的军报晚一季才出现（条目与事实带 `arrived_late: true` 与原发生季）。
+- **令达**：诏令中作用于某地区或其驻军、长官的条款，若该地 `courier_days > 60`，自动延至下季结算时执行（回执写「驿程遥远，令达于下季」）；其余当季。与既有的有司稽迟延期分开显示。
+- 剧本可用 `settings.courier: {late_threshold_days: 60}` 调整阈值。
+
+### 7.4 政令卡（policy cards）
+- 剧本 `policy_cards.yaml`：`[{id, category: 军务|内政|人事|外交|财计, title, summary, params: [{name, kind: character|office|army|region|amount|choice, filter?, choices?, min?, max?}], ops: [StateOp 模板，可用 {param} 占位], cost_hint, requires?, cooldown?}]`。ops 只能用玩家级操作（见 1.3.1），由引擎校验。
+- `GET /sessions/{id}/policy_cards`：当前可用卡片，以及每个参数的可选值（按 filter 与当前状态过滤，例如只列在世、可任职的人物）。
+- `edicts/draft` 与 MCP `draft_edict` 新增 `cards: [{card_id, params}]`：展开成条款，回执的 `source: card`，并带卡片标题。MCP 新增 `policy_cards` 工具。
+- **自由文字（御笔）**：provider 为 mock 时，文字条款一律 `narrative_only`，回执写明「未接模型：御笔只记入史册，不生效力；请用奏疏批答或政令卡」。`/view` 给出 `provider_mode: offline|llm`，供前端提示。
+
+### 7.5 军令与将领自主
+- 政令卡中的军务卡（出征、驻守、分兵、回援、换帅、坚壁清野）展开为 `march`、`detach`、`set_army_commander`，以及新 op `set_army_posture`（`army`, `posture: hold|attack|scorch`）。posture 影响战斗：hold 守方加成 +20%、不追击；attack 攻方 +10%、败则多损；scorch 本地区粮产与繁荣下降，攻方补给受损。
+- **将领自主**：剧本 `settings.autonomy: {formula}`，按统帅的忠诚、野心等特质与命令类型算出「拒命或擅动」概率（种子随机）。命中时，命令改为延后一季、改作他令，或主将擅自出战（例如哥舒翰被迫出关）；回执预览显示风险等级（低 / 中 / 高），结算时写成事实。
+- `GET /sessions/{id}/armies`：本方各军的兵力、兵质、统帅（是否在营）、驻地或行程、posture、可下的命令、到各地区的行程季数。前端兵部面板据此绘制路线。
+
+### 7.6 新手引导（前三季）
+- 剧本 `tutorial: [{turn, step, title, text, target}]`，target 为前端的 data-testid。`/view.tutorial` 给出当季步骤，可在设置里关闭（`settings.tutorial`，存在会话标记中）。
