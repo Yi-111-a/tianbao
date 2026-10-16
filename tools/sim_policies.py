@@ -20,6 +20,9 @@
 - defender / purge / chaos：结局可达性探针，分别瞄准 E3、E2、E5。它们不是玩家画像。
 - bankrupt / mawei_refuse：失败结局探针，分别瞄准「帑竭兵变」「龙驭宾天」。
 - detain_early：开局禄山在京即留京夺镇（奏疏「禄山在京未归」），其余同 detain。用来确认早夺镇不比召而后夺更省事。
+- first / last（round 8 压力测试）：每条奏疏、每个事件抉择都取首项 / 末项，不看局势。last 复现 self04（开局即留京夺镇、
+  处处取末项）；目标：E1 < 10%、E3 < 25%，多为历史重演 / 藩镇之始 / 失败。
+- passive_war：开局留京夺镇而穷治党与（酿成兵变），战时只守不攻（不进剿、不断粮、不招抚、不出关）。目标：罕得「再造唐室」。
 - ops_disarm（仅 engine 后端）：不经奏疏，以通用诏令把禄山调入京畿、免其范阳 / 平卢节度、以郭子仪接范阳，
   验证事件「禄山留京解镇」把这一局面并入留京路线（gpt-07）。model 后端不模拟玩家 ops，此策略退化为 wise。
 
@@ -674,6 +677,19 @@ WISE_MEMO = {
     "s_demobilize": "keep_best", "s_compensate": "honor", "s_canal": "repair", "s_finance": "abolish",
     "s_rewards": "honor_recall", "s_hebei": "relief", "s_frontier": "garrison", "s_collaborators": "lenient",
 }
+# 乱局奏疏池（round 8）：明君亦须进讨——直捣范阳、出井陉、断粮道、资义兵、招降胁从；东都暂不轻出。
+WAR_POOL_WISE = {
+    "wp_strike_shuofang": "march", "wp_strike_shuofang_2": "march", "wp_strike_hedong": "hebei", "wp_strike_hedong_2": "hebei",
+    "wp_jinjun_east": "hold", "wp_jinjun_east_2": "hold", "wp_supply_raid": "burn", "wp_supply_raid_2": "burn",
+    "wp_amnesty": "pardon", "wp_amnesty_2": "pardon", "wp_tongguan": "repair", "wp_tongguan_2": "repair",
+    "wp_hebei_loyal": "arm", "wp_hebei_loyal_2": "arm", "wp_finance": "frugal", "wp_finance_2": "frugal",
+    "wp_grain": "route", "wp_grain_2": "route", "wp_morale": "remit", "wp_morale_2": "relief",
+    "wp_recruit": "hire", "wp_recruit_2": "hire", "wp_taiyuan": "walls", "wp_taiyuan_2": "supply",
+    "wp_suiyang": "walls", "wp_suiyang_2": "supply", "wp_canal": "route", "wp_canal_2": "route",
+    "wp_rewards": "reward", "wp_rewards_2": "reward", "wp_huihe": "accept", "wp_west_troops": "decline",
+    "p_fanyang_kept": "disarm",
+}
+WISE_MEMO.update(WAR_POOL_WISE)
 WISE_CHOICE = {
     "guozhong_coverup": "punish", "khitan_defeat": "console", "donggong_framed_1": "protect",
     "donggong_framed_2": "protect", "abusi_revolt": "to_shuofang", "linfu_posthumous": "reject",
@@ -705,6 +721,8 @@ def wise(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
             oid = "invite" if m.r("rebellion_risk") < 52 else "hostage"
         if memo["id"] == "r_tongguan":
             oid = "hedong" if m.armies["hedong_army"]["faction"] == m.main and m.armies["hedong_army"]["strength"] > 0 else "jinjun"
+        if memo["id"] in ("r_guo", "r_shuofang_march", "r_hebei") and any(x["id"].startswith("wp_strike_shuofang") for x in visible):
+            continue  # 同季已议朔方直捣范阳，不再另调朔方军（免得两道军令相冲）
         if not oid:
             continue
         opt = next(o for o in memo["options"] if o["id"] == oid)
@@ -731,6 +749,7 @@ DEFENDER_MEMO = {  # 不阻止起兵，专修守备：目标 E3
     "p_gaoqing": "contact",
     "r_luoyang": "recruit", "r_trust": "trust", "r_guo": "march", "r_shuofang_march": "march", "r_hebei": "hebei", "r_tongguan": "jinjun",
     "r_west": "part", "r_sortie": "hold", "r_relief": "enlist", "r_tax": "palace",
+    **{k: v for k, v in WAR_POOL_WISE.items() if k.startswith("wp_")},
 }
 
 
@@ -869,10 +888,80 @@ def mawei_refuse(m: Model, visible: list[dict], pending: list[dict]) -> Decision
     return picks, {p["id"]: "refuse" for p in pending if p["event_id"] == "mawei"}
 
 
+# ---- 按位次选项的压力测试（round 8）：不看局势，每条奏疏、每个事件抉择都取首项 / 末项 ----
+_EVENT_CHOICES: dict[str, list[dict]] = {}
+
+
+def _choice_rows(event_id: str) -> list[dict]:
+    if not _EVENT_CHOICES:
+        for ev in load_pack()["events"] or []:
+            _EVENT_CHOICES[ev["id"]] = list(ev.get("choices") or [])
+    return _EVENT_CHOICES.get(event_id, [])
+
+
+def _choice_ok(m: Any, row: dict) -> bool:
+    cond = row.get("conditions")
+    if not cond:
+        return True
+    st = getattr(m, "st", None)
+    if st is not None:
+        from simcore.domain.events import matches  # noqa: E402
+        return matches(cond, st)
+    return m.matches(cond)
+
+
+def _positional(m: Any, visible: list[dict], pending: list[dict], index: int) -> Decision:
+    picks = [(memo["id"], memo["options"][index]["id"]) for memo in visible if memo.get("options")]
+    choices = {}
+    for p in pending:
+        rows = [row for row in _choice_rows(p["event_id"]) if _choice_ok(m, row)]
+        if rows:
+            choices[p["id"]] = rows[index]["id"]
+    return picks, choices
+
+
+def first(m: Any, visible: list[dict], pending: list[dict]) -> Decision:
+    """每条奏疏、每个事件抉择都取第一项（多为奏疏所议之案 / 进取之策）。"""
+    return _positional(m, visible, pending, 0)
+
+
+def last(m: Any, visible: list[dict], pending: list[dict]) -> Decision:
+    """每条奏疏、每个事件抉择都取最后一项（self04 压力局：多为最差或最消极之选）。目标：E1 < 10%、E3 < 25%。"""
+    return _positional(m, visible, pending, -1)
+
+
+# 消极应战：开局即留京夺镇而穷治党与（酿成兵变），战时只守不攻——只采纳守备、财计、民心类奏疏，
+# 不进剿、不断粮、不招抚、不出关。目标：多为「藩镇之始·河北割据」、历史重演或失败，罕得「再造唐室」。
+PASSIVE_WAR_MEMO = {
+    "r_luoyang": "recruit", "r_tongguan": "hedong", "r_tongguan_jinjun": "jinjun", "r_trust": "trust",
+    "r_guo": "defend", "r_shuofang_march": "defend", "r_hebei": "tongguan", "r_west": "part", "r_sortie": "hold",
+    "r_flight": "west", "r_relief": "relief", "r_tax": "palace",
+}
+PASSIVE_WAR_POOL = {"finance", "grain", "morale", "recruit", "tongguan", "canal", "taiyuan", "suiyang"}  # 只守不攻的题目（war_pool）
+
+
+def passive_war(m: Any, visible: list[dict], pending: list[dict]) -> Decision:
+    picks, choices = wise(m, visible, pending)
+    picks = [(mid, oid) for mid, oid in picks if mid not in ("p_summon", "p_an_capital", "p_fanyang_warn", "t17_fanyang")
+             and not mid.startswith(("r_", "wp_"))]
+    for memo in visible:
+        mid = memo["id"]
+        if mid == "p_an_in_capital":
+            picks.append((mid, "detain_feng"))
+        elif mid == "p_fanyang_warn":
+            picks.append((mid, "purge"))
+        elif mid in PASSIVE_WAR_MEMO and any(o["id"] == PASSIVE_WAR_MEMO[mid] for o in memo["options"]):
+            picks.append((mid, PASSIVE_WAR_MEMO[mid]))
+        elif memo.get("war_pool") in PASSIVE_WAR_POOL:
+            picks.append((mid, memo["options"][0]["id"]))
+    return picks, choices
+
+
 POLICIES: dict[str, Callable[[Model, list, list], Decision]] = {
     "do_nothing": do_nothing, "historical": historical, "wise": wise, "half_wise": half_wise,
     "defender": defender, "purge": purge, "chaos": chaos, "bankrupt": bankrupt, "mawei_refuse": mawei_refuse,
     "detain": detain, "detain_careless": detain_careless, "detain_early": detain_early, "ops_disarm": ops_disarm,
+    "first": first, "last": last, "passive_war": passive_war,
 }
 
 
@@ -1018,7 +1107,13 @@ def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False, on
                         if trace:
                             print(f"   T{state.turn} 拒绝 ops {op.get('op')}: {exc}")
                 continue
-            for op in adopted_ops(scenario, state, mid, oid):
+            try:
+                ops = adopted_ops(scenario, state, mid, oid)
+            except ValueError as exc:  # 同季先批之条已改变局势（如许镇河北、调走守军），此条已不可处理
+                if trace:
+                    print(f"   T{state.turn} 跳过 {mid}: {exc}")
+                continue
+            for op in ops:
                 try:
                     state, _ = apply(op, state)
                 except ValueError as exc:

@@ -170,8 +170,12 @@ wars:
 ai_routes:
   - faction: yan
     route: [fanyang, hebei, duji, tongguan, jingji]
-    hold_if_outnumbered: true
-    conditions: {kind: flag, key: rebellion_started, operator: eq, value: true}
+    hold_if_outnumbered: true   # 本区叛军（兵力 × 素质）不少于前方官军时才进兵；补兵之后即复南下（round 8）
+    conditions:
+      all:
+        - {kind: flag, key: rebellion_started, operator: eq, value: true}
+        - {not: {kind: flag, key: rebellion_quelled, operator: eq, value: true}}
+        - {not: {kind: flag, key: hebei_ceded, operator: eq, value: true}}
 
 objectives:
   - id: peace
@@ -183,7 +187,9 @@ objectives:
       唯禄山离镇方降——召其入朝后留京解镇（兵柄降至约 30；平卢、河东若仍兼领，随后解去再各降 10），新帅到镇且安抚旧部满三策后归零。
       不经奏疏、以诏令调禄山入京畿并免其范阳节度（范阳军不归其统领）者，同样算作留京解镇（事件「禄山留京解镇」），此后兼职解除、择帅、兵变之险与三策安抚全同；唯未经召见（奏疏「召禄山入朝」或应召入朝）而夺镇者，另有「诸镇自危」：安抚之策先记 −1，其后两季旧部不能归心、每季约一成五兵变之险。
       若乱已起，底线是潼关、京畿不失，且可提前终局：①叛军覆灭，或范阳收复、首逆（安禄山；兵变时为史思明）就擒或死且叛军余众 ≤ 2 万，即「乱平」，乱平后再善后两季以「再造唐室·乱平」终局；
-      ②自天宝十五载春（T20）起，东都光复或叛军总兵力 ≤ 6 万，以「再造唐室」终局；③否则守至 T23，以「潼关相持」终局。
+      ②自天宝十五载春（T20）起，东都、京畿不在贼手，官军战功 ≥ 2（收复东都 / 河北 / 范阳、焚其积聚、义兵截击、招降胁从），且河北已复或叛军总兵力 ≤ 5 万，以「再造唐室」终局；
+      ③守至 T23：叛军仍据范阳为「藩镇之始·河北割据」，范阳已复为「潼关相持」。另，许叛军世镇河北（奏疏「招抚之议」）即以「藩镇之始·许镇河北」终局。
+      叛军首逆在世而据范阳、河北则逐季补兵，兵力不弱于前方官军即复南下；朝廷连续两季无进讨之举则师老财匮、贼逼潼关。
     conditions:
       any:
         - all:
@@ -302,7 +308,21 @@ endings:
         - {kind: flag_age, key: rebellion_quelled, operator: gte, value: 2}
         - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
         - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
-    text: 叛军既平，首逆或擒或死；复员、抚恤、漕运、财计次第收拾，河北州县重归版籍。渔阳鼙鼓虽曾动地，终未动摇社稷。此为本游戏的反事实结局。【达成条件】叛乱已平（叛军覆灭，或范阳收复、首逆就擒或死且余众不足两万）；乱平后已善后两季；潼关未失；京畿未陷。
+    text: 叛军既平，首逆或擒或死；陷贼州县重归版籍，朝廷善后之议次第施行。渔阳鼙鼓虽曾动地，终未动摇社稷。此为本游戏的反事实结局。【达成条件】叛乱已平（叛军覆灭，或范阳收复、首逆就擒或死且余众不足两万）；乱平后已善后两季；潼关未失；京畿未陷。
+  # 「许镇河北」：玩家于奏疏「招抚之议」许叛军世镇河北，战事即止（round 8）。
+  - id: e7_hebei_ceded
+    kind: ending
+    priority: 6.5
+    title: 藩镇之始·许镇河北
+    illustration: ending.open_storm
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: rebellion_started, value: true}
+        - {kind: flag, operator: eq, key: hebei_ceded, value: true}
+        - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+    text: 兵连既久，朝廷诏许叛将世镇河北，叛军罢兵称臣。两京无恙，而河北赋税不入、官吏自署，父死子继，号令不出于朝廷。干戈虽息，藩镇割据之局自此而始。此为本游戏的反事实结局。【达成条件】乱已起；奏疏「招抚之议」许叛军世镇河北。
+  # 再造唐室须是官军亲手取胜（round 8）：战功（收复东都 / 河北 / 范阳、焚其积聚、义兵截击、招降胁从）≥ 2，
+  # 且叛军已被遏制（河北已复，或叛军总兵力 ≤ 5 万）、东都不在贼手。坐守不战、叛军盘踞河北者不得此局。
   - id: e3_restoration
     kind: ending
     priority: 7
@@ -314,10 +334,26 @@ endings:
         - {kind: turn, operator: gte, value: 20}
         - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
         - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
+        - {not: {kind: region_controller, operator: eq, region: duji, faction: yan}}
+        - {kind: counter, key: war_merit, operator: gte, value: 2}
         - any:
-            - {kind: flag, operator: eq, key: duji_recovered, value: true}
-            - {kind: army_strength, faction: yan, operator: lte, value: 60000}
-    text: 潼关固守，两京无恙；河北义旗与朔方之师断其归路，叛军日蹙。渔阳鼙鼓虽已动地，大唐终未倾覆。此为本游戏的反事实结局。【达成条件】乱已起；已至天宝十五载春（T20）或以后；潼关未失；京畿未陷；东都已光复或叛军总兵力不足六万。
+            - {not: {kind: region_controller, operator: eq, region: hebei, faction: yan}}
+            - {kind: army_strength, faction: yan, operator: lte, value: 50000}
+    text: 潼关固守，两京无恙；官军收复失地，断其归路，叛军日蹙，困守一隅。渔阳鼙鼓虽已动地，大唐终未倾覆。此为本游戏的反事实结局。【达成条件】乱已起；已至天宝十五载春（T20）或以后；潼关未失；京畿、东都不在贼手；官军战功 ≥ 2（收复东都、河北、范阳，焚其积聚，义兵截击，招降胁从）；河北已复或叛军总兵力不超过五万。
+  # 河北割据：守至时限，潼关、京畿无恙，而首逆仍据范阳——叛军未平亦未被遏制（round 8）。
+  - id: e7_hebei_split
+    kind: ending
+    priority: 7.5
+    title: 藩镇之始·河北割据
+    illustration: ending.open_storm
+    conditions:
+      all:
+        - {kind: flag, operator: eq, key: rebellion_started, value: true}
+        - {kind: turn, operator: gte, value: 23}
+        - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
+        - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
+        - {kind: region_controller, operator: eq, region: fanyang, faction: yan}
+    text: 潼关虽守，两京虽存，而叛军盘踞范阳、河北，兵连一年不解。朝廷力不能讨，诸将拥兵自重，河朔之地名为唐土，实为叛将私有。社稷未倾，然藩镇割据之势已成。此为本游戏的反事实结局。【达成条件】乱已起；守至 T23；潼关未失；京畿未陷；范阳仍在叛军之手。
   - id: e3_standoff
     kind: ending
     priority: 8
@@ -329,7 +365,8 @@ endings:
         - {kind: turn, operator: gte, value: 23}
         - {not: {kind: flag, operator: eq, key: tongguan_lost, value: true}}
         - {not: {kind: region_controller, operator: eq, region: jingji, faction: yan}}
-    text: 潼关岿然，叛军顿兵关外，一年不得西进。天下虽未复旧观，社稷已然无虞，平乱只在时日之间。此为本游戏的反事实结局。【达成条件】乱已起；守至 T23；潼关未失；京畿未陷。
+        - {not: {kind: region_controller, operator: eq, region: fanyang, faction: yan}}
+    text: 潼关岿然，叛军顿兵关外，一年不得西进；官军已复范阳，叛军失其根本。天下虽未复旧观，社稷已然无虞，平乱只在时日之间。此为本游戏的反事实结局。【达成条件】乱已起；守至 T23；潼关未失；京畿未陷；范阳已不在叛军之手（叛军仍据范阳者为「藩镇之始·河北割据」）。
   - id: e5_yang
     kind: ending
     priority: 9
@@ -482,8 +519,14 @@ settings:
     hedong_to_an: 河东归禄山
     hedong_secured: 河东归朝廷节制
     fanyang_pacified: 范阳旧部归心
+    hebei_ceded: 许叛军世镇河北
+    hebei_lost: 河北陷没
+    hebei_recovered: 河北反正
+    fanyang_recovered: 收复范阳
+    court_offensive: 朝廷进讨
   counter_labels:
     bankrupt_streak: 府库枯竭连续季数
     alarm_seasons: 山雨欲来以上季数
     strife_streak: 朝争高位连续季数
     fanyang_measures: 安抚范阳旧部之策
+    war_merit: 官军战功

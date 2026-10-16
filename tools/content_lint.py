@@ -41,6 +41,13 @@
     应设旗标、由「到镇」事件（character_region + army_commander）落实。
 17. 结局文字（round 7）：结局正文称「朝堂议论渐平 / 不复相倾」须有 court_strife 上限条件，称「朝争犹存 / 倾轧犹烈」须有下限条件；
     称「旧部受代 / 渔阳之兵既归朝廷」须有 an_command 上限条件。
+18. 乱局奏疏池（round 8）：带 `war_pool` 的奏疏按战局出现——同一题目至多两条、标题互异，不得按固定回合，
+    须正向要求 rebellion_started 并排除 rebellion_quelled / hebei_ceded；第二条须要求第一条已处理且隔两季以上（flag_age ≥ 2）。
+19. 兵变宽限（round 8）：设 mutiny_rebellion 的事件须有留京 / 不许还帅之后的季数条件，an_detained、fanyang_restive 下限 ≥ 2，
+    early_detain_alarm 下限 ≥ 1（夺镇当季与下一季不发，留一整季可行安抚之策）。
+20. 再造唐室须有战功（round 8）：e3_* 结局须正向要求乱平、官军战功（counter war_merit）或范阳已不在叛军之手之一。
+21. 善后之言须有其事（round 8）：乱平后的奏疏称乱中新募、加税、西兵东调、漕路被毁、州县陷贼等，须有记录其事的旗标。
+22. 察使称谓（round 8）：察看范阳的回奏事件写「中使」须排除遣御史，写「御史」须限于遣御史（memorial:p_envoy）。
 """
 from __future__ import annotations
 
@@ -114,6 +121,14 @@ ENDING_CLAIMS: list[tuple[str, str, str]] = [   # (正则, 资源, 须有的界�
     (r"旧部受代|渔阳之兵既归朝廷|兵柄尽归", "an_command", "upper"),
 ]
 MOVE_OPS = {"move_army", "march", "detach"}
+# ---- round 8 ----
+POSTWAR_CLAIMS: list[tuple[str, list[str]]] = [   # 善后奏疏的说法 → 记录乱中确有其事的旗标
+    (r"新募|所募|赦囚", ["jinjun_war_recruits"]),
+    (r"所加诸税|税商|鬻官|铸大钱|榷盐", ["war_levies"]),
+    (r"东调|边备空虚", ["west_called"]),
+    (r"漕路.{0,6}(阻|毁)|堰闸", ["canal_was_cut"]),
+    (r"陷贼|兵燹|受伪命|户口流散", ["hebei_lost", "duji_lost"]),
+]
 
 
 # ---- 读取 ----
@@ -236,6 +251,40 @@ def flag_exists_guards(cond: Any, negated: bool = False) -> set[str]:
         if (negated and op == "exists") or (not negated and op == "absent"):
             found.add(str(cond.get("key")))
     return found
+
+
+def leaf_conditions(cond: Any, negated: bool = False) -> list[dict[str, Any]]:
+    """条件里正向的叶子（all / any 之内；not 之内的不算）。"""
+    if isinstance(cond, list):
+        return [leaf for row in cond for leaf in leaf_conditions(row, negated)]
+    if not isinstance(cond, dict):
+        return []
+    for key in ("all", "any"):
+        if key in cond:
+            return leaf_conditions(cond[key], negated)
+    if "not" in cond:
+        return leaf_conditions(cond["not"], not negated)
+    return [] if negated else [cond]
+
+
+def negated_leaves(cond: Any, negated: bool = False) -> list[dict[str, Any]]:
+    """条件里 not 之内的叶子。"""
+    if isinstance(cond, list):
+        return [leaf for row in cond for leaf in negated_leaves(row, negated)]
+    if not isinstance(cond, dict):
+        return []
+    for key in ("all", "any"):
+        if key in cond:
+            return negated_leaves(cond[key], negated)
+    if "not" in cond:
+        return negated_leaves(cond["not"], not negated)
+    return [cond] if negated else []
+
+
+def flag_negations(cond: Any) -> set[str]:
+    """条件里「旗标未成」的 key（not + flag eq true）。"""
+    return {str(c.get("key")) for c in negated_leaves(cond)
+            if c.get("kind") == "flag" and c.get("operator", "eq") == "eq" and c.get("value", True) is True}
 
 
 def visible_turns(item: dict[str, Any]) -> set[int] | None:
@@ -424,9 +473,11 @@ def lint(pack: Path) -> list[str]:
         if upkeep:
             per_treasury = next((float(row.get("amount", 0)) / float(row.get("per", 1)) for row in upkeep
                                  if row.get("resource") == "treasury"), 0.0)
-            for opt in options:
+            rebel_now = {key[: -len("_rebel")] for key in positive_evidence(item.get("conditions")) if key.endswith("_army_rebel")}
+            for opt in options:   # 条件写明某军已从乱（<军>_rebel 旗标）者，其兵额不计入本方养兵（round 8）
                 net = sum(float(op.get("delta", 0)) for op in ops_of(opt.get("ops"))
-                          if op.get("op") == "adjust_army" and army_faction.get(op.get("army")) == player)
+                          if op.get("op") == "adjust_army" and army_faction.get(op.get("army")) == player
+                          and op.get("army") not in rebel_now)
                 hint = str(opt.get("hint", ""))
                 claim = UPKEEP_CLAIM.search(hint)
                 where = f"奏疏 {mid}.{opt.get('id')}"
@@ -513,6 +564,83 @@ def lint(pack: Path) -> list[str]:
             ok = {"upper": {"lt", "lte"}, "lower": {"gt", "gte"}}[direction]
             if not any(res == resource and op in ok for res, op in have):
                 problems.append(f"[结局] 结局 {ending.get('id')} 称「{hit.group(0)}」，但条件里没有 {resource} 的相应界限")
+
+    # ---- round 8：乱局奏疏池 / 兵变宽限 / 再造唐室须有战功 / 善后之言须有其事 / 察使称谓 ----
+    pool: dict[str, list[dict[str, Any]]] = {}
+    for item in memos:
+        if item.get("war_pool") is not None:
+            pool.setdefault(str(item["war_pool"]), []).append(item)
+    for template, rows in pool.items():
+        if len(rows) > 2:
+            problems.append(f"[奏疏池] 题目 {template} 有 {len(rows)} 条（{'、'.join(str(r['id']) for r in rows)}），每场战事同题至多两见")
+        if len({str(r.get("title")) for r in rows}) < len(rows):
+            problems.append(f"[奏疏池] 题目 {template} 的各条标题须互不相同（第二见另写标题）")
+        for index, row in enumerate(rows):
+            where = f"奏疏 {row.get('id')}（题目 {template}）"
+            cond = row.get("conditions")
+            if row.get("turn") is not None:
+                problems.append(f"[奏疏池] {where} 不得按固定回合出现，须按战局条件出现")
+            if "rebellion_started" not in positive_evidence(cond):
+                problems.append(f"[奏疏池] {where} 条件里没有正向的 rebellion_started")
+            negated = {key for key in ("rebellion_quelled", "hebei_ceded") if key in flag_negations(cond)}
+            for key in sorted({"rebellion_quelled", "hebei_ceded"} - negated):
+                problems.append(f"[奏疏池] {where} 条件里缺少「{key} 未成」")
+            if index > 0:
+                first_id = str(rows[0]["id"])
+                if not any(c.get("kind") == "flag_age" and c.get("key") == f"memorial:{first_id}"
+                           and c.get("operator") in ("gte", "gt") and float(c.get("value", 0)) >= 2 for c in leaf_conditions(cond)):
+                    problems.append(f"[奏疏池] {where} 为第二见，条件须写「memorial:{first_id}」已处理且隔两季以上（flag_age ≥ 2）")
+    # 兵变宽限：设 mutiny_rebellion 的事件，留京 / 不许还帅之后须满一整季（flag_age ≥ 2），「诸镇自危」之后须 ≥ 1
+    grace_min = {"an_detained": 2, "fanyang_restive": 2, "early_detain_alarm": 1}
+    for eid, ev in events.items():
+        sets_mutiny = any(op.get("op") == "set_flag" and op.get("key") == "mutiny_rebellion" and op.get("value", True)
+                          for op in ops_of(ev.get("effects")))
+        if not sets_mutiny:
+            continue
+        ages = [c for c in leaf_conditions(ev.get("conditions")) if c.get("kind") == "flag_age" and c.get("key") in grace_min]
+        if not ages:
+            problems.append(f"[宽限] 事件 {eid} 酿成兵变，却没有留京 / 夺镇之后的季数条件（宽限一季）")
+        for key in {str(c.get("key")) for c in ages}:
+            lows = [float(c.get("value", 0)) + (1 if c.get("operator") == "gt" else 0)
+                    for c in ages if c.get("key") == key and c.get("operator") in ("gte", "gt", "eq")]
+            if not lows or max(lows) < grace_min[key]:
+                problems.append(f"[宽限] 事件 {eid} 的 {key} 季数下限须 ≥ {grace_min[key]}（夺镇 / 不许还帅之后至少留一整季可行安抚之策）")
+    # 再造唐室须是官军亲手取胜：e3_* 结局须正向要求乱平、战功或收复范阳之一
+    for ending in data["scenario"].get("endings", []) or []:
+        if not str(ending.get("id", "")).startswith("e3_"):
+            continue
+        cond = ending.get("conditions")
+        leaves = leaf_conditions(cond)
+        ok = "rebellion_quelled" in positive_evidence(cond) or any(
+            c.get("kind") == "counter" and c.get("key") == "war_merit" and c.get("operator") in ("gte", "gt") for c in leaves
+        ) or any(c.get("kind") == "region_controller" and c.get("region") == "fanyang" and c.get("faction") == "yan"
+                 for c in negated_leaves(cond))
+        if not ok:
+            problems.append(f"[结局] 结局 {ending.get('id')} 属「再造唐室」，须要求乱平、官军战功（war_merit）或范阳已不在叛军之手之一，坐守不战者不得")
+    # 善后之言须有其事：乱平后的奏疏所称乱中之事，须有记录此事的旗标
+    for item in memos:
+        cond = item.get("conditions")
+        evidence = positive_evidence(cond)
+        if "rebellion_quelled" not in evidence:
+            continue
+        text = f"{item.get('title', '')}｜{item.get('summary', '')}"
+        for pattern, flags in POSTWAR_CLAIMS:
+            hit = re.search(pattern, text)
+            if hit and not evidence.intersection(flags):
+                problems.append(f"[善后] 奏疏 {item.get('id')} 称「{hit.group(0)}」，但条件里没有 {' / '.join(flags)} 之一（乱中未必有其事）")
+    # 察使称谓：察看范阳的回奏事件（条件含 envoy_sent）写「中使」者须排除遣御史，写「御史」者须限于遣御史
+    censor_key = "memorial:p_envoy"
+    for eid, ev in events.items():
+        leaves = leaf_conditions(ev.get("conditions"))
+        if not any(c.get("key") == "envoy_sent" for c in leaves):
+            continue
+        text = f"{ev.get('title', '')}｜{ev.get('text', '')}"
+        is_censor = any(c.get("key") == censor_key and c.get("value") == "censor" for c in leaves)
+        not_censor = any(c.get("key") == censor_key and c.get("value") == "censor" for c in negated_leaves(ev.get("conditions")))
+        if "中使" in text and not not_censor:
+            problems.append(f"[称谓] 事件 {eid} 写「中使」，但条件未排除遣御史（memorial:p_envoy = censor）")
+        if "御史" in text and not is_censor:
+            problems.append(f"[称谓] 事件 {eid} 写「御史」，但条件未限于遣御史")
 
     # 奏疏（原有检查）
     for item in memos:
