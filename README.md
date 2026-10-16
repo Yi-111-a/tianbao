@@ -14,7 +14,7 @@
   <img alt="Windows" src="https://img.shields.io/badge/%E6%A1%8C%E9%9D%A2%E7%89%88-Windows-2f5d8a?style=flat-square">
   <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3e7f6b?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-Codex%20%7C%20Claude%20Code-c0392b?style=flat-square">
-  <a href="https://github.com/Yi-111-a/tianbao/releases/tag/promo-v1"><img alt="宣传片" src="https://img.shields.io/badge/%E5%AE%A3%E4%BC%A0%E7%89%87-59s-17110e?style=flat-square"></a>
+  <a href="#-宣传片"><img alt="宣传片" src="https://img.shields.io/badge/%E5%AE%A3%E4%BC%A0%E7%89%87-59s-17110e?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -29,17 +29,17 @@
 <table>
   <tr>
     <td width="74%" align="center">
-      <a href="https://github.com/Yi-111-a/tianbao/releases/download/promo-v1/tianbao-promo-16x9.mp4"><img src="docs/media/promo-16x9.jpg" alt="宣传片 · 横屏"></a><br>
-      <sub>横屏 1920×1080 · 59 秒 · <a href="https://github.com/Yi-111-a/tianbao/releases/download/promo-v1/tianbao-promo-16x9.mp4">下载 / 播放</a></sub>
+      <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao-promo-16x9.mp4"><img src="docs/media/promo-16x9.jpg" alt="宣传片 · 横屏"></a><br>
+      <sub>横屏 1920×1080 · 59 秒 · <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao-promo-16x9.mp4">下载 / 播放</a></sub>
     </td>
     <td width="26%" align="center">
-      <a href="https://github.com/Yi-111-a/tianbao/releases/download/promo-v1/tianbao-promo-9x16.mp4"><img src="docs/media/promo-9x16.jpg" alt="宣传片 · 竖屏"></a><br>
-      <sub>竖屏 1080×1920 · <a href="https://github.com/Yi-111-a/tianbao/releases/download/promo-v1/tianbao-promo-9x16.mp4">下载 / 播放</a></sub>
+      <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao-promo-9x16.mp4"><img src="docs/media/promo-9x16.jpg" alt="宣传片 · 竖屏"></a><br>
+      <sub>竖屏 1080×1920 · <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao-promo-9x16.mp4">下载 / 播放</a></sub>
     </td>
   </tr>
 </table>
 
-画面全部来自真实对局，详见 [Release · 宣传片](https://github.com/Yi-111-a/tianbao/releases/tag/promo-v1)。
+画面全部来自真实对局。视频与安装包一起放在 [v0.1.0 发布页](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)。
 
 ## 这是什么游戏
 
