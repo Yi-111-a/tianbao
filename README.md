@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/media/title.jpg" alt="天宝 · 标题画面" width="100%">
+  <img src="docs/media/cover.jpg" alt="天宝" width="100%">
 </p>
 
 <h1 align="center">天宝</h1>
@@ -15,6 +15,11 @@
   <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3e7f6b?style=flat-square">
   <img alt="MCP" src="https://img.shields.io/badge/MCP-Codex%20%7C%20Claude%20Code-c0392b?style=flat-square">
   <a href="https://github.com/Yi-111-a/tianbao/releases/tag/promo-v1"><img alt="宣传片" src="https://img.shields.io/badge/%E5%AE%A3%E4%BC%A0%E7%89%87-59s-17110e?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao_0.1.0_x64-setup.exe"><img alt="下载 Windows 桌面版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20%E6%A1%8C%E9%9D%A2%E7%89%88%20v0.1.0-c0392b?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <br><sub>60.6 MB · 无需管理员权限 · 不配模型也能玩 · <a href="https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0">发布说明</a></sub>
 </p>
 
 ---
@@ -66,6 +71,14 @@
 
 ## 怎么玩
 
+### 桌面版（Windows，推荐）
+
+1. 下载 [`tianbao_0.1.0_x64-setup.exe`](https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao_0.1.0_x64-setup.exe)（[发布说明](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)）。
+2. 双击安装：装到当前用户（`%LOCALAPPDATA%\天宝`），不需要管理员权限。安装包没有代码签名，Windows 若弹出 SmartScreen，点「更多信息」→「仍要运行」。
+3. 打开「天宝」，点「开始新局」。存档在 `%APPDATA%	ianbao`。
+
+游戏本身不需要联网，不配模型也能完整玩一局；想让大臣由大模型扮演，在「设置 · 模型路由」里填任意 OpenAI 兼容接口。
+
 ### 在 Codex / Claude Code 里玩
 
 游戏自带 MCP 服务，模型可以直接开局、读简报、召对、下诏、结算回合，和桌面版共用存档：你开的局模型能接着玩，反过来也一样。
@@ -98,10 +111,6 @@ npm --prefix app run dev                          # 打开 http://localhost:5173
 ```
 
 想让大臣由大模型扮演，在游戏「设置 · 模型路由」里填任意 OpenAI 兼容接口；不填也能完整玩一局。
-
-### 桌面版（Windows）
-
-桌面版是 Tauri 外壳加打包好的引擎，安装后双击即玩，存档在 `%APPDATA%\tianbao`。安装包暂未公开发布，可以用 `scripts/build-desktop.ps1` 自行打包（需要 Rust、Node.js 和上面的 Python 环境）。
 
 ## 它是怎么做的
 
