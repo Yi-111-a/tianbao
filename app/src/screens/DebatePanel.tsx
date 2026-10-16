@@ -10,7 +10,7 @@ import { Portrait } from '../components/Portrait';
 import { useToast } from '../components/Toast';
 import { useGame } from '../store/game';
 import { cls } from '../lib/util';
-import { agendaCount, agendaExhausted, agendaTitle } from '../lib/court';
+import { agendaCount, agendaExhausted, agendaTitle, debateTopicLine } from '../lib/court';
 import { STANCE } from './MemorialPanel';
 
 const DEFAULT_PICK = ['li_linfu', 'yang_guozhong', 'yan_zhenqing', 'geshu_han'];
@@ -189,7 +189,7 @@ export function DebatePanel() {
         {result && (
           <div className="debate-stage">
             <div className="debate-topic-line t-title" data-testid="debate.topicLine">
-              议：{result.proposition || topic}
+              议：{result.proposition ? debateTopicLine(result.proposition) : topic}
             </div>
             {(result.written?.length ?? 0) > 0 && (
               <div className="debate-written-line" data-testid="debate.writtenLine">

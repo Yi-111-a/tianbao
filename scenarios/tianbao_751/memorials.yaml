@@ -212,7 +212,7 @@
         - {op: adjust_resource, resource: corruption, delta: 3, reason: 募兵扰民}
         - {op: adjust_resource, resource: treasury, delta: -80, reason: 募兵}
         - {op: adjust_army, army: jiannan_army, delta: 15000, reason: 分道募兵}
-      hint: 民心 −5，积弊 +3，国库 −80（史事）；此后养兵每季 +3.75 万贯、粮 +1.65 万石
+      hint: 剑南军 +15000，民心 −5，积弊 +3，国库 −80（史事）；此后养兵每季 +3.75 万贯、粮 +1.65 万石
 
 - id: t1_nanzhao_envoy
   conditions:
@@ -244,6 +244,10 @@
 
 - id: t1_khitan
   turn: 1
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t1_khitan_deputy"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # 禄山已留京解镇者见 t1_khitan_deputy
   title: 禄山请讨契丹
   summary: 安禄山奏请发平卢、范阳、河东三道兵讨契丹，并请调河东兵马出境助战。
   region: fanyang
@@ -268,6 +272,42 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: 1, reason: 三道兵并出}
         - {op: adjust_resource, resource: grain, delta: -60, reason: 军粮}
       hint: 外重内轻 +1，太仓 −60；胜负未卜（史事）
+
+# gpt-10 #5：禄山已留京解镇（夺范阳节度），三道兵不复由其统领——请战者改为范阳诸将，与禄山无涉。
+- id: t1_khitan_deputy
+  variant_of: t1_khitan   # 同一议题按局势写的分支：禄山已留京解镇
+  turn: 1
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t1_khitan"}}   # 同题分支：已处理其一则不再出现
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  title: 范阳诸将请讨契丹
+  keywords: [契丹, 范阳将士]
+  summary: 禄山既留京解镇，范阳诸将联名上言：契丹乘范阳易帅，游骑屡犯塞下，请发范阳、平卢兵出塞讨之。或言诸将欲借边功自固，宜令固守以俟朝命。
+  region: fanyang
+  illustration: event.fanyang_armoury
+  advisors:
+    - {character: li_linfu, stance: support, line: 边将请战，可壮军心，臣以为可许。, requires: {office: you_xiang}, option: approve}
+    - {character: geshu_han, stance: oppose, line: 主帅才换，旧部便要出塞，打赢了功劳记在谁头上？, option: forbid}
+    - {character: gao_lishi, stance: neutral, line: 新主还没坐稳，旧部先要动兵，老奴看着不放心。, option: forbid}
+  proposal: approve
+  options:
+    - id: forbid
+      label: 不许出塞，令范阳诸军固守，以俟朝命
+      ops:
+        - {op: set_flag, key: an_forbidden_khitan, value: true}
+        - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 契丹未受惩}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 号令出于朝廷}
+      hint: 边患 +2，君威 +1；范阳兵不出塞，亦不受损
+    - id: approve
+      label: 准诸将出塞讨契丹
+      ops:
+        - {op: adjust_resource, resource: grain, delta: -60, reason: 军粮}
+        - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 出塞示威}
+        - {op: adjust_resource, resource: fanzhen_power, delta: 1, reason: 边将擅功}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 旧部借边功自固}
+      hint: 太仓 −60，边患 −2，外重内轻 +1，鼙鼓 +2（旧部借边功自固）；兵额不变
 
 - id: t1_grain
   turn: 1
@@ -506,6 +546,10 @@
 # ============================== T3 天宝十载冬 ==============================
 - id: t3_an_tribute
   turn: 3
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t3_fanyang_tribute"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # 禄山已留京解镇者见 t3_fanyang_tribute
   title: 范阳岁贡
   summary: 安禄山岁贡俘虏、牛羊、珍禽，络绎于道，并上表陈谢恩遇。
   region: fanyang
@@ -536,6 +580,44 @@
         - {op: adjust_resource, resource: rebellion_risk, delta: -3, reason: 有所顾忌}
         - {op: set_flag, key: an_son_in_capital, value: true}
       hint: 渔阳鼙鼓 −3，异志（风闻）↑
+
+# gpt-10 #5：禄山已留京解镇，岁贡改由范阳军府循例进献，诸将附表——问的是如何待范阳旧部，而非禄山。
+- id: t3_fanyang_tribute
+  variant_of: t3_an_tribute   # 同一议题按局势写的分支：禄山已留京解镇
+  turn: 3
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t3_an_tribute"}}   # 同题分支：已处理其一则不再出现
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  title: 范阳岁贡
+  summary: 禄山既留京解镇，范阳岁贡仍由军府循例进献，俘虏、牛羊、珍禽络绎于道；旧部诸将附表陈谢，亦欲探朝廷待之厚薄。
+  region: fanyang
+  illustration: event.horse_tribute
+  proposal: reward
+  advisors:
+    - {character: yang_guifei, stance: support, option: reward, line: 禄山的旧部也知道孝顺，陛下赏他们些罢。}
+    - {character: yang_guozhong, stance: oppose, option: plain, line: 主子都留在京里了，还进什么贡？做给朝廷看的罢了。}
+    - {character: gao_lishi, stance: neutral, line: 旧部送东西来，是想看看朝廷还认不认他们。, option: reward}
+  options:
+    - id: reward
+      label: 优诏答之，回赐范阳将士金帛
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -50, reason: 回赐范阳将士}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -2, reason: 旧部得恩}
+      hint: 国库 −50，鼙鼓 −2（旧部得恩）
+    - id: plain
+      label: 依例收受，不加恩赏
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 恩威有度}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 1, reason: 旧部疑朝廷薄之}
+      hint: 君威 +1，鼙鼓 +1
+    - id: stop
+      label: 罢范阳诸将私献，贡物一归少府
+      ops:
+        - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 私献既罢}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 旧部失其进奉之门}
+      hint: 外重内轻 −2，鼙鼓 +2
 
 - id: t3_review
   turn: 3
@@ -1176,8 +1258,10 @@
   conditions:
     all:
       - {not: {kind: flag, operator: exists, key: "memorial:t4_an_troops_calm"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: exists, key: "memorial:t4_fanyang_troops"}}   # 同题分支：已处理其一则不再出现
       - {kind: turn, operator: eq, value: 4}
       - {kind: flag, operator: eq, key: an_weakened, value: true}   # 土护真水之败确已发生
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # 禄山已留京解镇者见 t4_fanyang_troops
   title: 范阳请增兵额
   summary: 安禄山奏范阳兵新经土护真水之败，请增兵额、补马匹，以备奚、契丹。
   region: fanyang
@@ -1213,8 +1297,10 @@
   conditions:
     all:
       - {not: {kind: flag, operator: exists, key: "memorial:t4_an_troops"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: exists, key: "memorial:t4_fanyang_troops"}}   # 同题分支：已处理其一则不再出现
       - {kind: turn, operator: eq, value: 4}
       - {not: {kind: flag, operator: eq, key: an_weakened, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # 禄山已留京解镇者见 t4_fanyang_troops
   title: 范阳请增兵额
   summary: 安禄山奏奚、契丹未受惩创，边尘时起，请增范阳兵额、补马匹以备之。
   region: fanyang
@@ -1244,6 +1330,45 @@
         - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 所请不遂}
         - {op: adjust_resource, resource: fanzhen_power, delta: -1, reason: 朝廷有制}
       hint: 外重内轻 −1，异志（风闻）↑
+
+# gpt-10 #5：禄山已留京解镇（兵柄或已归零），请兵者不再是他：范阳军府请汰旧部老弱、补以新募。
+- id: t4_fanyang_troops
+  variant_of: t4_an_troops   # 同一议题按局势写的分支：禄山已留京解镇
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t4_an_troops"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: exists, key: "memorial:t4_an_troops_calm"}}   # 同题分支：已处理其一则不再出现
+      - {kind: turn, operator: eq, value: 4}
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  title: 范阳请增兵额
+  summary: 禄山既留京解镇，范阳军府上言：旧部籍多虚额、老弱相杂，奚、契丹边尘时起，请汰其老弱、补以新募，并补马匹。
+  region: fanyang
+  illustration: event.fanyang_armoury
+  proposal: approve
+  advisors:
+    - {character: li_linfu, stance: support, option: approve, line: 边备不可弛。新募之卒不出旧部，正好掺入其中。, requires: {office: you_xiang}}
+    - {character: yang_guozhong, stance: oppose, option: deny, line: 范阳兵马已冠诸镇，换了主帅也一样，不可再增。}
+  options:
+    - id: approve
+      label: 准其汰弱补强，增兵额八千
+      ops:
+        - {op: adjust_army, army: fanyang_army, delta: 8000, reason: 增兵额}
+        - {op: adjust_resource, resource: fanzhen_power, delta: 3, reason: 增兵额}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -2, reason: 新募之卒不出旧部}
+      hint: 范阳兵 +8000，外重内轻 +3，鼙鼓 −2（新募之卒不出旧部）；此后养兵每季 +2 万贯、粮 +0.88 万石
+    - id: half
+      label: 许其补马，不增兵额
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -40, reason: 市马}
+        - {op: adjust_resource, resource: frontier_pressure, delta: -1, reason: 边备稍完}
+      hint: 国库 −40，边患 −1
+    - id: deny
+      label: 驳回，令其核籍自整
+      ops:
+        - {op: adjust_resource, resource: fanzhen_power, delta: -1, reason: 朝廷有制}
+        - {op: adjust_resource, resource: frontier_pressure, delta: 1, reason: 边备未补}
+      hint: 外重内轻 −1，边患 +1
 
 - id: t4_haul
   turn: 4
@@ -1717,7 +1842,7 @@
         - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
         - {op: appoint, character: feng_changqing, office: anxi_jds, dispatch: true}   # 实授并启程赴任（兼统anxi_army）
         - {op: set_flag, key: anxi_commander_pending, value: true}
-      hint: 封常清实授安西节度、统安西军（人在安西，即日视事）；到镇之季结算时边患 −2（史事：十一载十二月）
+      hint: 封常清实授安西节度、统安西军（人在安西，令达后即日视事；安西驿远，诏令照驿程延期）；到镇之季结算时边患 −2（史事：十一载十二月）
     - id: keep
       label: 仍以仙芝遥领，补其兵额
       ops:
@@ -2098,7 +2223,7 @@
         - {op: adjust_army, army: longyou_army, delta: -5000, reason: 战损}
         - {op: adjust_resource, resource: authority, delta: 2, reason: 边功}
         - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 陇右功高}
-      hint: 国库 −90，边患 −6，君威 +2，外重内轻 +2（史事）
+      hint: 国库 −90，陇右军 −5000（战损），边患 −6，君威 +2，外重内轻 +2（史事）
     - id: hold
       label: 但令增戍，不许深入
       ops:
@@ -2415,14 +2540,16 @@
 - id: t12_chancellor
   conditions:
     all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t12_chancellor_far"}}   # 同题分支：已处理其一则不再出现
       - {kind: turn, operator: eq, value: 12}
       - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: character_region, operator: eq, character: yang_guozhong, region: jiannan}}   # 国忠出镇在蜀者见 t12_chancellor_far
   title: 议加禄山平章事
   summary: 禄山在华清宫，陛下欲加其同平章事。杨国忠力谏，以为不可。
   region: jingji
   illustration: event.an_court_visit
   advisors:
-    - {character: yang_guozhong, stance: oppose, line: 他目不识丁，做了宰相，四夷要笑话大唐！, option: refuse}
+    - {character: yang_guozhong, stance: oppose, line: 他目不识丁，做了宰相，四夷要笑话大唐！, requires: {region: jingji}, option: refuse}
     - {character: yang_guifei, stance: support, line: 禄山那么忠心，给他个体面又何妨。, option: grant}
   proposal: grant
   options:
@@ -2440,7 +2567,41 @@
         - {op: adjust_resource, resource: an_ambition, delta: -3, reason: 拜相}
         - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 出将入相}
         - {op: adjust_resource, resource: court_strife, delta: 4, reason: 国忠大怒}
-      hint: 异志（风闻）↓，外重内轻 +2，朝争 +4；同平章事为荣衔，不占官职表，亦不改其镇守
+      hint: 异志（风闻）↓，外重内轻 +2，朝争 +4；同平章事为荣衔，不占官职表，亦不改其现任官职
+
+# gpt-10 #6：国忠已出镇剑南，不在华清宫——其谏为自成都驰表，不是当面力谏。
+- id: t12_chancellor_far
+  variant_of: t12_chancellor   # 同一议题按局势写的分支：国忠出镇在蜀
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t12_chancellor"}}   # 同题分支：已处理其一则不再出现
+      - {kind: turn, operator: eq, value: 12}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {kind: character_region, operator: eq, character: yang_guozhong, region: jiannan}
+  title: 议加禄山平章事
+  summary: 禄山在华清宫，陛下欲加其同平章事。杨国忠出镇剑南，闻之自成都驰表力谏，以为不可（表奏，非面陈）。
+  region: jingji
+  illustration: event.an_court_visit
+  advisors:
+    - {character: yang_guozhong, stance: oppose, line: 臣远在蜀中，闻陛下欲相禄山。彼目不识丁，若居相位，四夷将笑大唐，伏乞寝其议。, requires: {region: jiannan}, option: refuse}
+    - {character: yang_guifei, stance: support, line: 禄山那么忠心，给他个体面又何妨。, option: grant}
+  proposal: grant
+  options:
+    - id: refuse
+      label: 从国忠表奏，不加平章事
+      memory: {character: an_lushan, text: 华清宫中，陛下欲加我平章事，为国忠自蜀中驰表所阻}
+      ops:
+        - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 拜相不成}
+        - {op: adjust_resource, resource: court_strife, delta: -1, reason: 国忠意满}
+      hint: 异志（风闻）↑，朝争 −1（史事）
+    - id: grant
+      label: 加同平章事，令其兼带
+      memory: {character: an_lushan, text: 华清宫中，陛下加我同平章事}
+      ops:
+        - {op: adjust_resource, resource: an_ambition, delta: -3, reason: 拜相}
+        - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 出将入相}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 国忠大怒}
+      hint: 异志（风闻）↓，外重内轻 +2，朝争 +4；同平章事为荣衔，不占官职表，亦不改其现任官职
 
 - id: t12_tongguan
   turn: 12
@@ -2461,15 +2622,19 @@
         - {op: adjust_resource, resource: grain, delta: -40, reason: 屯粮}
       hint: 潼关防务 +5，国库 −60，太仓 −40
     - id: garrison
-      label: 调禁军五千戍关
+      label: 分禁军五千戍关
       ops:
-        - {op: adjust_army, army: jinjun, delta: -5000, reason: 分戍潼关}
+        - {op: detach, army: jinjun, strength: 5000, to_region: tongguan, new_army_name: 潼关戍卒}
         - {op: adjust_region, region: tongguan, stat: defense, delta: 3}
         - {op: adjust_region, region: jingji, stat: defense, delta: -2}
-      hint: 潼关防务 +3，京畿防务 −2
+      hint: 京师禁军分出五千人编为「潼关戍卒」赴潼关（行程按实际路线计；统帅与余众留京；总兵额不变，养兵不变）；潼关防务 +3，京畿防务 −2
 
 - id: t12_gaoshen
   turn: 12
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t12_fanyang_merit"}}   # 同题分支：已处理其一则不再出现
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # 禄山已留京解镇者见 t12_fanyang_merit
   title: 范阳请超授
   keywords: [超授, 告身, 范阳将士]
   summary: 安禄山奏所部讨奚、契丹、同罗有功，乞不拘常格超资加赏，并请写告身付其军中自授。
@@ -2477,7 +2642,8 @@
   illustration: event.jiedu_appointment
   advisors:
     - {character: an_lushan, stance: support, line: 将士们跟臣出生入死，求陛下给个名分。, option: grant}
-    - {character: yang_guozhong, stance: oppose, line: 一口气要几百个将军，这是要另立朝廷！, option: deny}
+    - {character: yang_guozhong, stance: oppose, line: 一口气要几百个将军，这是要另立朝廷！, requires: {region: jingji}, option: deny}
+    - {character: yang_guozhong, stance: oppose, line: 臣远在蜀中，闻范阳一请便是数百将军。名器不可假人，伏乞依常格。, requires: {region: jiannan}, option: deny}
     - {character: gao_lishi, stance: neutral, line: 告身从谁手里发，恩便记在谁头上。, option: court}
   proposal: grant
   options:
@@ -2506,6 +2672,48 @@
         - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 范阳将士失望}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 朝廷有制}
       hint: 鼙鼓 +2，君威 +1，异志（风闻）大升
+
+# gpt-10 #5：禄山已留京解镇，范阳由新帅（或副将）统领——请叙功者是范阳军府，恩赏归朝廷还是归军中，问的是旧部去就。
+- id: t12_fanyang_merit
+  variant_of: t12_gaoshen   # 同一议题按局势写的分支：禄山已留京解镇
+  turn: 12
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t12_gaoshen"}}   # 同题分支：已处理其一则不再出现
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  title: 范阳将士请叙功
+  keywords: [超授, 告身, 范阳将士]
+  summary: 禄山既留京解镇，范阳旧部数岁戍边讨奚有劳。范阳军府奏请不拘常格超资加赏，并请写告身付军中自授；诸将多望朝廷恩命，以定去就。
+  region: fanyang
+  illustration: event.jiedu_appointment
+  advisors:
+    - {character: yang_guozhong, stance: oppose, line: 一口气要几百个将军，换了主帅也是这个数！, requires: {region: jingji}, option: deny}
+    - {character: yang_guozhong, stance: oppose, line: 臣远在蜀中，闻范阳一请便是数百将军。名器不可假人，伏乞依常格。, requires: {region: jiannan}, option: deny}
+    - {character: gao_lishi, stance: neutral, line: 告身从谁手里发，恩便记在谁头上。旧部如今认的是朝廷还是旧主，就看这一回。, option: court}
+  proposal: grant
+  options:
+    - id: grant
+      label: 照准，告身付范阳军中自授
+      ops:
+        - {op: adjust_resource, resource: fanzhen_power, delta: 4, reason: 恩出于帅}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 名器假人}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -1, reason: 将士得赏}
+      hint: 外重内轻 +4，君威 −2，鼙鼓 −1
+    - id: court
+      label: 准叙功，告身由朝廷遣使颁授
+      ops:
+        - {op: adjust_resource, resource: fanzhen_power, delta: -1, reason: 恩出朝廷}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 名器在上}
+        - {op: adjust_resource, resource: treasury, delta: -30, reason: 遣使颁授}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -2, reason: 旧部感戴朝廷}
+      hint: 外重内轻 −1，君威 +1，国库 −30，鼙鼓 −2
+    - id: deny
+      label: 驳回，依常格叙功
+      ops:
+        - {op: adjust_resource, resource: rebellion_risk, delta: 3, reason: 范阳将士失望}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 朝廷有制}
+      hint: 鼙鼓 +3，君威 +1
 
 - id: t12_limi
   conditions:
@@ -2934,7 +3142,8 @@
   proposal: establish
   advisors:
     - {character: geshu_han, stance: support, option: establish, line: 多一军，吐蕃便少一条路。}
-    - {character: yang_guozhong, stance: oppose, option: deny, line: 边军岁增，度支已不堪了。}
+    - {character: yang_guozhong, stance: oppose, option: deny, line: 边军岁增，度支已不堪了。, requires: {region: jingji}}
+    - {character: yang_guozhong, stance: oppose, option: deny, line: 臣远在蜀中，剑南转饷尚且不给；西境再置一军，度支何以堪之？, requires: {region: jiannan}}
   options:
     - id: establish
       label: 准置神策军

@@ -152,7 +152,7 @@
   - 禄山留京后的「范阳择帅」「新帅到镇」「范阳旧部不安」与分级兵变概率、新帅脱身（`fanyang_*`、`mutiny_flee_*`、奏疏 `p_fanyang_warn`）；
   - 中使实奏的三档定性结论（`envoy_truth*`）；
   - 叛乱平定与善后（`rebellion_quelled`、`remnants_*`、`restore_*`、`postwar_calm`、奏疏 `s_*`），结局「再造唐室·乱平」；
-  - 状态分支文案：未遭土护真水之败的「范阳请增兵额」（`t4_an_troops_calm`）、未有阿布思之叛的「回纥入贡」（`t10_huihe_tribute`）、西南未丧师的「力士进言」（`t13_lishi_warn_peace`）、无霖雨之年的「独对·问时政」与「春荒」（`t14_lishi`、`t16_famine_plain`）、与南诏和好时的「剑南边报」（`t14_frontier_peace`）、战时的「东都储备」「政事堂议·讨贼方略」（`t15_luoyang_war`、`t16_court_war`）。
+  - 状态分支文案：未遭土护真水之败的「范阳请增兵额」（`t4_an_troops_calm`）、未有阿布思之叛的「回纥入贡」（`t10_huihe_tribute`）、西南未丧师的「力士进言」（`t13_lishi_warn_peace`）、无霖雨之年的「独对·问时政」与「春荒」（`t14_lishi`、`t16_famine_plain`）、与南诏和好时的「剑南边报」（`t14_frontier_peace`）、战时的「东都储备」「政事堂议·讨贼方略」（`t15_luoyang_war`、`t16_court_war`）；禄山已留京解镇时的「范阳诸将请讨契丹」「范阳岁贡（军府进献）」「范阳请增兵额（汰弱补强）」「范阳将士请叙功」（`t1_khitan_deputy`、`t3_fanyang_tribute`、`t4_fanyang_troops`、`t12_fanyang_merit`，gpt-10 #5；此时土护真水之败不再发生），国忠出镇在蜀时驰表谏止禄山拜相（`t12_chancellor_far`，gpt-10 #6）。
 - 第五轮新增或改写的虚构内容（据 self-03 与 GPT 试玩报告 gpt-03）：
   - 「禄山兵柄」资源（`an_command`）与危机计的兵柄折算、「兵柄已解」项；「范阳旧部归心」（`fanyang_pacified`）、「禄山失其兵柄」（`an_gone`）两事件；结局「天宝中兴·夺镇弭兵」（`e1_disarmed`）。
   - 中使实奏改为按禄山所在与旧部安抚情况分五档（`envoy_truth*`），并新增颜杲卿每三季一次的密报（`gaoqing_report_*`，七档）；所述兵马、军心、拒命迹象皆为游戏设定的定性情报，非史料。

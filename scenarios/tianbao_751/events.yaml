@@ -189,7 +189,10 @@
   title: 土护真水之败
   kind: scheduled
   when: {turn: 2}
-  conditions: {not: {kind: flag, operator: eq, key: an_forbidden_khitan, value: true}}
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: an_forbidden_khitan, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}   # gpt-10 #5：禄山已留京解镇，不能将兵出塞（范阳诸将请战另见 t1_khitan_deputy）
   gravity: 0.7
   text: 安禄山将三道兵六万讨契丹，以奚骑为向导，战于土护真水，大败，禄山仅以二十骑走免。范阳兵锐气顿挫。
   effects:
@@ -279,14 +282,14 @@
     - {op: set_flag, key: abusi_gone, value: true}
   choices:
     - id: to_an
-      text: 准禄山收其部众
+      text: 准禄山收其部众（范阳军 +5000）
       memory: {character: an_lushan, text: 阿布思叛去，陛下许我收其同罗部众}
       effects:
         - {op: adjust_resource, resource: fanzhen_power, delta: 4, reason: 同罗精骑归范阳}
         - {op: adjust_army, army: fanyang_army, delta: 5000, reason: 收阿布思余众}
         - {op: set_flag, key: abusi_to_an, value: true}
     - id: to_shuofang
-      text: 令归朔方
+      text: 令归朔方（朔方军 +3000）
       memory: {character: an_lushan, text: 阿布思余众，朝廷不给范阳，令归朔方}
       effects:
         - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 部众不入范阳}
@@ -752,21 +755,21 @@
 
 # 终局预告（#46）：下一次结算即终局，提前一季告知。
 - id: final_season_notice
-  title: 岁终在即：下一次结算即终局（T19 无决策）
+  title: 岁终在即：下一次结算即终局（天宝十四载冬无决策）
   kind: scheduled
   when: {turn: 18}
   conditions: {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   gravity: 1.0
-  text: 天宝十四载秋。本季诏令结算之后即至天宝十四载冬（T19），据当时局势评定结局，T19 不再有奏疏与决策。凡欲施行之事，须于本季下诏。
+  text: 天宝十四载秋。本季诏令结算之后即至天宝十四载冬，据当时局势评定结局，届时不再有奏疏与决策。凡欲施行之事，须于本季下诏。
   illustration: event.zhengshi_hall
 
 - id: final_season_notice_war
-  title: 战局将终：下一次结算即终局（T23 无决策）
+  title: 战局将终：下一次结算即终局（天宝十五载冬无决策）
   kind: scheduled
   when: {turn: 22}
   conditions: {kind: flag, operator: eq, key: rebellion_started, value: true}
   gravity: 1.0
-  text: 乱起之后战局延至今季。本季诏令结算之后即至 T23，据当时局势评定结局，T23 不再有奏疏与决策。
+  text: 乱起之后战局延至今季。本季诏令结算之后即至天宝十五载冬，据当时局势评定结局，届时不再有奏疏与决策。
   illustration: event.zhengshi_hall
 
 # 朝争调停（#44）：奏疏 p_court_harmony 处置后隔三季复议（清空其处置旗标，奏疏重新出现）。系统内部事件，不展示。
@@ -1110,6 +1113,69 @@
   effects:
     - {op: dismiss, character: an_lushan, office: hedong_jds}
     - {op: set_army_commander, army: hedong_army, character: null}
+    - {op: adjust_resource, resource: an_command, delta: -10, reason: 解河东节度}
+    - {op: set_flag, key: hedong_to_an, value: false}
+    - {op: set_flag, key: hedong_secured, value: true}
+  illustration: event.jiedu_appointment
+
+# gpt-10 #4：留京之后（含夺镇当季、上两条尚未结算之前）以诏令另行罢其平卢 / 河东兼职，兵柄同样各降 10——
+# 「平卢、河东若仍兼领，随后解去再各降 10」不论由结算依例解去，还是由诏令先行罢免。
+# 留京之前（禄山仍在镇时）已罢者不算：scenario.yaml 写明罢其兼领、禄山未离镇则兵柄不变。罢免的那一季结算时由记账事件
+# an_pinglu_lost_early / an_hedong_lost_early 记下；与留京同一季下诏者，结算时 an_detained 已立，按留京之后计。
+- id: an_pinglu_lost_early
+  title: 禄山留京之前已罢平卢（记账）
+  kind: system
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: office_holder, operator: eq, office: pinglu_jds, character: an_lushan}}
+      - {not: {kind: flag, operator: eq, key: an_pinglu_lost_early, value: true}}
+  gravity: 1.0
+  effects:
+    - {op: set_flag, key: an_pinglu_lost_early, value: true}
+
+- id: an_hedong_lost_early
+  title: 禄山留京之前已罢河东（记账）
+  kind: system
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {kind: flag, operator: eq, key: hedong_to_an, value: true}
+      - {not: {kind: office_holder, operator: eq, office: hedong_jds, character: an_lushan}}
+      - {not: {kind: flag, operator: eq, key: an_hedong_lost_early, value: true}}
+  gravity: 1.0
+  effects:
+    - {op: set_flag, key: an_hedong_lost_early, value: true}
+
+- id: an_pinglu_dismissed
+  title: 平卢兵柄归朝
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: office_holder, operator: eq, office: pinglu_jds, character: an_lushan}}
+      - {not: {kind: flag, operator: exists, key: "event:an_stripped_pinglu:fired"}}   # 已依例解去（已降 10）者不重计
+      - {not: {kind: flag, operator: eq, key: an_pinglu_lost_early, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 1.0
+  text: 禄山既留京师，平卢节度又已诏罢，平卢军不复奉其号令。（禄山兵柄 −10，与留京后依例解去平卢相同）
+  effects:
+    - {op: adjust_resource, resource: an_command, delta: -10, reason: 解平卢节度}
+  illustration: event.jiedu_appointment
+
+- id: an_hedong_dismissed
+  title: 河东兵柄归朝
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {kind: flag, operator: eq, key: hedong_to_an, value: true}
+      - {not: {kind: office_holder, operator: eq, office: hedong_jds, character: an_lushan}}
+      - {not: {kind: flag, operator: eq, key: an_hedong_lost_early, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 1.0
+  text: 禄山既留京师，河东节度又已诏罢，河东兵马改隶朝廷。（禄山兵柄 −10，与留京后依例解去河东相同）
+  effects:
     - {op: adjust_resource, resource: an_command, delta: -10, reason: 解河东节度}
     - {op: set_flag, key: hedong_to_an, value: false}
     - {op: set_flag, key: hedong_secured, value: true}
@@ -2061,6 +2127,9 @@
       - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
       - {kind: resource, id: rebellion_risk, operator: gte, value: 42}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      # 安堵在起兵之前判定（其 −8 可免当季之变）；减 8 之后仍必起兵者不报安堵，免得同季既报安堵又报起兵
+      - {not: {all: [{kind: turn, operator: gte, value: 19}, {kind: resource, id: rebellion_risk, operator: gte, value: 68}]}}
+      - {kind: resource, id: rebellion_risk, operator: lt, value: 98}
       - any:   # 同季已有流言则不报安堵
           - {kind: flag, operator: absent, key: fanyang_rumor_recent}
           - {kind: flag_age, key: fanyang_rumor_recent, operator: gte, value: 1}

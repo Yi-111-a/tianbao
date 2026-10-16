@@ -22,3 +22,4 @@ playtests/**/home/
 playtests/**/events.jsonl
 playtests/**/stderr.txt
 app/test-results*/
+playtests/home-dev/

@@ -60,6 +60,8 @@
     同一季 step 从 1 连续编号；target 指向具体奏疏（memorial.item.<id> / memorial.option.<id>.*）时，该奏疏须存在且在当季可见。
 26. 将领自主（round 9）：settings.autonomy 的 formula 与 by_order 各式只用人物特质、is_<命令>、present、strength 与 min / max；
     by_order 只用引擎的命令类型（march / move / detach / hold / attack / scorch）。
+27. 兵额写明（round 10，gpt-10 #11）：奏疏选项（及事件抉择）的 ops 使某军兵额变动 ≥ 2000（adjust_army 增减、detach 分出），
+    提示（抉择则为选项文字）须写出这一数目（「5000」「五千」「0.5万」之类任一写法），不能只在引擎摘要里出现。
 """
 from __future__ import annotations
 
@@ -750,6 +752,8 @@ def lint(pack: Path) -> list[str]:
                 check_char(op.get("character"), f"{where} op {op.get('op')}")
             check_title(str(choice.get("text", "")), choice.get("effects"), choice.get("appoints_via"), where)
     problems.extend(lint_round9(data))
+    problems.extend(lint_round10(data))
+    problems.extend(lint_turn_codes(data))
     return problems
 
 
@@ -899,6 +903,73 @@ def lint_round9(data: dict[str, Any]) -> list[str]:
             names = set(re.findall(r"[A-Za-z_]\w*", str(formula)))
             for name in sorted(names - AUTONOMY_VARS - traits):
                 problems.append(f"[将领自主] 公式用了未定义的变量 {name}")
+    return problems
+
+
+# ---- round 10：兵额变动须写进提示 ----
+TROOP_HINT_MIN = 2000
+CN_DIGITS = "〇一二三四五六七八九"
+
+
+def troop_forms(amount: float) -> set[str]:
+    """兵数的几种常见写法：5000 / 5,000 / 五千 / 0.5万；15000 → 一万五千 / 1.5万；20000 → 二万 / 两万。"""
+    n = int(abs(amount))
+    forms = {str(n), f"{n:,}"}
+    if n % 1000 == 0 and n < 100000:
+        wan, qian = divmod(n // 1000, 10)
+        for two in ("二", "两"):
+            digits = CN_DIGITS[:2] + two + CN_DIGITS[3:]
+            forms.add((digits[wan] + "万" if wan else "") + (digits[qian] + "千" if qian else ""))
+        forms.add(f"{n / 10000:g}万")
+    return forms
+
+
+def troop_changes(rows: Any) -> Iterator[tuple[str, float]]:
+    """ops 中使某军兵额变动 ≥ 2000 的：adjust_army 的增减，detach 自原军分出的兵数（参数化的政令卡除外）。"""
+    for op in ops_of(rows):
+        if op.get("op") == "adjust_army" and isinstance(op.get("delta"), (int, float)) and abs(op["delta"]) >= TROOP_HINT_MIN:
+            yield str(op.get("army")), float(op["delta"])
+        elif op.get("op") == "detach" and isinstance(op.get("strength"), (int, float)) and op["strength"] >= TROOP_HINT_MIN:
+            yield str(op.get("army")), -float(op["strength"])
+
+
+def lint_round10(data: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+    for item in data["memorials"] or []:
+        for opt in options_of(item):
+            text = f"{opt.get('label', '')}｜{opt.get('hint', '')}"
+            for army, delta in troop_changes(opt.get("ops")):
+                if not any(form in text for form in troop_forms(delta)):
+                    problems.append(f"[兵额] 奏疏 {item.get('id')}.{opt.get('id')} 使 {army} 兵额变动 {delta:+g}，提示未写这一数目")
+    for ev in data["events"] or []:
+        for choice in ev.get("choices") or []:
+            for army, delta in troop_changes(choice.get("effects")):
+                if not any(form in str(choice.get("text", "")) for form in troop_forms(delta)):
+                    problems.append(f"[兵额] 事件 {ev.get('id')}.{choice.get('id')} 使 {army} 兵额变动 {delta:+g}，选项文字未写这一数目")
+    return problems
+
+
+TURN_CODE = re.compile(r"(?<![A-Za-z_\d])T\d{1,2}(?!\d)")
+PLAYER_TEXT_KEYS = {"text", "title", "summary", "hint", "detail", "label", "line", "description"}
+
+
+def lint_turn_codes(data: dict[str, Any]) -> list[str]:
+    """玩家看得到的文字不写回合代号（「至 T23」「（T19）」），一律写成历法（天宝十五载冬）。"""
+    problems: list[str] = []
+
+    def walk(value: Any, where: str) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key in PLAYER_TEXT_KEYS and isinstance(child, str) and TURN_CODE.search(child):
+                    problems.append(f"[回合代号] {where}.{key}：{TURN_CODE.search(child).group(0)} 应写成历法（{child[:40]}…）")
+                else:
+                    walk(child, f"{where}.{value.get('id', key) if key in ('options', 'choices') else key}")
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                walk(child, f"{where}[{child.get('id', index) if isinstance(child, dict) else index}]")
+
+    for key, value in data.items():
+        walk(value, key)
     return problems
 
 

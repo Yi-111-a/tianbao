@@ -643,6 +643,9 @@ VARIANT_BASE = {
     "t18_hebei_watch_far": "t18_hebei_watch", "t18_tongguan_safe": "t18_tongguan", "r_tongguan_jinjun": "r_tongguan",
     "t7_anxi_away": "t7_anxi", "t10_geshu_title": "t10_geshu", "p_gaoqing_away": "p_gaoqing",
     "t16_court_detained": "t16_court", "t15_jiwen_court": "t15_jiwen", "t5_jingzhao_held": "t5_jingzhao",
+    # gpt-10 #5 / #6：禄山已留京解镇、国忠出镇在蜀时的分支
+    "t1_khitan_deputy": "t1_khitan", "t3_fanyang_tribute": "t3_an_tribute", "t4_fanyang_troops": "t4_an_troops",
+    "t12_fanyang_merit": "t12_gaoshen", "t12_chancellor_far": "t12_chancellor",
 }
 
 

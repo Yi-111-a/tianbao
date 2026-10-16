@@ -122,6 +122,8 @@ async function holdDebate(page: Page) {
   if (await start.isEnabled()) {
     await start.click();
     await expect(page.getByTestId('debate.topicLine')).toBeVisible({ timeout: 120_000 });
+    // the engine's proposition carries option ids for model clients; the desk shows none of them
+    await expect(page.getByTestId('debate.topicLine')).not.toContainText(/`|某|[A-Za-z_]{3,}/);
     await expect(page.getByTestId('desk.medallion.debate')).toHaveClass(/is-exhausted/, { timeout: 20_000 });
   }
   await closeOverlays(page);

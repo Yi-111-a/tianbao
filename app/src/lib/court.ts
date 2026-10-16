@@ -73,3 +73,16 @@ export function qualityWord(q: number | undefined): string {
   if (q == null) return '';
   return q >= 1.1 ? '精锐' : q >= 0.95 ? '可用' : q >= 0.75 ? '平平' : '羸弱';
 }
+
+/** The debate proposition as the engine writes it is for model clients: option ids in backticks, the
+ *  whole option list, how to name a proposal by option_id. On the desk it reads as the memorial and
+ *  the proposal only: 「就奏疏「河东节度出缺」，所议之案为「照准，并赐铁券」（奏疏所请）：赞成即主此案，反对即主他案」. */
+export function debateTopicLine(text: string): string {
+  return text
+    .replace(/`[^`]*`[，,]?/g, '')
+    .replace(/诸选项择一（.*?）；(?=所议之案|诸案并陈)/, '，')
+    .replace(/（可用 option_id[^）]*）/, '')
+    .replace(/；各人立场附所主张的选项$/, '')
+    .replace(/：各人只列所主张的选项，不以首个选项为案$/, '')
+    .replace(/（）/g, '');
+}
