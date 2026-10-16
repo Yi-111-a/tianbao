@@ -50,18 +50,18 @@ offices:
   - {id: zuo_xiang, name: 左相, requires: {ability: 3}}
   - {id: yushi_zhongcheng, name: 御史中丞, requires: {ability: 3}}
   - {id: duzhi, name: 判度支, requires: {ability: 4}}
-  - {id: jingzhao_yin, name: 京兆尹, requires: {ability: 4}}
-  - {id: fanyang_jds, name: 范阳节度使, requires: {ability: 6}}
-  - {id: pinglu_jds, name: 平卢节度使, requires: {ability: 6}}
-  - {id: hedong_jds, name: 河东节度使, requires: {ability: 6}}
-  - {id: shuofang_jds, name: 朔方节度使, requires: {ability: 6}}
-  - {id: hexi_jds, name: 河西节度使, requires: {ability: 6}}
-  - {id: longyou_jds, name: 陇右节度使, requires: {ability: 6}}
-  - {id: anxi_jds, name: 安西四镇节度使, requires: {ability: 6}}
-  - {id: beiting_jds, name: 北庭节度使, requires: {ability: 6}}
-  - {id: jiannan_jds, name: 剑南节度使, requires: {ability: 4}}
-  - {id: pingyuan_taishou, name: 平原太守, requires: {ability: 4}}
-  - {id: changshan_taishou, name: 常山太守, requires: {ability: 4}}
+  - {id: jingzhao_yin, name: 京兆尹, requires: {ability: 4}, seat: jingji}
+  - {id: fanyang_jds, name: 范阳节度使, requires: {ability: 6}, army: fanyang_army}
+  - {id: pinglu_jds, name: 平卢节度使, requires: {ability: 6}, army: pinglu_army}
+  - {id: hedong_jds, name: 河东节度使, requires: {ability: 6}, army: hedong_army}
+  - {id: shuofang_jds, name: 朔方节度使, requires: {ability: 6}, army: shuofang_army}
+  - {id: hexi_jds, name: 河西节度使, requires: {ability: 6}, army: hexi_army}
+  - {id: longyou_jds, name: 陇右节度使, requires: {ability: 6}, army: longyou_army}
+  - {id: anxi_jds, name: 安西四镇节度使, requires: {ability: 6}, army: anxi_army}
+  - {id: beiting_jds, name: 北庭节度使, requires: {ability: 6}, army: beiting_army}
+  - {id: jiannan_jds, name: 剑南节度使, requires: {ability: 4}, army: jiannan_army}
+  - {id: pingyuan_taishou, name: 平原太守, requires: {ability: 4}, seat: hebei}
+  - {id: changshan_taishou, name: 常山太守, requires: {ability: 4}, seat: hebei}
 
 edict_categories:
   - {id: military, name: 军务, hint: 节度、禁军、关防、征伐}
