@@ -1,0 +1,550 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-display: block;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+
+    /* ── full-bleed ground (clip, lowest track) ── */
+    #v08-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+    #v08-veil {
+      position: absolute;
+      inset: 0;
+      background: #000;
+    }
+
+    /* ── Scenes 1–2 group ── */
+    #v08-s12 {
+      position: absolute;
+      inset: 0;
+      transform-origin: 540px 800px;
+    }
+
+    .v08-tag {
+      position: absolute;
+      z-index: 5;
+      background: #c0392b;
+      color: #e6d3a3;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      padding: 10px 18px 10px 20px;
+      white-space: nowrap;
+    }
+
+    /* 召对 vertical window: An Lushan (top) + his reply bubble at 1.6x (bottom) */
+    .v08-win-pos {
+      position: absolute;
+      left: 29px;
+      top: 540px;
+      width: 1022px;
+      height: 811px;
+      transform-origin: 0 0;
+    }
+    .v08-glow1 {
+      position: absolute;
+      inset: -220px;
+      z-index: 1;
+      background: radial-gradient(closest-side, rgba(201, 162, 75, 0.8), rgba(160, 82, 30, 0.3) 55%, rgba(23, 17, 14, 0) 100%);
+      opacity: 0;
+    }
+    .v08-win-rise {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .v08-win {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1022px;
+      height: 811px;
+      box-sizing: border-box;
+      border: 3px solid #c9a24b;
+      background: #17110e;
+    }
+    .v08-face {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1016px;
+      height: 600px;
+      overflow: hidden;
+    }
+    .v08-face-img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1016px;
+      height: 600px;
+      background-image: url("assets/07-audience.png");
+      background-repeat: no-repeat;
+      /* source x 220–855, y 110–485 at 1.6x */
+      background-size: 3072px 1728px;
+      background-position: -352px -176px;
+      transform-origin: 50% 40%;
+    }
+    .v08-rule {
+      position: absolute;
+      left: 0;
+      top: 600px;
+      width: 1016px;
+      height: 3px;
+      background: #c9a24b;
+    }
+    .v08-reply {
+      position: absolute;
+      left: 0;
+      top: 603px;
+      width: 1016px;
+      height: 202px;
+      background-image: url("assets/07-audience.png");
+      background-repeat: no-repeat;
+      /* source x 897–1532, y 318–444 at 1.6x (text spans screen x ≈ 61–1003) */
+      background-size: 3072px 1728px;
+      background-position: -1435.2px -508.8px;
+    }
+    #v08-tag-audience {
+      left: 28px;
+      top: -24px;
+    }
+
+    /* lacquer label 「AI 驱动」 */
+    .v08-lab-pos {
+      position: absolute;
+      left: 64px;
+      top: 190px;
+      transform-origin: 0 0;
+    }
+    .v08-lab-tilt {
+      transform: rotate(-4deg);
+      transform-origin: 0 50%;
+    }
+    .v08-lab-panel {
+      background: #c0392b;
+      padding: 24px 40px 32px 40px;
+      transform-origin: 0 50%;
+      border-bottom: 3px solid #c9a24b;
+    }
+    .v08-lab-wrap {
+      display: inline-flex;
+      align-items: baseline;
+      min-width: 560px;
+      white-space: pre;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 160px;
+      line-height: 1;
+      color: #e6d3a3;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2), 6px 6px 0 rgba(28, 20, 16, 0.15);
+    }
+    .v08-caret {
+      display: inline-block;
+      width: 13px;
+      height: 134px;
+      margin-left: 8px;
+      background: #e6d3a3;
+      align-self: center;
+    }
+
+    /* debate speech cards: portrait crop + speech crop, side by side, stacked vertically */
+    .v08-card {
+      position: absolute;
+      left: 109px;
+      width: 862px;
+      height: 326px;
+      box-sizing: border-box;
+      border: 3px solid #c9a24b;
+      background: #2a1d14;
+      overflow: hidden;
+    }
+    #v08-card1 { top: 456px; z-index: 1; }
+    #v08-card2 { top: 804px; z-index: 2; }
+    #v08-card3 { top: 1152px; z-index: 3; }
+    .v08-por,
+    .v08-bub {
+      position: absolute;
+      background-image: url("assets/09-debate.png");
+      background-repeat: no-repeat;
+      background-size: 2304px 1296px;
+    }
+    .v08-por {
+      left: 11px;
+      top: 11px;
+      width: 264px;
+      height: 298px;
+    }
+    .v08-bub {
+      left: 293px;
+      width: 552px;
+    }
+    /* portraits: source x 368 / 850 / 1332, y 278, 220x248 at 1.2x */
+    #v08-por1 { background-position: -441.6px -333.6px; }
+    #v08-por2 { background-position: -1020px -333.6px; }
+    #v08-por3 { background-position: -1598.4px -333.6px; }
+    /* speeches: source x 248 / 730 / 1212, y 538 (to 621 / 648) at 1.2x */
+    #v08-bub1 { top: 110px; height: 100px; background-position: -297.6px -645.6px; }
+    #v08-bub2 { top: 94px; height: 132px; background-position: -876px -645.6px; }
+    #v08-bub3 { top: 94px; height: 132px; background-position: -1454.4px -645.6px; }
+    #v08-tag-debate {
+      left: 130px;
+      top: 428px;
+    }
+
+    .v08-chip-row {
+      position: absolute;
+      left: 60px;
+      top: 1506px;
+      width: 960px;
+      display: flex;
+      justify-content: center;
+    }
+    .v08-chip {
+      background: #e6d3a3;
+      color: #17110e;
+      border-left: 5px solid #c0392b;
+      border-radius: 4px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 36px;
+      line-height: 1;
+      letter-spacing: 0.06em;
+      padding: 14px 26px 15px 22px;
+      white-space: nowrap;
+    }
+
+    /* ── Scene 3: good ending ── */
+    #v08-end {
+      position: absolute;
+      inset: 0;
+    }
+    .v08-glow2 {
+      position: absolute;
+      inset: -200px;
+      z-index: 1;
+      background: radial-gradient(closest-side, rgba(201, 162, 75, 0.85), rgba(192, 57, 43, 0.35) 50%, rgba(23, 17, 14, 0) 100%);
+      opacity: 0;
+    }
+    .v08-bloom {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      transform-origin: 50% 40%;
+    }
+    .v08-bloom img {
+      position: absolute;
+      /* cover-crop at 3x: source x 1042–1402, y 150–790 — the palace between the two cards (no UI text) */
+      left: -3126px;
+      top: -450px;
+      width: 5760px;
+      height: 3240px;
+      display: block;
+    }
+    .v08-dim {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+      opacity: 0;
+    }
+
+    /* parchment title card, source x 400–1042, y 236–756 at 1.48x */
+    .v08-title {
+      position: absolute;
+      z-index: 3;
+      left: 65px;
+      top: 120px;
+      width: 950px;
+      height: 770px;
+      background-image: url("assets/31-ending-good.png");
+      background-repeat: no-repeat;
+      background-size: 2841.6px 1598.4px;
+      background-position: -592px -349.28px;
+    }
+
+    /* review card 目标 + 关键数值, source x 1408–1804, y 560–806 at 2.25x */
+    .v08-rev {
+      position: absolute;
+      z-index: 3;
+      left: 95px;
+      top: 930px;
+      width: 891px;
+      height: 554px;
+      background-image: url("assets/31-ending-good.png");
+      background-repeat: no-repeat;
+      background-size: 4320px 2430px;
+      background-position: -3168px -1260px;
+    }
+    .v08-band {
+      position: absolute;
+      left: 27px;
+      width: 846px;
+      height: 54px;
+      background: #c9a24b;
+      mix-blend-mode: multiply;
+      opacity: 0.5;
+      transform-origin: 0 50%;
+    }
+    #v08-band1 { top: 86.6px; }
+    #v08-band2 { top: 149.6px; }
+    #v08-band3 { top: 212.6px; }
+    .v08-seal {
+      position: absolute;
+      left: 666px;
+      width: 63px;
+      height: 63px;
+      transform-origin: 50% 50%;
+    }
+    #v08-seal1 { top: 82.1px; }
+    #v08-seal2 { top: 145.1px; }
+    #v08-seal3 { top: 208.1px; }
+    .v08-seal svg {
+      display: block;
+      width: 63px;
+      height: 63px;
+      overflow: visible;
+    }
+  </style>
+
+  <div id="root" data-composition-id="08-ai" data-width="1080" data-height="1920" data-duration="7.768">
+    <!-- ground -->
+    <div id="v08-ground" class="clip" data-start="0" data-duration="7.768" data-track-index="0">
+      <div id="v08-veil"></div>
+    </div>
+
+    <!-- Scenes 1–2: 召对 window + lacquer label + debate cards -->
+    <div id="v08-s12" class="clip" data-start="0" data-duration="7.768" data-track-index="1">
+      <div class="v08-win-pos" id="v08-win-pos">
+        <div class="v08-glow1" id="v08-glow1"></div>
+        <div class="v08-win-rise" id="v08-win-rise">
+          <div class="v08-win">
+            <div class="v08-face">
+              <div class="v08-face-img" id="v08-face-img" role="img" aria-label="召对"></div>
+            </div>
+            <div class="v08-rule"></div>
+            <div class="v08-reply" role="img" aria-label="回话"></div>
+          </div>
+          <div class="v08-tag" id="v08-tag-audience">召对</div>
+        </div>
+      </div>
+
+      <div class="v08-lab-pos" id="v08-lab-pos">
+        <div class="v08-lab-tilt">
+          <div class="v08-lab-panel" id="v08-lab-panel">
+            <div class="v08-lab-wrap"><span id="v08-lab-text"></span><span class="v08-caret" id="v08-caret"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="v08-card" id="v08-card1" role="img" aria-label="廷议发言">
+        <div class="v08-por" id="v08-por1"></div>
+        <div class="v08-bub" id="v08-bub1"></div>
+      </div>
+      <div class="v08-card" id="v08-card2" role="img" aria-label="廷议发言">
+        <div class="v08-por" id="v08-por2"></div>
+        <div class="v08-bub" id="v08-bub2"></div>
+      </div>
+      <div class="v08-card" id="v08-card3" role="img" aria-label="廷议发言">
+        <div class="v08-por" id="v08-por3"></div>
+        <div class="v08-bub" id="v08-bub3"></div>
+      </div>
+      <div class="v08-tag" id="v08-tag-debate">廷议</div>
+
+      <div class="v08-chip-row">
+        <div class="v08-chip" id="v08-chip">每位大臣由大模型扮演</div>
+      </div>
+    </div>
+
+    <!-- Scene 3: good ending blooms full-frame; title card + review card re-stacked; three ticks -->
+    <div id="v08-end" class="clip" data-start="0" data-duration="7.768" data-track-index="2">
+      <div class="v08-glow2" id="v08-glow2"></div>
+      <div class="v08-bloom" id="v08-bloom">
+        <img src="assets/31-ending-good.png" alt="" />
+        <div class="v08-dim" id="v08-dim"></div>
+      </div>
+      <div class="v08-title" id="v08-title" role="img" aria-label="天宝中兴·夺镇弭兵"></div>
+      <div class="v08-rev" id="v08-rev" role="img" aria-label="目标 达成">
+        <div class="v08-band" id="v08-band1"></div>
+        <div class="v08-band" id="v08-band2"></div>
+        <div class="v08-band" id="v08-band3"></div>
+        <div class="v08-seal" id="v08-seal1">
+          <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path id="v08-tick1" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+        </div>
+        <div class="v08-seal" id="v08-seal2">
+          <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path id="v08-tick2" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+        </div>
+        <div class="v08-seal" id="v08-seal3">
+          <svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path id="v08-tick3" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const DUR = 7.368;
+
+      // ───────── Scene 1 (0.0–2.7s): light returns, 召对 window rises, 「AI 驱动」 types ─────────
+      tl.fromTo("#v08-veil", { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power1.out" }, 0);
+      tl.fromTo("#v08-glow1", { opacity: 0, scale: 0.85 }, { opacity: 0.2, scale: 1, duration: 0.9, ease: "power2.out" }, 0);
+      tl.fromTo(
+        "#v08-win-rise",
+        { opacity: 0, y: 80, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: "power3.out" },
+        0
+      );
+      tl.fromTo("#v08-tag-audience", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 0.45);
+      // slow drift on the An Lushan crop inside its window (clipped; the reply bubble stays still and legible)
+      tl.fromTo("#v08-face-img", { scale: 1 }, { scale: 1.06, duration: 3.29, ease: "none" }, 0);
+
+      // lacquer label panel snaps open, then 「AI 驱动」 types with a caret (discrete-text-sequence)
+      tl.fromTo("#v08-lab-panel", { scaleX: 0 }, { scaleX: 1, duration: 0.32, ease: "power3.out" }, 0.5);
+      const SEQUENCE = [
+        { t: 0.0, text: "" },
+        { t: 0.7, text: "A" },
+        { t: 0.8, text: "AI" },
+        { t: 0.92, text: "AI " },
+        { t: 1.12, text: "AI 驱" },
+        { t: 1.34, text: "AI 驱动" },
+      ];
+      function textAt(time) {
+        for (let i = SEQUENCE.length - 1; i >= 0; i--) {
+          if (time >= SEQUENCE[i].t) return SEQUENCE[i].text;
+        }
+        return "";
+      }
+      const textEl = document.getElementById("v08-lab-text");
+      const caretEl = document.getElementById("v08-caret");
+      const TYPE_TOTAL = 2.6;
+      const driver = { t: 0 };
+      tl.to(
+        driver,
+        {
+          t: TYPE_TOTAL,
+          duration: TYPE_TOTAL,
+          ease: "none",
+          onUpdate: () => {
+            textEl.textContent = textAt(driver.t);
+          },
+        },
+        0
+      );
+      // caret blink: deterministic square wave, retired once the line has settled
+      const BLINK_START = 0.5;
+      const BLINK_DUR = 2.3;
+      const BLINK_CYCLES = 3.5;
+      const blink = { p: 0 };
+      tl.fromTo(
+        blink,
+        { p: 0 },
+        {
+          p: Math.PI * 2 * BLINK_CYCLES,
+          duration: BLINK_DUR,
+          ease: "none",
+          immediateRender: false,
+          onUpdate: () => {
+            caretEl.style.opacity = Math.cos(blink.p) > 0 ? "1" : "0";
+          },
+        },
+        BLINK_START
+      );
+      tl.set(caretEl, { opacity: 0 }, 0);
+      tl.set(caretEl, { opacity: 0 }, BLINK_START + BLINK_DUR);
+
+      // ───────── Scene 2 (3.29–5.4s): reply yields up into the header, three speech cards fan in ─────────
+      const S2 = 3.29;
+      // weight-transfer slide: the 召对 window slides up-right and shrinks into the header row (x 611–1020, y 76–400)
+      tl.to("#v08-win-pos", { x: 582, y: -464, scale: 0.4, duration: 0.75, ease: "power3.inOut" }, S2);
+      tl.to("#v08-glow1", { opacity: 0.1, duration: 0.75, ease: "power2.inOut" }, S2);
+      // the 「AI 驱动」 label tightens to share the header row
+      tl.to("#v08-lab-pos", { y: -40, scale: 0.74, duration: 0.75, ease: "power3.inOut" }, S2);
+
+      tl.fromTo("#v08-tag-debate", { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 3.72);
+      const cards = [
+        { id: "#v08-card1", rot: -1.2, dx: -10, at: 3.58 },
+        { id: "#v08-card2", rot: 1.2, dx: 10, at: 3.9 },
+        { id: "#v08-card3", rot: -1.2, dx: -10, at: 4.22 },
+      ];
+      cards.forEach((c) => {
+        tl.fromTo(
+          c.id,
+          { opacity: 0, x: 300, y: 60, rotation: c.rot + 10, scale: 0.9 },
+          { opacity: 1, x: c.dx, y: 0, rotation: c.rot, scale: 1, duration: 0.6, ease: "power3.out" },
+          c.at
+        );
+      });
+
+      tl.fromTo("#v08-chip", { opacity: 0, y: 18, scaleX: 0.6 }, { opacity: 1, y: 0, scaleX: 1, duration: 0.4, ease: "power3.out" }, 4.7);
+
+      // ───────── Scene 3 (5.57–7.368s): everything clears, good ending blooms, two cards re-stack, ticks ─────────
+      const S3 = 5.57;
+      // zoom-through clear: Z-scale toward camera + blur + fade
+      tl.to("#v08-s12", { opacity: 0, scale: 1.07, filter: "blur(10px)", duration: 0.4, ease: "power2.in" }, S3);
+
+      // the painting blooms full-frame (cover-crop), settling inward — done before the hold
+      tl.fromTo("#v08-glow2", { opacity: 0, scale: 0.85 }, { opacity: 0.3, scale: 1, duration: 0.6, ease: "power2.out" }, S3);
+      tl.fromTo(
+        "#v08-bloom",
+        { opacity: 0, scale: 1.08, filter: "blur(14px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.6, ease: "power3.out" },
+        S3 + 0.04
+      );
+      tl.fromTo("#v08-dim", { opacity: 0 }, { opacity: 0.5, duration: 0.45, ease: "power2.out" }, 5.8);
+
+      // parchment title card 「天宝中兴·夺镇弭兵」 rises into the upper half and stays put to the end
+      tl.fromTo(
+        "#v08-title",
+        { opacity: 0, y: 60, scale: 0.96 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" },
+        5.78
+      );
+      // review card's 目标 rows + 关键数值 below it
+      tl.fromTo(
+        "#v08-rev",
+        { opacity: 0, y: 60, scale: 0.96 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "power3.out" },
+        5.92
+      );
+
+      // three 「达成」 rows: gold band sweeps, seal settles, tick draws — in sequence; last lands by ~6.9s
+      [1, 2, 3].forEach((n, i) => {
+        const at = 6.36 + i * 0.14;
+        tl.fromTo("#v08-band" + n, { scaleX: 0 }, { scaleX: 1, duration: 0.24, ease: "power2.out" }, at);
+        tl.fromTo("#v08-seal" + n, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "power3.out" }, at);
+        tl.fromTo("#v08-tick" + n, { strokeDashoffset: 20 }, { strokeDashoffset: 0, duration: 0.18, ease: "power2.out" }, at + 0.08);
+      });
+
+      // hold to the end of the frame (no exit — the root transition owns it)
+      tl.set({}, {}, DUR);
+
+      window.__timelines["08-ai"] = tl;
+    })();
+  </script>
+</template>

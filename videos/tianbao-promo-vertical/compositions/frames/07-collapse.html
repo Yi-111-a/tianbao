@@ -1,0 +1,472 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: "Noto Serif SC", serif;
+    }
+
+    /* full-bleed lacquer ground — the lowest clip track */
+    #v07-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+
+    /* camera (shake) wrapper — every shot layer rides inside it */
+    #v07-cam {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 50%;
+    }
+    .v07-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    /* opacity-only gating: graded media must stay visibility:visible at init */
+    .v07-later {
+      opacity: 0;
+    }
+    /* portrait cover-crop of a 1344×896 painting (scale 2.143 → 504 source px wide) */
+    .v07-bleed {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+      object-fit: cover;
+      display: block;
+    }
+    .v07-scrim {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+      opacity: 0.35;
+    }
+    /* horizontal centering row for a slam slip (slip itself carries the GSAP transform) */
+    .v07-row {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Scene 1 — 一步 / 走错, two-line poster stack on lacquer */
+    #v07-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 290px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 34px;
+    }
+    .v07-line-row {
+      display: flex;
+      gap: 10px;
+    }
+    .v07-ch {
+      display: inline-block;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 300px;
+      line-height: 1;
+      color: #e6d3a3;
+    }
+
+    /* slam slips — sharp printed rectangles, gold hairline inside */
+    .v07-slip {
+      position: relative;
+      padding: 18px 46px 28px;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      line-height: 1;
+      white-space: nowrap;
+      outline: 2px solid #c9a24b;
+      outline-offset: -12px;
+    }
+    .v07-paper {
+      background: #e6d3a3;
+      color: #c0392b;
+    }
+    .v07-redpanel {
+      background: #c0392b;
+      color: #e6d3a3;
+      text-shadow:
+        2px 2px 0 rgba(28, 20, 16, 0.25),
+        4px 4px 0 rgba(28, 20, 16, 0.2),
+        6px 6px 0 rgba(28, 20, 16, 0.15);
+    }
+
+    /* Scene 2 — 范阳起兵: drum + drummer cover-crop */
+    #v07-fanyang-img {
+      object-position: 4% 50%;
+      transform-origin: 30% 40%;
+    }
+    #v07-fanyang-row {
+      top: 214px;
+    }
+    #v07-fanyang-txt {
+      font-size: 200px;
+    }
+    /* proof: the 时事 · 范阳起兵 entry of the 推演结果 scroll (22-war-result-0 x712–1335, y466–566, ×1.4446) */
+    #v07-proof-row {
+      top: 1150px;
+    }
+    #v07-proof {
+      position: relative;
+      width: 900px;
+      height: 144px;
+      border: 6px solid #e6d3a3;
+      background-color: #e6d3a3;
+      background-image: url("assets/22-war-result-0.png");
+      background-repeat: no-repeat;
+      background-size: 2773.6px 1560.2px;
+      background-position: -1028.6px -673.2px;
+    }
+
+    /* Scene 3 — tall crop of the war desk; desk space mapped (965,150)→(0,0) at ×2.4 */
+    #v07-map-push {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 37.5%;
+    }
+    #v07-desk-space {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 0 0;
+      transform: translate(-2316px, -360px) scale(2.4);
+    }
+    #v07-desk0 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+    /* desk-3 rescaled ×1.1076 so its map content registers on desk-0's map (measured landmarks 范阳 / 洛阳) */
+    #v07-desk3 {
+      position: absolute;
+      left: -107.8px;
+      top: -18.5px;
+      width: 2126.6px;
+      height: 1196.2px;
+      display: block;
+      /* map area only, notched around desk-0's crisis panel so the two panels never ghost */
+      clip-path: polygon(
+        24.58% 15.93%,
+        72.08% 15.93%,
+        72.08% 54.21%,
+        77.72% 54.21%,
+        77.72% 78.88%,
+        24.58% 78.88%
+      );
+    }
+    #v07-dongdu-row {
+      top: 1030px;
+    }
+    #v07-dongdu-txt {
+      font-size: 196px;
+    }
+
+    /* Scene 4 — 潼关失守: general + gate cover-crop */
+    #v07-tongguan-img {
+      object-position: 8% 50%;
+      transform-origin: 40% 35%;
+    }
+    #v07-tongguan-row {
+      top: 1250px;
+    }
+    #v07-tongguan-txt {
+      font-size: 206px;
+    }
+
+    /* Scene 5 — 马嵬驿: the abandoned silk on the bench, drains to grey */
+    #v07-mawei-img {
+      object-position: 19% 50%;
+      transform-origin: 40% 50%;
+    }
+    #v07-mawei-row {
+      top: 200px;
+    }
+    #v07-mawei-txt {
+      font-size: 240px;
+    }
+
+    /* Scene 6 — dark ending painting (25-ending-bad x0–398 → full width, ×2.714), card crop centered */
+    #v07-ending-bg {
+      position: absolute;
+      left: 0;
+      top: -407px;
+      width: 1080px;
+      height: 2931px;
+      object-fit: cover;
+      object-position: 0% 50%;
+      display: block;
+    }
+    #v07-card-row {
+      top: 400px;
+    }
+    /* parchment ending card: 25-ending-bad x400–1042, y258–736 at ×1.48 */
+    #v07-card {
+      position: relative;
+      width: 950px;
+      height: 707px;
+      background-image: url("assets/25-ending-bad.png");
+      background-repeat: no-repeat;
+      background-size: 2841.6px 1598.4px;
+      background-position: -592px -381.8px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="07-collapse" data-width="1080" data-height="1920" data-duration="8.208">
+    <div
+      id="v07-ground"
+      class="clip"
+      data-start="0"
+      data-duration="8.208"
+      data-track-index="0"
+    ></div>
+
+    <div id="v07-cam">
+      <!-- Scene 1: 一步走错 -->
+      <div class="v07-layer" id="v07-s1">
+        <div id="v07-line">
+          <div class="v07-line-row">
+            <span class="v07-ch">一</span><span class="v07-ch">步</span>
+          </div>
+          <div class="v07-line-row">
+            <span class="v07-ch">走</span><span class="v07-ch" id="v07-cuo">错</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 2: 范阳起兵 -->
+      <div class="v07-layer v07-later" id="v07-s2">
+        <img class="v07-bleed" id="v07-fanyang-img" src="assets/event.fanyang_uprising.webp" alt="" />
+        <div class="v07-scrim"></div>
+        <div class="v07-row" id="v07-fanyang-row">
+          <div class="v07-slip v07-paper" id="v07-fanyang-txt">范阳起兵</div>
+        </div>
+        <div class="v07-row" id="v07-proof-row">
+          <div id="v07-proof"></div>
+        </div>
+      </div>
+
+      <!-- Scene 3: 东都陷落 — war map, red spreads -->
+      <div class="v07-layer v07-later" id="v07-s3">
+        <div id="v07-map-push">
+          <div id="v07-desk-space">
+            <img id="v07-desk0" src="assets/24-war-desk-0.png" alt="" />
+            <img id="v07-desk3" src="assets/24-war-desk-3.png" alt="" />
+          </div>
+        </div>
+        <div class="v07-row" id="v07-dongdu-row">
+          <div class="v07-slip v07-redpanel" id="v07-dongdu-txt">东都陷落</div>
+        </div>
+      </div>
+
+      <!-- Scene 4: 潼关失守 -->
+      <div class="v07-layer v07-later" id="v07-s4">
+        <img class="v07-bleed" id="v07-tongguan-img" src="assets/event.tongguan_battle.webp" alt="" />
+        <div class="v07-scrim"></div>
+        <div class="v07-row" id="v07-tongguan-row">
+          <div class="v07-slip v07-paper" id="v07-tongguan-txt">潼关失守</div>
+        </div>
+      </div>
+
+      <!-- Scene 5: 马嵬驿 — drains toward grey -->
+      <div class="v07-layer v07-later" id="v07-s5">
+        <img
+          class="v07-bleed"
+          id="v07-mawei-img"
+          data-color-grading="{&quot;preset&quot;:null,&quot;intensity&quot;:1,&quot;adjust&quot;:{&quot;exposure&quot;:-0.2,&quot;contrast&quot;:0,&quot;highlights&quot;:0,&quot;shadows&quot;:0,&quot;whites&quot;:0,&quot;blacks&quot;:0,&quot;temperature&quot;:0,&quot;tint&quot;:0,&quot;vibrance&quot;:0,&quot;saturation&quot;:-0.92},&quot;details&quot;:{&quot;vignette&quot;:0,&quot;vignetteMidpoint&quot;:0.5,&quot;vignetteRoundness&quot;:0,&quot;vignetteFeather&quot;:0.65,&quot;grain&quot;:0,&quot;grainSize&quot;:0.25,&quot;grainRoughness&quot;:0.5},&quot;effects&quot;:{&quot;blur&quot;:0,&quot;pixelate&quot;:0,&quot;chromaBleed&quot;:0,&quot;tapeDamage&quot;:0,&quot;tapeTracking&quot;:0,&quot;tapeNoise&quot;:1,&quot;tapeSpeed&quot;:0.5,&quot;filmArtifacts&quot;:0,&quot;halftone&quot;:0,&quot;halftoneSize&quot;:0,&quot;twoInkPrint&quot;:0,&quot;twoInkPrintSize&quot;:0,&quot;ascii&quot;:0,&quot;asciiSize&quot;:0.06578947368421052,&quot;asciiInvert&quot;:0,&quot;asciiStyle&quot;:0,&quot;asciiColor&quot;:1,&quot;asciiRotation&quot;:0,&quot;dither&quot;:0,&quot;ditherSize&quot;:0,&quot;bloom&quot;:0,&quot;bloomRadius&quot;:8,&quot;monoScreen&quot;:0,&quot;monoScreenSize&quot;:0,&quot;monoScreenAngle&quot;:0,&quot;monoScreenSpread&quot;:0,&quot;monoScreenShape&quot;:0,&quot;monoScreenInvert&quot;:0,&quot;scanlines&quot;:0,&quot;scanlineCount&quot;:0,&quot;scanlineSoftness&quot;:0,&quot;chromaticAberration&quot;:0,&quot;chromaticAngle&quot;:0,&quot;crtCurvature&quot;:0,&quot;digitalGlitch&quot;:0,&quot;digitalGlitchColorSplit&quot;:0,&quot;digitalGlitchLineTear&quot;:0,&quot;digitalGlitchPixelate&quot;:0,&quot;digitalGlitchBlockAmount&quot;:0,&quot;digitalGlitchBlockDisplacement&quot;:0,&quot;digitalGlitchBlockOpacity&quot;:0,&quot;digitalGlitchSpeed&quot;:0,&quot;engraving&quot;:0,&quot;engravingSpacing&quot;:0.4117647058823529,&quot;engravingMinThickness&quot;:0.2,&quot;engravingMaxThickness&quot;:0.4571428571428572,&quot;engravingAngle&quot;:0.25,&quot;engravingContrast&quot;:0.4666666666666667,&quot;engravingSharpness&quot;:0.59,&quot;engravingWave&quot;:0.2,&quot;engravingWaveFrequency&quot;:0.2222222222222222,&quot;crosshatch&quot;:0,&quot;crosshatchSpacing&quot;:0.28,&quot;crosshatchThickness&quot;:0.25,&quot;crosshatchAngle&quot;:0.25,&quot;crosshatchContrast&quot;:0.3333333333333333,&quot;crosshatchEdges&quot;:0.5,&quot;crosshatchLineWeight&quot;:0,&quot;crosshatchWave&quot;:0.33,&quot;crosshatchWaveFrequency&quot;:0.2222222222222222,&quot;kuwahara&quot;:0,&quot;kuwaharaRadius&quot;:0.14285714285714285,&quot;kuwaharaSharpness&quot;:0.3125,&quot;kuwaharaSaturation&quot;:0.5},&quot;lut&quot;:null,&quot;colorSpace&quot;:&quot;rec709&quot;}"
+          src="assets/event.mawei.webp"
+          alt=""
+          style="--hf-color-grading-intensity: 0"
+        />
+        <div class="v07-scrim"></div>
+        <div class="v07-row" id="v07-mawei-row">
+          <div class="v07-slip v07-paper" id="v07-mawei-txt">马嵬驿</div>
+        </div>
+      </div>
+
+      <!-- Scene 6: 渔阳鼙鼓·历史重演 — bad ending card, still -->
+      <div class="v07-layer v07-later" id="v07-s6">
+        <img
+          id="v07-ending-bg"
+          data-color-grading="{&quot;preset&quot;:null,&quot;intensity&quot;:1,&quot;adjust&quot;:{&quot;exposure&quot;:-0.3,&quot;contrast&quot;:0,&quot;highlights&quot;:0,&quot;shadows&quot;:0,&quot;whites&quot;:0,&quot;blacks&quot;:0,&quot;temperature&quot;:0,&quot;tint&quot;:0,&quot;vibrance&quot;:0,&quot;saturation&quot;:0},&quot;details&quot;:{&quot;vignette&quot;:0.8,&quot;vignetteMidpoint&quot;:0.4,&quot;vignetteRoundness&quot;:0,&quot;vignetteFeather&quot;:0.6,&quot;grain&quot;:0,&quot;grainSize&quot;:0.25,&quot;grainRoughness&quot;:0.5},&quot;effects&quot;:{&quot;blur&quot;:0,&quot;pixelate&quot;:0,&quot;chromaBleed&quot;:0,&quot;tapeDamage&quot;:0,&quot;tapeTracking&quot;:0,&quot;tapeNoise&quot;:1,&quot;tapeSpeed&quot;:0.5,&quot;filmArtifacts&quot;:0,&quot;halftone&quot;:0,&quot;halftoneSize&quot;:0,&quot;twoInkPrint&quot;:0,&quot;twoInkPrintSize&quot;:0,&quot;ascii&quot;:0,&quot;asciiSize&quot;:0.06578947368421052,&quot;asciiInvert&quot;:0,&quot;asciiStyle&quot;:0,&quot;asciiColor&quot;:1,&quot;asciiRotation&quot;:0,&quot;dither&quot;:0,&quot;ditherSize&quot;:0,&quot;bloom&quot;:0,&quot;bloomRadius&quot;:8,&quot;monoScreen&quot;:0,&quot;monoScreenSize&quot;:0,&quot;monoScreenAngle&quot;:0,&quot;monoScreenSpread&quot;:0,&quot;monoScreenShape&quot;:0,&quot;monoScreenInvert&quot;:0,&quot;scanlines&quot;:0,&quot;scanlineCount&quot;:0,&quot;scanlineSoftness&quot;:0,&quot;chromaticAberration&quot;:0,&quot;chromaticAngle&quot;:0,&quot;crtCurvature&quot;:0,&quot;digitalGlitch&quot;:0,&quot;digitalGlitchColorSplit&quot;:0,&quot;digitalGlitchLineTear&quot;:0,&quot;digitalGlitchPixelate&quot;:0,&quot;digitalGlitchBlockAmount&quot;:0,&quot;digitalGlitchBlockDisplacement&quot;:0,&quot;digitalGlitchBlockOpacity&quot;:0,&quot;digitalGlitchSpeed&quot;:0,&quot;engraving&quot;:0,&quot;engravingSpacing&quot;:0.4117647058823529,&quot;engravingMinThickness&quot;:0.2,&quot;engravingMaxThickness&quot;:0.4571428571428572,&quot;engravingAngle&quot;:0.25,&quot;engravingContrast&quot;:0.4666666666666667,&quot;engravingSharpness&quot;:0.59,&quot;engravingWave&quot;:0.2,&quot;engravingWaveFrequency&quot;:0.2222222222222222,&quot;crosshatch&quot;:0,&quot;crosshatchSpacing&quot;:0.28,&quot;crosshatchThickness&quot;:0.25,&quot;crosshatchAngle&quot;:0.25,&quot;crosshatchContrast&quot;:0.3333333333333333,&quot;crosshatchEdges&quot;:0.5,&quot;crosshatchLineWeight&quot;:0,&quot;crosshatchWave&quot;:0.33,&quot;crosshatchWaveFrequency&quot;:0.2222222222222222,&quot;kuwahara&quot;:0,&quot;kuwaharaRadius&quot;:0.14285714285714285,&quot;kuwaharaSharpness&quot;:0.3125,&quot;kuwaharaSaturation&quot;:0.5},&quot;lut&quot;:null,&quot;colorSpace&quot;:&quot;rec709&quot;}"
+          src="assets/25-ending-bad.png"
+          alt=""
+          style="--hf-color-grading-intensity: 0.15"
+        />
+        <div class="v07-row" id="v07-card-row">
+          <div id="v07-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const FID = "07-collapse";
+      const DUR = 7.608;
+      const $ = (s) => "#v07-" + s;
+      const tl = gsap.timeline({ paused: true });
+
+      // ── one beat array: every slam, cut and shake kick reads from it ──
+      const CUT = { s2: 1.25, s3: 2.26, s4: 3.27, s5: 4.35, black: 5.1, s6: 5.22 };
+      const BEATS = [1.27, 2.32, 3.31, 4.39]; // 范阳起兵 · 东都陷落 · 潼关失守 · 马嵬驿
+
+      // camera wrapper carries a 3% overscan so the shake never exposes an edge
+      tl.set($("cam"), { scale: 1.03, x: 0, y: 0, rotation: 0 }, 0);
+
+      // ── Scene 1 (0.0–1.25): 一步 / 走错, per-word reveal on lacquer ──
+      const chars = gsap.utils.toArray("#v07-line .v07-ch");
+      chars.forEach((el, i) => {
+        tl.fromTo(
+          el,
+          { opacity: 0, y: 44, filter: "blur(12px)" },
+          { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.34, ease: "power3.out" },
+          0.06 + i * 0.17,
+        );
+      });
+      // 错 turns vermilion — the misstep
+      tl.set($("cuo"), { color: "#c0392b" }, 0.9);
+      tl.fromTo($("cuo"), { scale: 1.22 }, { scale: 1, duration: 0.3, ease: "power3.out" }, 0.9);
+
+      // ── hard cuts between shots (seek-safe opacity sets) ──
+      const order = ["s1", "s2", "s3", "s4", "s5"];
+      const cutAt = [0, CUT.s2, CUT.s3, CUT.s4, CUT.s5];
+      order.forEach((id, i) => {
+        if (i > 0) tl.set($(id), { opacity: 1 }, cutAt[i]);
+        const end = i < order.length - 1 ? cutAt[i + 1] : CUT.black;
+        tl.set($(id), { opacity: 0 }, end);
+      });
+
+      // ── Scene 2 (1.25–2.26): 范阳起兵 — painting slams full-height, word slams in the top band ──
+      tl.fromTo($("fanyang-img"), { scale: 1.14 }, { scale: 1.04, duration: 1.0, ease: "power3.out" }, CUT.s2);
+      tl.fromTo(
+        $("fanyang-txt"),
+        { scale: 1.7, rotation: -5, opacity: 0, filter: "blur(14px)" },
+        { scale: 1, rotation: -5, opacity: 1, filter: "blur(0px)", duration: 0.42, ease: "power4.out" },
+        BEATS[0],
+      );
+      // the in-game 推演结果 entry cuts in at lower-middle, as proof
+      tl.fromTo(
+        $("proof"),
+        { x: 90, rotation: 2, opacity: 0 },
+        { x: 0, rotation: 2, opacity: 1, duration: 0.3, ease: "expo.out" },
+        1.58,
+      );
+
+      // ── Scene 3 (2.26–3.27): 东都陷落 — tall map crop, push toward the bloc while red spreads ──
+      tl.fromTo($("map-push"), { scale: 1 }, { scale: 1.12, duration: 1.0, ease: "power3.out" }, CUT.s3);
+      // desk-0 → desk-3 crossfade: the red visibly spreads over 河北 / 都畿
+      tl.fromTo($("desk3"), { opacity: 0 }, { opacity: 1, duration: 0.42, ease: "power1.inOut" }, 2.48);
+      tl.fromTo(
+        $("dongdu-txt"),
+        { x: -560, rotation: -4, opacity: 0 },
+        { x: 0, rotation: -4, opacity: 1, duration: 0.4, ease: "expo.out" },
+        BEATS[1],
+      );
+
+      // ── Scene 4 (3.27–4.35): 潼关失守 ──
+      tl.fromTo($("tongguan-img"), { scale: 1.03 }, { scale: 1.1, duration: 1.08, ease: "none" }, CUT.s4);
+      tl.fromTo(
+        $("tongguan-txt"),
+        { y: 160, rotation: 5, opacity: 0 },
+        { y: 0, rotation: -3, opacity: 1, duration: 0.5, ease: "circ.out" },
+        BEATS[2],
+      );
+
+      // ── Scene 5 (4.35–5.1): 马嵬驿 — big→small slam while the painting drains to grey ──
+      tl.fromTo($("mawei-img"), { scale: 1.08 }, { scale: 1.02, duration: 0.75, ease: "power2.out" }, CUT.s5);
+      tl.fromTo(
+        $("mawei-img"),
+        { "--hf-color-grading-intensity": 0 },
+        { "--hf-color-grading-intensity": 1, duration: 0.66, ease: "sine.inOut" },
+        4.43,
+      );
+      tl.fromTo(
+        $("mawei-txt"),
+        { scale: 2.5, rotation: -6, opacity: 0 },
+        { scale: 1, rotation: -6, opacity: 1, duration: 0.45, ease: "power4.out" },
+        BEATS[3],
+      );
+
+      // ── Scene 6 (5.22–7.608): music drops — ending painting fades up, card settles, then dead still ──
+      tl.fromTo($("s6"), { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "power1.out" }, CUT.s6);
+      tl.fromTo(
+        $("card"),
+        { opacity: 0, y: 26 },
+        { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" },
+        5.4,
+      );
+      // the painting sinks darker and the vignette closes in (grade only — no push during the hold)
+      tl.fromTo(
+        $("ending-bg"),
+        { "--hf-color-grading-intensity": 0.15 },
+        { "--hf-color-grading-intensity": 1, duration: 1.9, ease: "sine.inOut" },
+        5.6,
+      );
+
+      // ── camera shake: begins in Scene 1, kicks on every slam, dies at the music drop ──
+      const SH_START = 0.7,
+        SH_END = 5.1,
+        STEP = 0.05;
+      const KICKS = [0.9].concat(BEATS);
+      const hash = (n) => {
+        const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+        return (s - Math.floor(s)) * 2 - 1;
+      };
+      const steps = Math.round((SH_END - SH_START) / STEP);
+      for (let i = 1; i <= steps; i++) {
+        const t = SH_START + i * STEP;
+        let a = 2.6 * Math.min(1, (t - SH_START) / 0.4);
+        KICKS.forEach((k) => {
+          if (t >= k) a += 10 * Math.exp(-(t - k) / 0.13);
+        });
+        tl.to(
+          $("cam"),
+          {
+            x: hash(i) * a * 0.6,
+            y: hash(i + 71) * a,
+            rotation: hash(i + 13) * a * 0.02,
+            duration: STEP,
+            ease: "sine.inOut",
+          },
+          t - STEP,
+        );
+      }
+      tl.to($("cam"), { x: 0, y: 0, rotation: 0, duration: 0.1, ease: "power2.out" }, SH_END);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines[FID] = tl;
+    })();
+  </script>
+</template>

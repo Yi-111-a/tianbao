@@ -1,0 +1,372 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+    #f04-ground {
+      position: absolute;
+      inset: 0;
+      background: #e6d3a3;
+    }
+    #f04-stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ── the held surface: ink rule · gold mat · ink hairline · screen (bottom edge 887px < 896 keep-out) ── */
+    #f04-surface {
+      position: absolute;
+      left: 197px;
+      top: 18px;
+      width: 1525px;
+      height: 869px;
+      box-sizing: border-box;
+      border: 3px solid #17110e;
+      padding: 8px;
+      background: #c9a24b;
+    }
+    #f04-screen {
+      position: relative;
+      width: 1503px;
+      height: 847px;
+      box-sizing: border-box;
+      border: 1.5px solid #17110e;
+      background: #17110e;
+      overflow: hidden;
+    }
+    /* virtual camera inside the screen: outer scales, inner counter-translates */
+    #f04-zoom-outer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1500px;
+      height: 844px;
+      transform-origin: 750px 422px;
+    }
+    #f04-zoom-inner {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1500px;
+      height: 844px;
+    }
+    .f04-gate,
+    .f04-slide {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1500px;
+      height: 844px;
+    }
+    /* source-pixel space: 1920×1080 screenshot laid out 1:1, statically scaled to the 1500px screen */
+    .f04-src {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform: scale(0.78125);
+      transform-origin: 0 0;
+    }
+    .f04-shot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+
+    /* 迟到之报 — vermilion outline stamp over the memorial list (source px) */
+    #f04-stamp {
+      position: absolute;
+      left: 414px;
+      top: 486px;
+      width: 352px;
+      height: 112px;
+      box-sizing: border-box;
+      border: 5px solid #c0392b;
+      background: rgba(230, 211, 163, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 64px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      color: #c0392b;
+      white-space: nowrap;
+    }
+    #f04-stamp-rule {
+      position: absolute;
+      inset: 6px;
+      border: 1.5px solid #c0392b;
+    }
+    #f04-stamp-text {
+      position: relative;
+      margin-right: -0.1em;
+    }
+
+    /* reply bubble: patch (empty parchment from the same screenshot) hides it; crop re-reveals it */
+    .f04-cut {
+      position: absolute;
+      left: 845px;
+      top: 316px;
+      width: 700px;
+      height: 128px;
+      background-image: url("assets/07-audience.png");
+      background-size: 1920px 1080px;
+      background-repeat: no-repeat;
+    }
+    #f04-reply-patch {
+      background-position: -845px -470px;
+    }
+    #f04-reply {
+      --f04-wipe: -20%;
+      background-position: -845px -316px;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 var(--f04-wipe),
+        transparent calc(var(--f04-wipe) + 20%)
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 var(--f04-wipe),
+        transparent calc(var(--f04-wipe) + 20%)
+      );
+    }
+    /* 卿以为范阳之兵如何？ — vermilion scribble underline (source px) */
+    #f04-marker {
+      position: absolute;
+      left: 1416px;
+      top: 297px;
+      width: 178px;
+      height: 14px;
+      overflow: visible;
+    }
+
+    /* lacquer chip at the surface's top-left */
+    #f04-chip {
+      position: absolute;
+      left: -14px;
+      top: -12px;
+      width: 136px;
+      height: 56px;
+      box-sizing: border-box;
+      background: #17110e;
+      border: 2px solid #c9a24b;
+      overflow: hidden;
+    }
+    .f04-chip-word {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      color: #e6d3a3;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div data-hf-id="hf-t3eu" id="root" data-composition-id="04-audience" data-width="1920" data-height="1080" data-duration="8.396">
+    <div data-hf-id="hf-waqm"
+      id="f04-ground"
+      class="clip"
+      data-start="0"
+      data-duration="8.396"
+      data-track-index="0"
+    ></div>
+
+    <div data-hf-id="hf-ytjk" id="f04-stage" class="clip" data-start="0" data-duration="8.396" data-track-index="1">
+      <div data-hf-id="hf-7ujr" id="f04-surface">
+        <div data-hf-id="hf-88dy" id="f04-screen">
+          <div data-hf-id="hf-32gg" id="f04-zoom-outer" data-layout-allow-overflow>
+            <div data-hf-id="hf-mgs9" id="f04-zoom-inner" data-layout-allow-overflow>
+              <!-- screen 1: 奏疏 -->
+              <div data-hf-id="hf-97ur" id="f04-mem-gate" class="f04-gate" data-layout-allow-overflow>
+                <div data-hf-id="hf-ydwl" id="f04-slide-mem" class="f04-slide" data-layout-allow-overflow>
+                  <div data-hf-id="hf-xxme" class="f04-src" data-layout-allow-overflow>
+                    <img data-hf-id="hf-00uq" class="f04-shot" src="assets/06-memorial.png" alt="" />
+                    <div data-hf-id="hf-5gfz" id="f04-stamp">
+                      <span data-hf-id="hf-8gid" id="f04-stamp-rule"></span>
+                      <span data-hf-id="hf-ubft" id="f04-stamp-text">迟到之报</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- screen 2: 召对 -->
+              <div data-hf-id="hf-fhsw" id="f04-aud-gate" class="f04-gate" data-layout-allow-overflow>
+                <div data-hf-id="hf-1xy0" id="f04-slide-aud" class="f04-slide" data-layout-allow-overflow>
+                  <div data-hf-id="hf-zmje" class="f04-src" data-layout-allow-overflow>
+                    <img data-hf-id="hf-5px5" class="f04-shot" src="assets/07-audience.png" alt="" />
+                    <div data-hf-id="hf-qa7p" id="f04-reply-patch" class="f04-cut"></div>
+                    <div data-hf-id="hf-ci04" id="f04-reply" class="f04-cut"></div>
+                    <svg data-hf-id="hf-7yau"
+                      id="f04-marker"
+                      viewBox="0 0 178 14"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <path data-hf-id="hf-eewd"
+                        id="f04-marker-path"
+                        d="M2,7 Q13,1 24,7 Q35,13 46,7 Q57,1 68,7 Q79,13 90,7 Q101,1 112,7 Q123,13 134,7 Q145,1 156,7 Q167,13 176,7"
+                        pathLength="1"
+                        fill="none"
+                        stroke="#c0392b"
+                        stroke-width="3.5"
+                        stroke-linecap="round"
+                        stroke-dasharray="1 1"
+                        stroke-dashoffset="1"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div data-hf-id="hf-qh7g" id="f04-chip">
+          <span data-hf-id="hf-tdmy" id="f04-chip-a" class="f04-chip-word">奏疏</span>
+          <span data-hf-id="hf-cv1s" id="f04-chip-b" class="f04-chip-word">召对</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      // Camera targets (screen-local px; screen = source × 0.78125; origin O = 750,422).
+      // Nested-wrapper coordinate-target-zoom: T = O − p (independent of S).
+      var K = 0.78125;
+      var OX = 750,
+        OY = 422;
+      var PORTRAIT = { x: OX - 770 * K, y: OY - 450 * K, s: 1.75 }; // An Lushan, left half
+      var DIALOGUE = { x: OX - 1205 * K, y: OY - 350 * K, s: 2.1 }; // question + reply bubbles
+
+      // initial states
+      gsap.set("#f04-aud-gate", { opacity: 0 });
+      gsap.set("#f04-reply", { "--f04-wipe": "-20%" });
+
+      // ── Scene 1 (0.0–1.7): memorial surface rises into the gold frame; 奏疏 chip ──
+      tl.fromTo(
+        "#f04-surface",
+        { y: 150, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.0, ease: "expo.out" },
+        0.0,
+      );
+      tl.fromTo(
+        "#f04-chip",
+        { scale: 0.6, opacity: 0, rotation: -9 },
+        { scale: 1, opacity: 1, rotation: -3, duration: 0.45, ease: "back.out(2)" },
+        0.55,
+      );
+      // always-on micro push while the memorial holds
+      tl.to("#f04-zoom-outer", { scale: 1.03, duration: 2.2, ease: "sine.inOut" }, 0.9);
+
+      // ── Scene 2 (1.8–2.6): 迟到之报 stamp thumps onto the memorial list ──
+      tl.fromTo(
+        "#f04-stamp",
+        { scale: 2.6, opacity: 0, rotation: -11 },
+        { scale: 1, opacity: 1, rotation: -4, duration: 0.2, ease: "power4.in" },
+        1.95,
+      );
+      tl.to("#f04-surface", { y: 7, duration: 0.05, ease: "power1.out" }, 2.15);
+      tl.to("#f04-surface", { y: 0, duration: 0.32, ease: "power2.out" }, 2.2);
+
+      // ── Scene 3 (3.1–5.2): cut-the-curve push LEFT to 召对, then zoom to the portrait ──
+      // exit: power4.in, 230px; fade dies right at the cut (3.40)
+      tl.to("#f04-slide-mem", { x: -230, duration: 0.3, ease: "power4.in" }, 3.1);
+      tl.to("#f04-slide-mem", { opacity: 0, duration: 0.22, ease: "power1.in" }, 3.18);
+      tl.to("#f04-chip-a", { y: -30, opacity: 0, duration: 0.22, ease: "power2.in" }, 3.18);
+      // hard cut at 3.40 — entry: mirrored power4.out, same distance, picks up at 0.35
+      tl.set("#f04-mem-gate", { opacity: 0 }, 3.4);
+      tl.set("#f04-aud-gate", { opacity: 1 }, 3.4);
+      tl.fromTo(
+        "#f04-slide-aud",
+        { x: 230, opacity: 0.35 },
+        { x: 0, opacity: 1, duration: 0.34, ease: "power4.out", immediateRender: false },
+        3.4,
+      );
+      tl.fromTo(
+        "#f04-chip-b",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.36, ease: "power3.out" },
+        3.4,
+      );
+      // zoom-to-target: An Lushan's portrait half (当面问他)
+      tl.to(
+        "#f04-zoom-outer",
+        { scale: PORTRAIT.s, duration: 1.2, ease: "power3.inOut" },
+        3.9,
+      );
+      tl.to(
+        "#f04-zoom-inner",
+        { x: PORTRAIT.x, y: PORTRAIT.y, duration: 1.2, ease: "power3.inOut" },
+        3.9,
+      );
+
+      // ── Scene 4 (5.3–7.896): re-target to the dialogue; marker under the question; reply wipes in ──
+      tl.to(
+        "#f04-zoom-outer",
+        { scale: DIALOGUE.s, duration: 0.9, ease: "power3.inOut" },
+        5.3,
+      );
+      tl.to(
+        "#f04-zoom-inner",
+        { x: DIALOGUE.x, y: DIALOGUE.y, duration: 0.9, ease: "power3.inOut" },
+        5.3,
+      );
+      tl.fromTo("#f04-marker-path", { opacity: 0 }, { opacity: 1, duration: 0.05 }, 5.85);
+      tl.fromTo(
+        "#f04-marker-path",
+        { strokeDashoffset: 1 },
+        { strokeDashoffset: 0, duration: 0.6, ease: "power1.inOut" },
+        5.85,
+      );
+      tl.fromTo(
+        "#f04-reply",
+        { "--f04-wipe": "-20%" },
+        { "--f04-wipe": "100%", duration: 0.85, ease: "power1.inOut" },
+        6.3,
+      );
+      // hold: quiet settle push (same T keeps the dialogue centred)
+      tl.to("#f04-zoom-outer", { scale: 2.12, duration: 1.696, ease: "sine.out" }, 6.2);
+
+      window.__timelines["04-audience"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,463 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    #root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+    }
+
+    /* ---- ground: paper sheet (full-bleed clip, lowest track) ---- */
+    #v06-edict-ground {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+      background: #e6d3a3;
+    }
+
+    /* ---- scene 4 background: the real map (map pixel space, camera = transform on this box) ---- */
+    #v06-edict-map {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      will-change: transform, opacity;
+    }
+    #v06-edict-map img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+    #v06-edict-route-svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: visible;
+    }
+    #v06-edict-route-dash {
+      fill: none;
+      stroke: #c0392b;
+      stroke-width: 6;
+      stroke-dasharray: 15 9;
+      stroke-linecap: butt;
+      stroke-linejoin: round;
+    }
+    #v06-edict-route-reveal {
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 16;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    /* uniform ~40% ink dim over the map (screen space, so it never pans away) */
+    #v06-edict-map-dim {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+      background: #17110e;
+      will-change: opacity;
+    }
+
+    /* ---- scenes 1–3: the tall gold-framed window ---- */
+    #v06-edict-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+      will-change: transform, opacity;
+    }
+    #v06-edict-win {
+      position: absolute;
+      left: 70px;
+      top: 230px;
+      width: 940px;
+      height: 1200px;
+      overflow: hidden;
+      background: #17110e;
+    }
+    /* each surface = gate (instant show/hide) > slide (push-left) > zo (scale about window center) > zi (counter-translate) */
+    .v06-edict-gate,
+    .v06-edict-slide {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 940px;
+      height: 1200px;
+    }
+    .v06-edict-slide {
+      will-change: transform, opacity;
+    }
+    .v06-edict-zo {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    /* image center (960,540) sits on window center (470,600) */
+    .v06-edict-zi {
+      position: absolute;
+      left: -490px;
+      top: 60px;
+      width: 1920px;
+      height: 1080px;
+      will-change: transform;
+    }
+    .v06-edict-zi img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+    /* frame rules: 3px ink outer + gold hairline inner (overlays, so zoom math stays exact) */
+    .v06-edict-frame-ink {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      border: 3px solid #17110e;
+      pointer-events: none;
+    }
+    .v06-edict-frame-gold {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 1.5px solid #c9a24b;
+      pointer-events: none;
+    }
+
+    /* relay pips under the window (three steps, red fill grows on each cue) */
+    .v06-edict-pip {
+      position: absolute;
+      top: 1468px;
+      width: 300px;
+      height: 14px;
+      border: 2px solid #17110e;
+      background: #e6d3a3;
+      overflow: hidden;
+    }
+    .v06-edict-pip > i {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: #c0392b;
+      transform-origin: 0% 50%;
+      will-change: transform;
+    }
+
+    /* ---- chips (red-leftbar tag, tilted −4°) ---- */
+    .v06-edict-chip {
+      position: absolute;
+      left: 64px;
+      top: 128px;
+      will-change: transform, opacity;
+    }
+    .v06-edict-chip > span {
+      display: inline-block;
+      transform: rotate(-4deg);
+      transform-origin: 0% 50%;
+      background: #e6d3a3;
+      border: 3px solid #17110e;
+      border-left: 14px solid #c0392b;
+      padding: 16px 34px 20px 28px;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 84px;
+      line-height: 1;
+      color: #17110e;
+      white-space: nowrap;
+    }
+    .v06-edict-chip em {
+      font-style: normal;
+      color: #c0392b;
+      margin-left: 16px;
+    }
+
+    /* ---- scene 4: receipt card, lower-middle ---- */
+    #v06-edict-card {
+      position: absolute;
+      left: 90px;
+      top: 1000px;
+      width: 900px;
+      height: 440px;
+      will-change: transform, opacity;
+    }
+    #v06-edict-card-win {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 900px;
+      height: 440px;
+      overflow: hidden;
+      background: #17110e;
+    }
+    #v06-edict-zi-card {
+      position: absolute;
+      left: -510px;
+      top: -320px;
+      width: 1920px;
+      height: 1080px;
+      will-change: transform;
+    }
+    #v06-edict-zi-card img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+    #v06-edict-card .v06-edict-frame-ink {
+      border-left: 12px solid #c0392b;
+    }
+
+    /* ---- the 需 4 季 stamp ---- */
+    #v06-edict-stamp {
+      position: absolute;
+      left: 600px;
+      top: 1226px;
+      will-change: transform, opacity;
+    }
+    #v06-edict-stamp > span {
+      display: inline-block;
+      transform: rotate(-6deg);
+      transform-origin: 50% 50%;
+      background: #e6d3a3;
+      border: 5px solid #c0392b;
+      padding: 14px 22px 18px;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 80px;
+      line-height: 1;
+      color: #c0392b;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div id="root" data-composition-id="06-edict" data-width="1080" data-height="1920" data-duration="6.688">
+    <div
+      id="v06-edict-ground"
+      class="clip"
+      data-start="0"
+      data-duration="6.688"
+      data-track-index="0"
+    ></div>
+
+    <!-- Scene 4 background: map + self-drawing route, all in map pixel space -->
+    <div id="v06-edict-map">
+      <img src="assets/05-map-zoom.png" alt="" />
+      <svg id="v06-edict-route-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <mask id="v06-edict-route-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080">
+            <path
+              id="v06-edict-route-reveal"
+              d="M 182 712 C 280 762, 380 782, 450 752 C 560 702, 650 598, 768 518 C 884 440, 994 360, 1052 252"
+            />
+          </mask>
+        </defs>
+        <path
+          id="v06-edict-route-dash"
+          mask="url(#v06-edict-route-mask)"
+          d="M 182 712 C 280 762, 380 782, 450 752 C 560 702, 650 598, 768 518 C 884 440, 994 360, 1052 252"
+        />
+        <circle id="v06-edict-route-start" cx="182" cy="712" r="8" fill="#c0392b" stroke="#e6d3a3" stroke-width="2.5" />
+        <circle id="v06-edict-route-end" cx="1052" cy="252" r="13" fill="none" stroke="#c0392b" stroke-width="4.5" />
+        <circle id="v06-edict-route-end-dot" cx="1052" cy="252" r="4.5" fill="#c0392b" />
+      </svg>
+    </div>
+    <div id="v06-edict-map-dim"></div>
+
+    <!-- Scenes 1–3: tall gold-framed window, three-surface relay -->
+    <div id="v06-edict-stage">
+      <div id="v06-edict-win">
+        <div id="v06-edict-gate-1" class="v06-edict-gate">
+          <div id="v06-edict-slide-1" class="v06-edict-slide">
+            <div id="v06-edict-zo-1" class="v06-edict-zo">
+              <div id="v06-edict-zi-1" class="v06-edict-zi"><img src="assets/12-edict.png" alt="" /></div>
+            </div>
+          </div>
+        </div>
+        <div id="v06-edict-gate-2" class="v06-edict-gate">
+          <div id="v06-edict-slide-2" class="v06-edict-slide">
+            <div id="v06-edict-zo-2" class="v06-edict-zo">
+              <div id="v06-edict-zi-2" class="v06-edict-zi"><img src="assets/11-cards.png" alt="" /></div>
+            </div>
+          </div>
+        </div>
+        <div id="v06-edict-gate-3" class="v06-edict-gate">
+          <div id="v06-edict-slide-3" class="v06-edict-slide">
+            <div id="v06-edict-zo-3" class="v06-edict-zo">
+              <div id="v06-edict-zi-3" class="v06-edict-zi"><img src="assets/10-army.png" alt="" /></div>
+            </div>
+          </div>
+        </div>
+        <div class="v06-edict-frame-ink"></div>
+        <div class="v06-edict-frame-gold"></div>
+      </div>
+
+      <div id="v06-edict-pip-1" class="v06-edict-pip" style="left: 70px"><i id="v06-edict-pipfill-1"></i></div>
+      <div id="v06-edict-pip-2" class="v06-edict-pip" style="left: 390px"><i id="v06-edict-pipfill-2"></i></div>
+      <div id="v06-edict-pip-3" class="v06-edict-pip" style="left: 710px"><i id="v06-edict-pipfill-3"></i></div>
+
+      <div id="v06-edict-chip-1" class="v06-edict-chip"><span>拟诏</span></div>
+      <div id="v06-edict-chip-2" class="v06-edict-chip"><span>政策卡<em>×27</em></span></div>
+      <div id="v06-edict-chip-3" class="v06-edict-chip"><span>兵部</span></div>
+    </div>
+
+    <!-- Scene 4: receipt card + 需 4 季 stamp -->
+    <div id="v06-edict-card">
+      <div id="v06-edict-card-win">
+        <div id="v06-edict-zo-card" class="v06-edict-zo">
+          <div id="v06-edict-zi-card"><img src="assets/13-receipt.png" alt="" /></div>
+        </div>
+      </div>
+      <div class="v06-edict-frame-ink"></div>
+      <div class="v06-edict-frame-gold"></div>
+    </div>
+    <div id="v06-edict-stamp"><span>需 4 季</span></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const root = document.querySelector('[data-composition-id="06-edict"]');
+      const $ = (id) => root.querySelector("#v06-edict-" + id);
+
+      const DUR = 6.288;
+      const CUT1 = 0.76; // 「发政策卡」
+      const CUT2 = 1.76; // 「调兵遣将」
+      const EXIT = 0.26; // cut-the-curve exit (power4.in)
+      const ENTER = 0.34; // cut-the-curve entry (power3.out)
+      const PUSH = 260; // same leftward distance both sides of every seam
+
+      // Zoom-to-target (nested wrappers): zo scales about the window center,
+      // zi translates by (image center − target); targets are pixel coords on the 1920×1080 screenshots.
+      const T = (tx, ty) => ({ x: 960 - tx, y: 540 - ty });
+
+      const tl = gsap.timeline({ paused: true });
+
+      // ---------- initial states ----------
+      tl.set($("gate-2"), { autoAlpha: 0 }, 0);
+      tl.set($("gate-3"), { autoAlpha: 0 }, 0);
+      tl.set([$("chip-2"), $("chip-3")], { opacity: 0 }, 0);
+      tl.set([$("pipfill-1"), $("pipfill-2"), $("pipfill-3")], { scaleX: 0 }, 0);
+      tl.set($("map"), { opacity: 0, transformOrigin: "0px 0px", scale: 2, x: 0, y: -240 }, 0);
+      tl.set($("map-dim"), { opacity: 0 }, 0);
+      tl.set([$("card"), $("stamp")], { opacity: 0 }, 0);
+
+      // gates: each surface only exists inside its scene window
+      tl.set($("gate-1"), { autoAlpha: 0 }, CUT1);
+      tl.set($("gate-2"), { autoAlpha: 1 }, CUT1);
+      tl.set($("gate-2"), { autoAlpha: 0 }, CUT2);
+      tl.set($("gate-3"), { autoAlpha: 1 }, CUT2);
+
+      // ---------- Scene 1 (0.0–0.76): 拟诏 — the edict scroll rises into the window ----------
+      tl.fromTo($("slide-1"), { y: 220 }, { y: 0, duration: 0.6, ease: "power3.out" }, 0);
+      tl.fromTo($("slide-1"), { opacity: 0.25 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0);
+      tl.fromTo($("zo-1"), { scale: 1.16 }, { scale: 1.3, duration: CUT1, ease: "power1.out" }, 0);
+      tl.fromTo($("zi-1"), T(960, 530), { ...T(960, 520), duration: CUT1, ease: "power1.out" }, 0);
+      tl.fromTo($("chip-1"), { x: 120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 0.1);
+      tl.fromTo($("pipfill-1"), { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.1);
+
+      // seam 1 → push-left (cut the curve)
+      tl.to($("slide-1"), { x: -PUSH, duration: EXIT, ease: "power4.in" }, CUT1 - EXIT);
+      tl.to($("slide-1"), { opacity: 0, duration: 0.2, ease: "none" }, CUT1 - 0.2);
+      tl.to($("chip-1"), { x: -120, duration: EXIT, ease: "power4.in" }, CUT1 - EXIT);
+      tl.to($("chip-1"), { opacity: 0, duration: 0.2, ease: "none" }, CUT1 - 0.2);
+
+      // ---------- Scene 2 (0.76–1.76): 发政策卡 — card picker, zoom onto the card grid ----------
+      tl.fromTo($("slide-2"), { x: PUSH }, { x: 0, duration: ENTER, ease: "power3.out" }, CUT1);
+      tl.fromTo($("slide-2"), { opacity: 0.35 }, { opacity: 1, duration: 0.18, ease: "power1.out" }, CUT1);
+      tl.fromTo($("zo-2"), { scale: 1.13 }, { scale: 1.32, duration: 0.72, ease: "power3.inOut" }, 0.86);
+      tl.fromTo($("zi-2"), T(980, 545), { ...T(980, 600), duration: 0.72, ease: "power3.inOut" }, 0.86);
+      tl.fromTo($("chip-2"), { x: 120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, CUT1 + 0.04);
+      tl.fromTo($("pipfill-2"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, CUT1 + 0.04);
+
+      // seam 2 → push-left
+      tl.to($("slide-2"), { x: -PUSH, duration: EXIT, ease: "power4.in" }, CUT2 - EXIT);
+      tl.to($("slide-2"), { opacity: 0, duration: 0.2, ease: "none" }, CUT2 - 0.2);
+      tl.to($("chip-2"), { x: -120, duration: EXIT, ease: "power4.in" }, CUT2 - EXIT);
+      tl.to($("chip-2"), { opacity: 0, duration: 0.2, ease: "none" }, CUT2 - 0.2);
+
+      // ---------- Scene 3 (1.76–2.9): 调兵遣将 — 兵部 panel, zoom onto the army list ----------
+      tl.fromTo($("slide-3"), { x: PUSH }, { x: 0, duration: ENTER, ease: "power3.out" }, CUT2);
+      tl.fromTo($("slide-3"), { opacity: 0.35 }, { opacity: 1, duration: 0.18, ease: "power1.out" }, CUT2);
+      // list column x 22–470; 1.5× view (x 0–627, y 90–890) stays inside the image
+      tl.fromTo($("zo-3"), { scale: 1.12 }, { scale: 1.5, duration: 0.95, ease: "power3.inOut" }, 1.9);
+      tl.fromTo($("zi-3"), T(420, 540), { ...T(313, 490), duration: 0.95, ease: "power3.inOut" }, 1.9);
+      tl.fromTo($("chip-3"), { x: 120, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, CUT2 + 0.04);
+      tl.fromTo($("pipfill-3"), { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, CUT2 + 0.04);
+
+      // seam 3 → the whole stage pushes left and gives way to the map (internal scene seam)
+      tl.to($("stage"), { x: -PUSH, duration: 0.3, ease: "power4.in" }, 3.0);
+      tl.to($("stage"), { opacity: 0, duration: 0.22, ease: "none" }, 3.08);
+
+      // ---------- Scene 4 (3.25–6.288): 千里之外 — map + route; 军令要走好几季 — receipt + 需 4 季 ----------
+      tl.to($("map"), { opacity: 1, duration: 0.55, ease: "power1.out" }, 3.12);
+      tl.to($("map-dim"), { opacity: 0.4, duration: 0.55, ease: "power1.out" }, 3.12);
+      // cover-crop camera (2× map, top HUD cropped): 京畿 + 潼关 in view → travels in lockstep with the pen (same timing + ease) to 范阳, then holds
+      tl.fromTo($("map"), { x: 0 }, { x: -1580, duration: 1.1, ease: "power2.inOut" }, 3.46);
+
+      // svg-path-draw: a measured solid reveal stroke inside a mask uncovers the dashed route
+      const reveal = $("route-reveal");
+      const len = reveal.getTotalLength() * 1.02;
+      reveal.style.strokeDasharray = String(len);
+      reveal.style.strokeDashoffset = String(len);
+      tl.fromTo($("route-start"), { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.3, ease: "power2.out" }, 3.36);
+      tl.fromTo(reveal, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1.1, ease: "power2.inOut" }, 3.46);
+      tl.fromTo($("route-end"), { scale: 0, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.35, ease: "power2.out" }, 4.46);
+      tl.fromTo($("route-end-dot"), { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.25, ease: "power2.out" }, 4.46);
+
+      // receipt drops in as a card in the lower-middle
+      tl.fromTo($("card"), { y: -110 }, { y: 0, duration: 0.55, ease: "power3.out" }, 4.3);
+      tl.to($("card"), { opacity: 1, duration: 0.25, ease: "power1.out" }, 4.3);
+      // zoom-to-target inside the card: receipt list overview → the 兴工「禁军整训」4 季 row (施行)
+      // card window 900×440; overview 0.86× @ (982, 590) → 2.2× @ (670, 800)
+      tl.fromTo($("zo-card"), { scale: 0.86 }, { scale: 2.2, duration: 0.85, ease: "power3.inOut" }, 4.72);
+      tl.fromTo($("zi-card"), T(982, 590), { ...T(670, 800), duration: 0.85, ease: "power3.inOut" }, 4.72);
+
+      // 需 4 季 stamp lands beside the 4-season row, then holds
+      tl.fromTo($("stamp"), { scale: 1.6 }, { scale: 1, duration: 0.4, ease: "power3.out" }, 5.58);
+      tl.to($("stamp"), { opacity: 1, duration: 0.16, ease: "power1.out" }, 5.58);
+
+      // pad the timeline to the fixed frame duration
+      tl.to({}, { duration: DUR }, 0);
+
+      window.__timelines["06-edict"] = tl;
+    })();
+  </script>
+</template>

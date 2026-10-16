@@ -1,0 +1,8 @@
+{"id":"sfx_001","type":"sfx","path":"assets/sfx/taiko-hit.mp3","source":"search","description":"taiko-hit","duration":0.4,"provenance":{"provider":"heygen","prompt":"taiko-hit"}}
+{"id":"sfx_002","type":"sfx","path":"assets/sfx/low-boom.mp3","source":"search","description":"low-boom","duration":2,"provenance":{"provider":"heygen","prompt":"low-boom"}}
+{"id":"sfx_003","type":"sfx","path":"assets/sfx/whoosh.mp3","source":"search","description":"whoosh","duration":1.6,"provenance":{"provider":"heygen","prompt":"whoosh"}}
+{"id":"sfx_004","type":"sfx","path":"assets/sfx/riser.mp3","source":"search","description":"riser","duration":5,"provenance":{"provider":"heygen","prompt":"riser"}}
+{"id":"sfx_005","type":"sfx","path":"assets/sfx/impact-heavy.mp3","source":"search","description":"impact-heavy","duration":5.4,"provenance":{"provider":"heygen","prompt":"impact-heavy"}}
+{"id":"sfx_006","type":"sfx","path":"assets/sfx/war-drum.mp3","source":"search","description":"war-drum","duration":2.9,"provenance":{"provider":"heygen","prompt":"war-drum"}}
+{"id":"sfx_007","type":"sfx","path":"assets/sfx/shimmer.mp3","source":"search","description":"shimmer","duration":3.3,"provenance":{"provider":"heygen","prompt":"shimmer"}}
+{"id":"sfx_008","type":"sfx","path":"assets/sfx/riser-soft.mp3","source":"search","description":"riser-soft","duration":5,"provenance":{"provider":"heygen","prompt":"riser-soft"}}

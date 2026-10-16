@@ -1,0 +1,397 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      perspective: 1600px; /* REQUIRED for the split-tilt rotateY */
+      perspective-origin: 50% 50%;
+      font-family: "Noto Serif SC", serif;
+      color: #e6d3a3;
+    }
+
+    /* Full-bleed lacquer ground on its own clip layer (never on #root). */
+    #choice-02-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+
+    /* ---- Scene 1 headline ---- */
+    #choice-02-headline {
+      position: absolute;
+      left: 0;
+      top: 225px; /* centre ≈ y 300 — upper third */
+      width: 1920px;
+      height: 150px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      font-size: 150px;
+      line-height: 1;
+      color: #e6d3a3;
+      white-space: nowrap;
+      will-change: transform;
+    }
+    .choice-02-word {
+      display: inline-block;
+      will-change: transform, opacity;
+    }
+    .choice-02-word.is-mark {
+      color: #c0392b;
+    }
+
+    /* ---- split stage ---- */
+    #choice-02-stage {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+    }
+
+    /* Left card — bad ending (desaturated, darkened). Two layers: entry on the
+       wrapper, idle float on the inner so they never collide on one alias. */
+    #choice-02-left {
+      position: absolute;
+      left: 164px;
+      top: 320px;
+      width: 720px;
+      height: 480px;
+      transform-style: preserve-3d;
+      will-change: transform, opacity;
+    }
+    #choice-02-left-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border: 2px solid rgba(201, 162, 75, 0.55);
+      background: #17110e;
+    }
+    #choice-02-left-inner img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(0.85) brightness(0.55) contrast(1.05);
+    }
+
+    /* Vermilion caption on the left card's lower edge — on the parent, not
+       inside the card, so it does not inherit the rotateY. */
+    #choice-02-left-cap {
+      position: absolute;
+      left: 324px; /* card centre x 524 − half width 200 */
+      top: 762px;
+      width: 400px;
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #c0392b;
+      color: #e6d3a3;
+      font-weight: 900;
+      font-size: 48px;
+      line-height: 1;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2),
+        6px 6px 0 rgba(28, 20, 16, 0.15);
+      will-change: transform, opacity;
+    }
+
+    /* Right card — good ending. Authored at its FINAL full-frame geometry
+       (1920×1280, centred on the frame) and scaled down for the split, so the
+       card-morph-anchor expand lands crisp at scale 1. */
+    #choice-02-right {
+      position: absolute;
+      left: 0;
+      top: -100px;
+      width: 1920px;
+      height: 1280px;
+      transform-origin: 50% 50%;
+      transform-style: preserve-3d;
+      will-change: transform, opacity;
+    }
+    #choice-02-right-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden; /* content clips during the shape change */
+      border: 5px solid rgba(201, 162, 75, 0.85); /* ≈2px apparent at split scale */
+      background: #17110e;
+    }
+    #choice-02-right-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform-origin: 50% 45%;
+    }
+    /* Old content (励精图治) — sizes authored at apparent ÷ 0.4125 */
+    #choice-02-old {
+      position: absolute;
+      inset: 0;
+    }
+    #choice-02-old-scrim {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 640px;
+      background: linear-gradient(to bottom, rgba(23, 17, 14, 0), rgba(23, 17, 14, 0.78));
+    }
+    #choice-02-old-title {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 760px;
+      height: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      font-size: 260px; /* ≈107px apparent */
+      line-height: 1;
+      color: #e6d3a3;
+      white-space: nowrap;
+      text-shadow: 5px 5px 0 rgba(28, 20, 16, 0.3), 10px 10px 0 rgba(28, 20, 16, 0.2);
+      will-change: transform, opacity;
+    }
+    #choice-02-old-rule {
+      position: absolute;
+      left: 600px;
+      top: 1066px;
+      width: 720px; /* ≈297px apparent */
+      height: 5px; /* ≈2px apparent gold hairline */
+      background: #c9a24b;
+      transform-origin: 0 50%;
+      will-change: transform;
+    }
+
+    /* New content (阻止安史之乱？) — authored at final scale 1. Card spans
+       frame y −100…1180, so card-y = frame-y + 100. */
+    #choice-02-new {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+    }
+    #choice-02-new-scrim {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 470px; /* frame y 370 … 710 */
+      height: 340px;
+      background: rgba(23, 17, 14, 0.68);
+      border-top: 2px solid rgba(201, 162, 75, 0.7);
+      border-bottom: 2px solid rgba(201, 162, 75, 0.7);
+    }
+    #choice-02-new-title {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 560px; /* frame y 460 … 620 */
+      height: 160px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      font-size: 150px;
+      line-height: 1;
+      color: #e6d3a3;
+      white-space: nowrap;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.35), 4px 4px 0 rgba(28, 20, 16, 0.25),
+        6px 6px 0 rgba(28, 20, 16, 0.18);
+      will-change: transform, opacity;
+    }
+  </style>
+
+  <div data-hf-id="hf-tnjp" id="root" data-composition-id="02-choice" data-width="1920" data-height="1080" data-duration="7.056">
+    <div data-hf-id="hf-krp4" id="choice-02-ground" class="clip" data-start="0" data-duration="7.056" data-track-index="0"></div>
+
+    <div data-hf-id="hf-5th5" id="choice-02-headline" class="clip" data-layout-allow-overflow data-start="0" data-duration="7.056" data-track-index="1">
+      <span data-hf-id="hf-zd0c" class="choice-02-word">什么</span><span data-hf-id="hf-0cl4" class="choice-02-word">都不做</span><span data-hf-id="hf-rptz" class="choice-02-word is-mark">？</span>
+    </div>
+
+    <div data-hf-id="hf-b2pf" id="choice-02-stage" class="clip" data-start="0" data-duration="7.056" data-track-index="2">
+      <!-- DOM order = stacking: left card first, right card on top -->
+      <div data-hf-id="hf-8yen" id="choice-02-left">
+        <div data-hf-id="hf-sgs0" id="choice-02-left-inner">
+          <img data-hf-id="hf-dtgn" src="assets/ending.e4_history.webp" alt="雨夜栈道，车驾西幸" />
+        </div>
+      </div>
+
+      <div data-hf-id="hf-t8s5" id="choice-02-right" data-layout-allow-overflow>
+        <div data-hf-id="hf-n8qp" id="choice-02-right-inner">
+          <img data-hf-id="hf-db80" id="choice-02-right-img" data-layout-allow-overflow src="assets/ending.e1_zhongxing.webp" alt="牡丹宫阙，日出白鹤" />
+          <div data-hf-id="hf-wsoz" id="choice-02-old">
+            <div data-hf-id="hf-sc1i" id="choice-02-old-scrim"></div>
+            <div data-hf-id="hf-112y" id="choice-02-old-title">励精图治</div>
+            <div data-hf-id="hf-645i" id="choice-02-old-rule"></div>
+          </div>
+          <div data-hf-id="hf-ocfy" id="choice-02-new">
+            <div data-hf-id="hf-ttrv" id="choice-02-new-scrim"></div>
+            <div data-hf-id="hf-fsq3" id="choice-02-new-title" data-layout-allow-overflow>阻止安史之乱？</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Caption lives outside the preserve-3d stage so the tilted card can never z-sort over it. -->
+    <div data-hf-id="hf-ffem" id="choice-02-left-cap" class="clip" data-start="0" data-duration="7.056" data-track-index="3">等待历史重演？</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector('[data-composition-id="02-choice"] ' + s);
+      const qa = (s) => document.querySelectorAll('[data-composition-id="02-choice"] ' + s);
+
+      // ---------- Scene 1 (0.0–1.0s): per-word reveal, content-sequenced ----------
+      // dynamic-content-sequencing: pre-compute each word's start from its length.
+      const WORDS = Array.prototype.slice.call(qa(".choice-02-word"));
+      const BASE = 0.14;
+      const SEC_PER_CHAR = 0.06;
+      let cursor = 0.08;
+      const SEQ = WORDS.map((el) => {
+        const start = cursor;
+        cursor += BASE + el.textContent.length * SEC_PER_CHAR;
+        return { el: el, start: start };
+      });
+      SEQ.forEach((w, i) => {
+        const last = i === SEQ.length - 1;
+        tl.fromTo(
+          w.el,
+          { opacity: 0, y: 46, scale: last ? 1.6 : 1 },
+          { opacity: 1, y: 0, scale: 1, duration: last ? 0.36 : 0.42, ease: last ? "back.out(2.2)" : "power3.out" },
+          w.start,
+        );
+      });
+
+      // Headline block: −2° poster tilt from the start, then slides up to make room.
+      tl.fromTo(
+        q("#choice-02-headline"),
+        { y: 0, scale: 1, rotation: -2 },
+        { y: -138, scale: 0.62, rotation: -2, duration: 0.75, ease: "power3.out" },
+        1.14,
+      );
+
+      // ---------- Scene 2 (1.14–2.9s): left card swings in from the left wing ----------
+      const TILT = 14;
+      const OVER = 8;
+      tl.fromTo(
+        q("#choice-02-left"),
+        { x: -420, rotationY: TILT + OVER, scale: 0.85, opacity: 0 },
+        { x: 0, rotationY: TILT, scale: 1, opacity: 1, duration: 0.95, ease: "power3.out" },
+        1.14,
+      );
+      // Caption: the lone overshoot — badge pop on the card's lower edge.
+      tl.fromTo(
+        q("#choice-02-left-cap"),
+        { opacity: 0, y: 24, scale: 0.55, rotation: -2 },
+        { opacity: 1, y: 0, scale: 1, rotation: -2, duration: 0.5, ease: "back.out(2)" },
+        1.72,
+      );
+      // Idle float on the inner layer (explicit, no repeat/yoyo) — counter-phase to the right card.
+      tl.fromTo(
+        q("#choice-02-left-inner"),
+        { y: 0 },
+        { y: -6, duration: 1.2, ease: "sine.inOut" },
+        2.1,
+      );
+      tl.to(q("#choice-02-left-inner"), { y: 2, duration: 1.24, ease: "sine.inOut" }, 3.3);
+
+      // ---------- Scene 3 (3.0–4.5s): right card swings in from the right wing ----------
+      const S0 = 0.4125; // split-phase scale → ≈792×528 apparent (slightly larger than the left card)
+      const RX = 400; // card centre x 1360
+      const RY = 20; // card centre y 560
+      tl.fromTo(
+        q("#choice-02-right"),
+        { x: RX + 420, y: RY, rotationY: -(TILT + OVER), scale: S0 * 0.85, opacity: 0 },
+        { x: RX, y: RY, rotationY: -TILT, scale: S0, opacity: 1, duration: 0.95, ease: "power3.out" },
+        3.0,
+      );
+      // 励精图治 lands on the card, then the gold hairline draws under it.
+      tl.fromTo(
+        q("#choice-02-old-title"),
+        { opacity: 0, y: -90, scale: 1.25 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" },
+        3.42,
+      );
+      tl.fromTo(
+        q("#choice-02-old-rule"),
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.5, ease: "power2.out" },
+        3.82,
+      );
+      // Counter-phase idle on the right inner layer (pre-scale units, ≈4px apparent).
+      tl.fromTo(
+        q("#choice-02-right-inner"),
+        { y: 0 },
+        { y: 10, duration: 0.6, ease: "sine.inOut" },
+        3.94,
+      );
+
+      // ---------- Scene 4 (4.54–6.456s): right card flattens + expands to full frame ----------
+      const M0 = 4.54;
+      const MD = 1.0;
+      // card-morph-anchor: one tween, uniform scale + flatten + recentre.
+      tl.to(
+        q("#choice-02-right"),
+        { x: 0, y: 0, rotationY: 0, scale: 1, duration: MD, ease: "power2.inOut" },
+        M0,
+      );
+      tl.to(q("#choice-02-right-inner"), { y: 0, borderColor: "rgba(201,162,75,0)", duration: MD, ease: "power2.inOut" }, M0);
+      // Headline is swallowed by the expanding painting — fade it under the card.
+      tl.to(q("#choice-02-headline"), { opacity: 0, duration: 0.45, ease: "power1.in" }, M0);
+      // Left card + its caption slide out to the left wing.
+      tl.to(
+        q("#choice-02-left"),
+        { x: -760, rotationY: TILT + 16, opacity: 0, duration: 0.75, ease: "power2.in" },
+        M0,
+      );
+      tl.to(q("#choice-02-left-cap"), { x: -760, opacity: 0, duration: 0.7, ease: "power2.in" }, M0);
+      // Old content out in the first ~40% of the morph.
+      tl.to(q("#choice-02-old"), { opacity: 0, duration: MD * 0.4, ease: "power1.in" }, M0);
+      // New content in over the last ~40%.
+      tl.fromTo(
+        q("#choice-02-new"),
+        { opacity: 0 },
+        { opacity: 1, duration: MD * 0.4, ease: "power1.out" },
+        M0 + MD * 0.6,
+      );
+      tl.fromTo(
+        q("#choice-02-new-title"),
+        { y: 34, scale: 1.1, rotation: -3 },
+        { y: 0, scale: 1, rotation: -3, duration: 0.8, ease: "power3.out" },
+        M0 + MD * 0.6,
+      );
+      // Hold with a slow push into the painting so the last beat never freezes.
+      tl.fromTo(
+        q("#choice-02-right-img"),
+        { scale: 1 },
+        { scale: 1.045, duration: 6.456 - (M0 + 0.3), ease: "sine.out" },
+        M0 + 0.3,
+      );
+
+      // Pad to the fixed duration.
+      tl.set({}, {}, 6.456);
+
+      window.__timelines["02-choice"] = tl;
+    })();
+  </script>
+</template>

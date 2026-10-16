@@ -1,0 +1,430 @@
+{
+  "total_duration_s": 56.568,
+  "width": 1920,
+  "height": 1080,
+  "groups": [
+    {
+      "id": "caption-group-0",
+      "frame": 1,
+      "start": 0.103,
+      "end": 1.525,
+      "text": "公元七五一年",
+      "words": [
+        {
+          "id": "caption-word-0-0",
+          "text": "公元七五一年",
+          "start": 0.103,
+          "end": 1.405
+        }
+      ]
+    },
+    {
+      "id": "caption-group-1",
+      "frame": 1,
+      "start": 2,
+      "end": 4.33,
+      "text": "离安史之乱 只剩四年",
+      "words": [
+        {
+          "id": "caption-word-1-0",
+          "text": "离安史之乱",
+          "start": 2,
+          "end": 3.105
+        },
+        {
+          "id": "caption-word-1-1",
+          "text": "只剩四年",
+          "start": 3.25,
+          "end": 4.21
+        }
+      ]
+    },
+    {
+      "id": "caption-group-2",
+      "frame": 2,
+      "start": 4.903,
+      "end": 7.325,
+      "text": "什么都不做 等待历史重演",
+      "words": [
+        {
+          "id": "caption-word-2-0",
+          "text": "什么都不做",
+          "start": 4.903,
+          "end": 5.784
+        },
+        {
+          "id": "caption-word-2-1",
+          "text": "等待历史重演",
+          "start": 5.942,
+          "end": 7.205
+        }
+      ]
+    },
+    {
+      "id": "caption-group-3",
+      "frame": 2,
+      "start": 7.813,
+      "end": 9.275,
+      "text": "还是励精图治",
+      "words": [
+        {
+          "id": "caption-word-3-0",
+          "text": "还是励精图治",
+          "start": 7.813,
+          "end": 9.155
+        }
+      ]
+    },
+    {
+      "id": "caption-group-4",
+      "frame": 2,
+      "start": 9.339,
+      "end": 10.762,
+      "text": "阻止安史之乱",
+      "words": [
+        {
+          "id": "caption-word-4-0",
+          "text": "阻止安史之乱",
+          "start": 9.339,
+          "end": 10.642
+        }
+      ]
+    },
+    {
+      "id": "caption-group-5",
+      "frame": 3,
+      "start": 11.359,
+      "end": 12.321,
+      "text": "这是 天宝",
+      "words": [
+        {
+          "id": "caption-word-5-0",
+          "text": "这是",
+          "start": 11.359,
+          "end": 11.688
+        },
+        {
+          "id": "caption-word-5-1",
+          "text": "天宝",
+          "start": 11.701,
+          "end": 12.201
+        }
+      ]
+    },
+    {
+      "id": "caption-group-6",
+      "frame": 3,
+      "start": 12.809,
+      "end": 14.586,
+      "text": "这一次 你是唐玄宗",
+      "words": [
+        {
+          "id": "caption-word-6-0",
+          "text": "这一次",
+          "start": 12.809,
+          "end": 13.427
+        },
+        {
+          "id": "caption-word-6-1",
+          "text": "你是唐玄宗",
+          "start": 13.559,
+          "end": 14.466
+        }
+      ]
+    },
+    {
+      "id": "caption-group-7",
+      "frame": 4,
+      "start": 15.175,
+      "end": 17.689,
+      "text": "奏疏从千里外送来 会迟到",
+      "words": [
+        {
+          "id": "caption-word-7-0",
+          "text": "奏疏从千里外送来",
+          "start": 15.175,
+          "end": 16.78
+        },
+        {
+          "id": "caption-word-7-1",
+          "text": "会迟到",
+          "start": 16.885,
+          "end": 17.569
+        }
+      ]
+    },
+    {
+      "id": "caption-group-8",
+      "frame": 4,
+      "start": 18.177,
+      "end": 19.416,
+      "text": "召安禄山入殿",
+      "words": [
+        {
+          "id": "caption-word-8-0",
+          "text": "召安禄山入殿",
+          "start": 18.177,
+          "end": 19.296
+        }
+      ]
+    },
+    {
+      "id": "caption-group-9",
+      "frame": 4,
+      "start": 19.533,
+      "end": 22.495,
+      "text": "当面问他 范阳的兵 到底听谁的",
+      "words": [
+        {
+          "id": "caption-word-9-0",
+          "text": "当面问他",
+          "start": 19.533,
+          "end": 20.283
+        },
+        {
+          "id": "caption-word-9-1",
+          "text": "范阳的兵",
+          "start": 20.375,
+          "end": 21.151
+        },
+        {
+          "id": "caption-word-9-2",
+          "text": "到底听谁的",
+          "start": 21.322,
+          "end": 22.375
+        }
+      ]
+    },
+    {
+      "id": "caption-group-10",
+      "frame": 5,
+      "start": 23.071,
+      "end": 26.533,
+      "text": "廷议上 谁附议 谁反对 一目了然",
+      "words": [
+        {
+          "id": "caption-word-10-0",
+          "text": "廷议上",
+          "start": 23.071,
+          "end": 23.676
+        },
+        {
+          "id": "caption-word-10-1",
+          "text": "谁附议",
+          "start": 23.807,
+          "end": 24.557
+        },
+        {
+          "id": "caption-word-10-2",
+          "text": "谁反对",
+          "start": 24.676,
+          "end": 25.452
+        },
+        {
+          "id": "caption-word-10-3",
+          "text": "一目了然",
+          "start": 25.61,
+          "end": 26.413
+        }
+      ]
+    },
+    {
+      "id": "caption-group-11",
+      "frame": 6,
+      "start": 27.127,
+      "end": 29.786,
+      "text": "拟诏 发政策卡 调兵遣将",
+      "words": [
+        {
+          "id": "caption-word-11-0",
+          "text": "拟诏",
+          "start": 27.127,
+          "end": 27.64
+        },
+        {
+          "id": "caption-word-11-1",
+          "text": "发政策卡",
+          "start": 27.798,
+          "end": 28.679
+        },
+        {
+          "id": "caption-word-11-2",
+          "text": "调兵遣将",
+          "start": 28.798,
+          "end": 29.666
+        }
+      ]
+    },
+    {
+      "id": "caption-group-12",
+      "frame": 6,
+      "start": 30.274,
+      "end": 32.841,
+      "text": "千里之外 军令要走好几季",
+      "words": [
+        {
+          "id": "caption-word-12-0",
+          "text": "千里之外",
+          "start": 30.274,
+          "end": 30.958
+        },
+        {
+          "id": "caption-word-12-1",
+          "text": "军令要走好几季",
+          "start": 31.116,
+          "end": 32.721
+        }
+      ]
+    },
+    {
+      "id": "caption-group-13",
+      "frame": 7,
+      "start": 33.414,
+      "end": 37.626,
+      "text": "可一步走错 范阳起兵 东都陷落 潼关失守",
+      "words": [
+        {
+          "id": "caption-word-13-0",
+          "text": "可一步走错",
+          "start": 33.414,
+          "end": 34.48
+        },
+        {
+          "id": "caption-word-13-1",
+          "text": "范阳起兵",
+          "start": 34.559,
+          "end": 35.414
+        },
+        {
+          "id": "caption-word-13-2",
+          "text": "东都陷落",
+          "start": 35.572,
+          "end": 36.44
+        },
+        {
+          "id": "caption-word-13-3",
+          "text": "潼关失守",
+          "start": 36.585,
+          "end": 37.506
+        }
+      ]
+    },
+    {
+      "id": "caption-group-14",
+      "frame": 7,
+      "start": 37.664,
+      "end": 40.416,
+      "text": "马嵬驿 盛世 就此终结",
+      "words": [
+        {
+          "id": "caption-word-14-0",
+          "text": "马嵬驿",
+          "start": 37.664,
+          "end": 38.388
+        },
+        {
+          "id": "caption-word-14-1",
+          "text": "盛世",
+          "start": 38.532,
+          "end": 39.138
+        },
+        {
+          "id": "caption-word-14-2",
+          "text": "就此终结",
+          "start": 39.309,
+          "end": 40.296
+        }
+      ]
+    },
+    {
+      "id": "caption-group-15",
+      "frame": 8,
+      "start": 41.023,
+      "end": 43.735,
+      "text": "这是一款 AI 驱动的历史模拟",
+      "words": [
+        {
+          "id": "caption-word-15-0",
+          "text": "这是一款 AI 驱动的历史模拟",
+          "start": 41.023,
+          "end": 43.615
+        }
+      ]
+    },
+    {
+      "id": "caption-group-16",
+      "frame": 8,
+      "start": 44.209,
+      "end": 47.816,
+      "text": "接上大模型 满朝文武 都由 AI 来演",
+      "words": [
+        {
+          "id": "caption-word-16-0",
+          "text": "接上大模型",
+          "start": 44.209,
+          "end": 45.288
+        },
+        {
+          "id": "caption-word-16-1",
+          "text": "满朝文武",
+          "start": 45.42,
+          "end": 46.354
+        },
+        {
+          "id": "caption-word-16-2",
+          "text": "都由 AI 来演",
+          "start": 46.486,
+          "end": 47.696
+        }
+      ]
+    },
+    {
+      "id": "caption-group-17",
+      "frame": 9,
+      "start": 48.391,
+      "end": 54.129,
+      "text": "开源免费 打开网页就能玩 还能直接接入 Codex 和 Claude Code",
+      "words": [
+        {
+          "id": "caption-word-17-0",
+          "text": "开源免费",
+          "start": 48.391,
+          "end": 49.259
+        },
+        {
+          "id": "caption-word-17-1",
+          "text": "打开网页就能玩",
+          "start": 49.404,
+          "end": 50.693
+        },
+        {
+          "id": "caption-word-17-2",
+          "text": "还能直接接入 Codex 和 Claude Code",
+          "start": 50.864,
+          "end": 54.009
+        }
+      ]
+    },
+    {
+      "id": "caption-group-18",
+      "frame": 9,
+      "start": 54.604,
+      "end": 56.118,
+      "text": "你 能救大唐吗",
+      "words": [
+        {
+          "id": "caption-word-18-0",
+          "text": "你",
+          "start": 54.604,
+          "end": 54.972
+        },
+        {
+          "id": "caption-word-18-1",
+          "text": "能救大唐吗",
+          "start": 55.064,
+          "end": 55.998
+        }
+      ]
+    }
+  ]
+}

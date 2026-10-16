@@ -1,0 +1,226 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+    #intro03-ground {
+      position: absolute;
+      inset: 0;
+      background: #e6d3a3;
+    }
+    /* framed screenshot: dark ink mat, gold hairline inset — top 83% only (bottom edge 866px) */
+    #intro03-screen {
+      position: absolute;
+      left: 200px;
+      top: 56px;
+      width: 1440px;
+      height: 810px;
+      border: 3px solid #17110e;
+      background: #17110e;
+      box-sizing: content-box;
+      margin-left: -3px;
+      margin-top: -3px;
+    }
+    #intro03-screen-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    #intro03-shot {
+      position: absolute;
+      inset: 0;
+      width: 1440px;
+      height: 810px;
+      display: block;
+      object-fit: cover;
+    }
+    #intro03-hairline {
+      position: absolute;
+      inset: 8px;
+      border: 1.5px solid #c9a24b;
+      pointer-events: none;
+    }
+    /* vermilion seal 天宝 — stamped on the upper-left corner */
+    #intro03-seal {
+      position: absolute;
+      left: 118px;
+      top: 22px;
+      width: 168px;
+      height: 168px;
+      box-sizing: border-box;
+      background: #c0392b;
+      border: 6px solid #c9a24b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #intro03-seal-inner {
+      position: absolute;
+      inset: 7px;
+      border: 1.5px solid #e6d3a3;
+      opacity: 0.85;
+    }
+    #intro03-seal-text {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 60px;
+      line-height: 1;
+      color: #e6d3a3;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2);
+    }
+    #intro03-seal-text span + span {
+      margin-top: 4px;
+    }
+    /* lacquer label card — upper right, cantilevered over the frame's top edge (keeps the 渔阳鼙鼓 crisis dial clear) */
+    #intro03-card {
+      position: absolute;
+      left: 1416px;
+      top: 26px;
+      width: 462px;
+      height: 152px;
+      box-sizing: border-box;
+      background: #17110e;
+      border: 1.5px solid #c9a24b;
+      border-left: 6px solid #c0392b;
+      padding: 0 34px 0 36px;
+      display: flex;
+      align-items: center;
+    }
+    #intro03-card-row {
+      display: flex;
+      align-items: baseline;
+      white-space: nowrap;
+    }
+    #intro03-card-lead {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 500;
+      font-size: 38px;
+      line-height: 1;
+      color: #c9a24b;
+    }
+    #intro03-card-dot {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 700;
+      font-size: 38px;
+      line-height: 1;
+      color: #c0392b;
+      margin: 0 14px 0 10px;
+    }
+    #intro03-card-name {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 90px;
+      line-height: 1;
+      color: #e6d3a3;
+    }
+  </style>
+
+  <div data-hf-id="hf-9w27" id="root" data-composition-id="03-intro" data-width="1920" data-height="1080" data-duration="4.316">
+    <div data-hf-id="hf-31av" id="intro03-ground" class="clip" data-start="0" data-duration="4.316" data-track-index="0"></div>
+
+    <div data-hf-id="hf-tj03" id="intro03-screen" class="clip" data-start="0" data-duration="4.316" data-track-index="1">
+      <div data-hf-id="hf-0cfc" id="intro03-screen-inner">
+        <img data-hf-id="hf-zqjt" id="intro03-shot" src="assets/04-desk.png" alt="" />
+      </div>
+      <div data-hf-id="hf-jfwd" id="intro03-hairline"></div>
+    </div>
+
+    <div data-hf-id="hf-llrr" id="intro03-seal" class="clip" data-start="0" data-duration="4.316" data-track-index="2">
+      <div data-hf-id="hf-m6hj" id="intro03-seal-inner"></div>
+      <div data-hf-id="hf-zp78" id="intro03-seal-text"><span data-hf-id="hf-84uw">天</span><span data-hf-id="hf-8yyc">宝</span></div>
+    </div>
+
+    <div data-hf-id="hf-kjoj" id="intro03-card" class="clip" data-start="0" data-duration="4.316" data-track-index="3">
+      <div data-hf-id="hf-gq0i" id="intro03-card-row">
+        <span data-hf-id="hf-gw24" id="intro03-card-lead">你是</span><span data-hf-id="hf-1k49" id="intro03-card-dot">·</span><span data-hf-id="hf-bvpz" id="intro03-card-name">唐玄宗</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1 (0.0–1.5s) — 「这是」: main screen eases up into place (slide-up crossfade, power3)
+      tl.fromTo(
+        "#intro03-screen",
+        { y: 56, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+        0
+      );
+      // camera micro-drift under the hold (barely perceptible, whole shot)
+      tl.fromTo(
+        "#intro03-shot",
+        { scale: 1.0 },
+        { scale: 1.025, duration: 3.816, ease: "none", transformOrigin: "50% 45%" },
+        0
+      );
+
+      // 「天宝」 (0.45s): vermilion seal stamps onto the upper-left corner — 1.15→1 + short shadow kick
+      tl.fromTo(
+        "#intro03-seal",
+        { scale: 1.15, rotation: -4, opacity: 0 },
+        { scale: 1, rotation: -4, opacity: 1, duration: 0.2, ease: "power4.in" },
+        0.45
+      );
+      tl.fromTo(
+        "#intro03-seal",
+        { boxShadow: "0px 16px 26px rgba(23,17,14,0.55)" },
+        { boxShadow: "0px 0px 0px rgba(23,17,14,0)", duration: 0.32, ease: "power2.out" },
+        0.65
+      );
+      // impact settle: the framed screen takes a tiny press on the stamp
+      tl.fromTo(
+        "#intro03-screen-inner",
+        { scale: 1 },
+        { scale: 0.994, duration: 0.08, ease: "power2.out" },
+        0.65
+      );
+      tl.to("#intro03-screen-inner", { scale: 1, duration: 0.3, ease: "power2.out" }, 0.73);
+
+      // Scene 2 (1.55–3.816s) — 「这一次，你是唐玄宗」: lacquer label card slides in at upper right, then holds
+      tl.fromTo(
+        "#intro03-card",
+        { x: 90, rotation: -2, opacity: 0 },
+        { x: 0, rotation: -2, opacity: 1, duration: 0.6, ease: "power3.out" },
+        1.55
+      );
+      tl.fromTo(
+        "#intro03-card-name",
+        { opacity: 0, x: 24 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" },
+        1.85
+      );
+
+      // pin the timeline length to the frame duration (still hold to end)
+      tl.set({}, {}, 3.816);
+
+      window.__timelines["03-intro"] = tl;
+    })();
+  </script>
+</template>

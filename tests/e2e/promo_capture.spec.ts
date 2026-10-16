@@ -127,6 +127,9 @@ test('opening season: title, desk, memorials, audience, debate, edict, 兵部, r
   await page.evaluate(() => localStorage.clear());
   await page.goto('/');
   await expect(page.getByTestId('title.root')).toBeVisible();
+  // until the engine answers, the title shows its vector stand-in instead of the painting
+  await expect(page.getByTestId('title.health')).toContainText('就绪', { timeout: 60_000 });
+  await page.waitForFunction(() => [...document.images].some((i) => i.complete && i.naturalWidth > 1000), null, { timeout: 30_000 });
   await shot(page, '01-title', 2600);
 
   await page.getByTestId('title.newGame').click();

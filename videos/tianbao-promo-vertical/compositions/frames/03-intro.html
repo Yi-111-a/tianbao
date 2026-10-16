@@ -1,0 +1,218 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+    #v03-ground {
+      position: absolute;
+      inset: 0;
+      background: #e6d3a3;
+    }
+    /* tall portrait window: crop of the main screen, x 850–1905 / y 0–1080 of the
+       1920×1080 screenshot (right part of the map, the four faction ribbons, the
+       渔阳鼙鼓 crisis dial). Inner 1000×1024 at x 40–1040, y 440–1464. */
+    #v03-window {
+      position: absolute;
+      left: 37px;
+      top: 437px;
+      width: 1006px;
+      height: 1030px;
+      box-sizing: border-box;
+      border: 3px solid #17110e;
+      background: #17110e;
+    }
+    #v03-window-inner {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    #v03-shot {
+      position: absolute;
+      left: -805.7px;
+      top: 0;
+      width: 1819.9px;
+      height: 1023.7px;
+      max-width: none;
+      display: block;
+    }
+    #v03-hairline {
+      position: absolute;
+      inset: 8px;
+      border: 1.5px solid #c9a24b;
+      pointer-events: none;
+    }
+    /* vermilion seal 天宝 — straddles the window's upper-left corner
+       (covers only the resource-bar tail + wallpaper; ribbons start at x≈206) */
+    #v03-seal {
+      position: absolute;
+      left: 60px;
+      top: 370px;
+      width: 144px;
+      height: 144px;
+      box-sizing: border-box;
+      background: #c0392b;
+      border: 5px solid #c9a24b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #v03-seal-inner {
+      position: absolute;
+      inset: 6px;
+      border: 1.5px solid #e6d3a3;
+      opacity: 0.85;
+    }
+    #v03-seal-text {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 50px;
+      line-height: 1;
+      color: #e6d3a3;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2);
+    }
+    #v03-seal-text span + span {
+      margin-top: 4px;
+    }
+    /* lacquer label — top title band, right of the seal, right edge on the window's */
+    #v03-label {
+      position: absolute;
+      left: 330px;
+      top: 196px;
+      width: 690px;
+      height: 196px;
+      box-sizing: border-box;
+      background: #17110e;
+      border: 1.5px solid #c9a24b;
+      border-left: 7px solid #c0392b;
+      padding: 0 36px 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #v03-label-row {
+      display: flex;
+      align-items: baseline;
+      white-space: nowrap;
+    }
+    #v03-label-lead {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 500;
+      font-size: 50px;
+      line-height: 1;
+      color: #c9a24b;
+    }
+    #v03-label-dot {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 700;
+      font-size: 50px;
+      line-height: 1;
+      color: #c0392b;
+      margin: 0 16px 0 12px;
+    }
+    #v03-label-name {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 136px;
+      line-height: 1;
+      color: #e6d3a3;
+    }
+  </style>
+
+  <div id="root" data-composition-id="03-intro" data-width="1080" data-height="1920" data-duration="4.316">
+    <div id="v03-ground" class="clip" data-start="0" data-duration="4.316" data-track-index="0"></div>
+
+    <div id="v03-window" class="clip" data-start="0" data-duration="4.316" data-track-index="1">
+      <div id="v03-window-inner">
+        <img id="v03-shot" src="assets/04-desk.png" alt="" />
+      </div>
+      <div id="v03-hairline"></div>
+    </div>
+
+    <div id="v03-seal" class="clip" data-start="0" data-duration="4.316" data-track-index="2">
+      <div id="v03-seal-inner"></div>
+      <div id="v03-seal-text"><span>天</span><span>宝</span></div>
+    </div>
+
+    <div id="v03-label" class="clip" data-start="0" data-duration="4.316" data-track-index="3">
+      <div id="v03-label-row">
+        <span id="v03-label-lead">你是</span><span id="v03-label-dot">·</span><span id="v03-label-name">唐玄宗</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // Scene 1 (0.0–1.5s) — 「这是」: the cropped main-screen window eases up into place
+      // (slide-up crossfade, power3) — the one restrained move.
+      tl.fromTo(
+        "#v03-window",
+        { y: 72, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+        0
+      );
+
+      // 「天宝」 (0.45s): vermilion seal stamps onto the window's upper-left corner
+      tl.fromTo(
+        "#v03-seal",
+        { scale: 1.18, rotation: -4, opacity: 0 },
+        { scale: 1, rotation: -4, opacity: 1, duration: 0.2, ease: "power3.in" },
+        0.45
+      );
+      // impact: the framed screen takes a tiny press as the seal lands, then settles
+      tl.fromTo(
+        "#v03-window-inner",
+        { scale: 1 },
+        { scale: 0.993, duration: 0.08, ease: "power2.out" },
+        0.65
+      );
+      tl.to("#v03-window-inner", { scale: 1, duration: 0.3, ease: "power2.out" }, 0.73);
+
+      // Scene 2 (1.55–3.816s) — 「这一次，你是唐玄宗」: lacquer label slides into the top
+      // title band, 唐玄宗 lands a beat later; then a still hold to the end.
+      tl.fromTo(
+        "#v03-label",
+        { x: 90, rotation: -2, opacity: 0 },
+        { x: 0, rotation: -2, opacity: 1, duration: 0.6, ease: "power3.out" },
+        1.55
+      );
+      tl.fromTo(
+        "#v03-label-name",
+        { opacity: 0, x: 24 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" },
+        1.85
+      );
+
+      // pin the timeline to the frame duration (still hold to end)
+      tl.set({}, {}, 3.816);
+
+      window.__timelines["03-intro"] = tl;
+    })();
+  </script>
+</template>

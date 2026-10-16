@@ -1,0 +1,301 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: block;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      container-type: size;
+    }
+
+    /* camera wrapper (kick target) — the full-bleed clip layer */
+    #v01-countdown-cam {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /* background push target: origin parked on the smoke plume */
+    #v01-countdown-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      transform-origin: 300px 620px;
+    }
+    /* portrait cover-crop of the 1920x1080 painting: height-fit (x1.7778 -> 3413x1920),
+       window = source x 1040..1648 — smoke column left-mid, Xuanzong's back lower right,
+       the logo/menu side is far off-canvas */
+    #v01-countdown-bg img {
+      position: absolute;
+      left: -1849px;
+      top: 0;
+      width: 3413px;
+      height: 1920px;
+      max-width: none;
+      display: block;
+    }
+    /* ~45% black scrim; top band and the stat zone pushed darker so the type owns them */
+    #v01-countdown-scrim {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.3) 22%, rgba(0, 0, 0, 0) 34%),
+        radial-gradient(560px 520px at 330px 1000px, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 100%),
+        rgba(0, 0, 0, 0.45);
+    }
+
+    #v01-countdown-type {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* title band: year + vermilion rule + typed label, tilted −2° as one sheet */
+    #v01-countdown-head {
+      position: absolute;
+      left: 80px;
+      top: 128px;
+      width: 900px;
+      transform: rotate(-2deg);
+      transform-origin: 0 50%;
+    }
+    #v01-countdown-year {
+      display: inline-block;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 170px;
+      line-height: 1;
+      letter-spacing: 0.01em;
+      color: #e6d3a3;
+      white-space: nowrap;
+      transform-origin: 0 60%;
+    }
+    #v01-countdown-rule {
+      display: block;
+      width: 740px;
+      height: 40px;
+      margin-top: 16px;
+      overflow: visible;
+    }
+    #v01-countdown-rule path {
+      fill: none;
+      stroke: #c0392b;
+      stroke-width: 13;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+    }
+    #v01-countdown-label {
+      margin-top: 24px;
+      height: 82px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 66px;
+      line-height: 82px;
+      letter-spacing: 0.1em;
+      color: #e6d3a3;
+      white-space: nowrap;
+    }
+    #v01-countdown-label .v01-countdown-dot {
+      color: #c0392b;
+      margin: 0 0.18em;
+    }
+    #v01-countdown-caret {
+      display: inline-block;
+      width: 7px;
+      height: 64px;
+      margin-left: 6px;
+      vertical-align: -9px;
+      background: #c0392b;
+    }
+
+    /* mid-frame stat over the smoke column: giant vermilion 4 + 年 */
+    #v01-countdown-stat {
+      position: absolute;
+      left: 88px;
+      top: 660px;
+      display: flex;
+      align-items: flex-end;
+      gap: 28px;
+    }
+    #v01-countdown-four {
+      display: inline-block;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 760px;
+      line-height: 0.82;
+      color: #c0392b;
+      text-shadow:
+        3px 3px 0 rgba(23, 17, 14, 0.25),
+        6px 6px 0 rgba(23, 17, 14, 0.2),
+        9px 9px 0 rgba(23, 17, 14, 0.15);
+      transform-origin: 50% 60%;
+    }
+    #v01-countdown-nian {
+      display: inline-block;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 210px;
+      line-height: 1;
+      color: #e6d3a3;
+      margin-bottom: 10px;
+    }
+  </style>
+
+  <div id="root" data-composition-id="01-countdown" data-width="1080" data-height="1920" data-duration="5.2">
+    <div id="v01-countdown-cam" class="clip" data-start="0" data-duration="5.2" data-track-index="0">
+      <div id="v01-countdown-bg">
+        <img src="assets/01-title.png" alt="" />
+        <div id="v01-countdown-scrim"></div>
+      </div>
+
+      <div id="v01-countdown-type">
+        <div id="v01-countdown-head">
+          <div id="v01-countdown-year">公元751年</div>
+          <svg id="v01-countdown-rule" viewBox="0 0 740 40" xmlns="http://www.w3.org/2000/svg">
+            <path id="v01-countdown-rule-path" d="M 4 24 C 180 14, 430 30, 736 16" />
+          </svg>
+          <div id="v01-countdown-label"><span class="v01-countdown-ch">距</span><span class="v01-countdown-ch v01-countdown-dot">·</span><span class="v01-countdown-ch">安</span><span class="v01-countdown-ch">史</span><span class="v01-countdown-ch">之</span><span class="v01-countdown-ch">乱</span><span id="v01-countdown-caret"></span></div>
+        </div>
+
+        <div id="v01-countdown-stat">
+          <span id="v01-countdown-four">4</span>
+          <span id="v01-countdown-nian">年</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      var ID = "01-countdown";
+      var DURATION = 4.8;
+      var $ = function (s) { return document.getElementById("v01-countdown-" + s); };
+
+      // One beat array — every hit reads its time from the voiceover cues.
+      var BEATS = {
+        year: 0.10,   // 「公元七五一年」
+        rule: 2.00,   // 「离安史之乱」
+        four: 3.25,   // 「只剩四年」
+        nian: 3.62    // 「年」 a beat after the 4
+      };
+
+      var cam = $("cam");
+      var bg = $("bg");
+      var year = $("year");
+      var rulePath = $("rule-path");
+      var caret = $("caret");
+      var four = $("four");
+      var nian = $("nian");
+      var chars = $("label").getElementsByClassName("v01-countdown-ch");
+
+      var tl = gsap.timeline({ paused: true });
+
+      // ── Scene 1 (0.0–1.4s): short push toward the smoke plume ──
+      tl.fromTo(bg, { scale: 1 }, { scale: 1.07, duration: 1.4, ease: "power2.out" }, 0);
+
+      // 「公元751年」 slam — scale + blur collapse (kinetic-beat-slam hit 1)
+      tl.fromTo(
+        year,
+        { scale: 1.5, filter: "blur(16px)", opacity: 0 },
+        { scale: 1, filter: "blur(0px)", opacity: 1, duration: 0.5, ease: "power4.out" },
+        BEATS.year
+      );
+
+      // ── Scene 2 (2.0–3.1s): vermilion rule draws, label types beneath ──
+      var len = 0;
+      try { len = rulePath.getTotalLength(); } catch (e) { len = 0; }
+      if (!len || !isFinite(len)) len = 740;
+      len = len * 1.05;
+      tl.fromTo(
+        rulePath,
+        { strokeDasharray: len, strokeDashoffset: len },
+        { strokeDashoffset: 0, duration: 0.55, ease: "power2.out" },
+        BEATS.rule
+      );
+
+      // caret appears with the first keystroke, rides the end of the typed text
+      tl.fromTo(caret, { display: "none" }, { display: "inline-block", duration: 0 }, BEATS.rule + 0.38);
+      var TYPE_START = BEATS.rule + 0.4;
+      var TYPE_STEP = 0.085;
+      for (var i = 0; i < chars.length; i++) {
+        tl.fromTo(
+          chars[i],
+          { display: "none" },
+          { display: "inline", duration: 0 },
+          TYPE_START + i * TYPE_STEP
+        );
+      }
+      // caret blink after typing (discrete sets — seek-safe, finite)
+      var blinkFrom = TYPE_START + chars.length * TYPE_STEP + 0.12;
+      var on = false;
+      for (var t = blinkFrom; t < DURATION - 0.01; t += 0.26) {
+        tl.set(caret, { opacity: on ? 1 : 0 }, t);
+        on = !on;
+      }
+
+      // ── Scene 3 (3.25–4.8s): giant vermilion 4 slams over the smoke ──
+      tl.fromTo(
+        four,
+        { scale: 2.6, y: -160, rotation: -16, opacity: 0, filter: "blur(10px)" },
+        { scale: 1, y: 0, rotation: -6, opacity: 1, filter: "blur(0px)", duration: 0.38, ease: "expo.out" },
+        BEATS.four
+      );
+
+      // camera kick on impact
+      tl.set(cam, { x: 0, y: 0, scale: 1 }, 0);
+      tl.to(
+        cam,
+        {
+          keyframes: [
+            { x: -14, y: 14, scale: 1.022, duration: 0.05, ease: "power2.out" },
+            { x: 9, y: -9, scale: 1.014, duration: 0.06, ease: "power1.inOut" },
+            { x: -4, y: 4, scale: 1.006, duration: 0.07, ease: "power1.inOut" },
+            { x: 0, y: 0, scale: 1, duration: 0.14, ease: "power2.out" }
+          ]
+        },
+        BEATS.four + 0.1
+      );
+
+      // 「年」 lands beside it a beat later — side snap with a heavy rise
+      tl.fromTo(
+        nian,
+        { x: 90, y: 40, opacity: 0 },
+        { x: 0, y: 0, opacity: 1, duration: 0.42, ease: "circ.out" },
+        BEATS.nian
+      );
+
+      // subtle jitter on the 4 only, holding to the cut (fixed offsets — deterministic)
+      var JIT = [
+        [1.6, -1.0], [-1.2, 1.4], [0.8, 0.6], [-1.6, -0.8], [1.2, 1.2],
+        [-0.6, -1.4], [1.4, 0.4], [-1.0, 1.0], [0.6, -0.6], [-1.4, 0.8],
+        [1.0, -1.2], [-0.8, 0.4], [1.4, 1.0], [-1.2, -0.6], [0.4, 1.2]
+      ];
+      var jStart = BEATS.four + 0.42;
+      var jStep = 0.07;
+      for (var k = 0; k < JIT.length; k++) {
+        var at = jStart + k * jStep;
+        if (at + jStep > DURATION) break;
+        tl.to(four, { x: JIT[k][0], y: JIT[k][1], duration: jStep, ease: "none" }, at);
+      }
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</template>

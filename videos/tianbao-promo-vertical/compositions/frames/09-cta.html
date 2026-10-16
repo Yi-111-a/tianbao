@@ -1,0 +1,548 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+
+    /* ---------- full-bleed lacquer ground (lowest track) ---------- */
+    #v09-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+
+    /* ---------- lens: un-transformed wrapper that carries the push streak filter ---------- */
+    #v09-lens {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    #v09-cam {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1080px;
+      height: 1920px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* title painting, cover-cropped on Xuanzong (1920x1080 scaled to 1920 tall), heavy scrim */
+    #v09-bg {
+      position: absolute;
+      left: -2333px;
+      top: 0;
+      width: 3413px;
+      height: 1920px;
+      display: block;
+    }
+    #v09-scrim {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(23, 17, 14, 0.74) 0%, rgba(23, 17, 14, 0.6) 34%, rgba(23, 17, 14, 0.62) 70%, rgba(23, 17, 14, 0.86) 100%);
+    }
+
+    /* the ink-blot 「天宝」 mark — cropped from 01-title (x 105–480, y 80–655), upper third, centered */
+    #v09-mark {
+      position: absolute;
+      left: 352px;
+      top: 64px;
+      width: 375px;
+      height: 575px;
+      background: url("assets/01-title.png") -105px -80px / 1920px 1080px no-repeat;
+      -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 74%, transparent 100%);
+      mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 74%, transparent 100%);
+    }
+
+    /* parchment strip behind the three lines */
+    #v09-panel {
+      position: absolute;
+      left: 60px;
+      top: 690px;
+      width: 960px;
+      height: 860px;
+      background: #e6d3a3;
+      border-left: 6px solid #c0392b;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    #v09-panel-tex {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.08;
+      filter: grayscale(1) sepia(0.6);
+      mix-blend-mode: multiply;
+    }
+    #v09-panel-rim {
+      position: absolute;
+      inset: 12px;
+      border: 1.5px solid #c9a24b;
+      pointer-events: none;
+    }
+
+    .v09-line {
+      position: absolute;
+      left: 66px;
+      white-space: nowrap;
+      font-weight: 900;
+      color: #17110e;
+    }
+    #v09-l1 {
+      top: 66px;
+      font-size: 156px;
+      line-height: 1;
+    }
+    #v09-seal {
+      position: absolute;
+      left: 744px;
+      top: 78px;
+      width: 124px;
+      height: 124px;
+      background: #c0392b;
+      color: #e6d3a3;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 46px;
+      line-height: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border: 3px solid #c0392b;
+      outline: 1.5px solid #e6d3a3;
+      outline-offset: -10px;
+    }
+    #v09-l2 {
+      top: 278px;
+      font-size: 112px;
+      line-height: 1;
+    }
+    .v09-w {
+      display: inline-block;
+    }
+    #v09-l3 {
+      top: 452px;
+      font-size: 64px;
+      line-height: 1;
+    }
+    .v09-dot {
+      color: #c0392b;
+      margin: 0 0.16em;
+    }
+    .v09-glowword {
+      position: relative;
+      display: inline-block;
+    }
+    .v09-uline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -12px;
+      height: 6px;
+      background: #c9a24b;
+      transform-origin: 0 50%;
+    }
+
+    /* lacquer terminal pill — command wrapped to two lines */
+    #v09-term {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      top: 586px;
+      height: 196px;
+      padding: 0 34px 0 34px;
+      background: #17110e;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 46px;
+      line-height: 66px;
+      color: #e6d3a3;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    .v09-tline {
+      position: relative;
+      display: block;
+      height: 66px;
+      padding-left: 46px;
+    }
+    #v09-prompt {
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #c0392b;
+      font-weight: 700;
+    }
+    .v09-cmd span {
+      display: none;
+    }
+    .v09-caret {
+      display: inline-block;
+      vertical-align: -6px;
+      width: 20px;
+      height: 50px;
+      margin-left: 6px;
+      background: #c9a24b;
+    }
+
+    /* ---------- final lockup on lacquer ---------- */
+    #v09-final {
+      position: absolute;
+      inset: 0;
+    }
+    #v09-final-inner {
+      position: absolute;
+      inset: 0;
+    }
+    .v09-q {
+      position: absolute;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 220px;
+      line-height: 1;
+      color: #e6d3a3;
+      white-space: nowrap;
+    }
+    .v09-punct {
+      display: inline-block;
+      margin-right: -0.42em;
+    }
+    #v09-q1 {
+      top: 470px;
+    }
+    #v09-q2 {
+      top: 730px;
+    }
+    #v09-datang {
+      display: inline-block;
+      color: #c0392b;
+      margin-right: 0.04em;
+    }
+    #v09-rule {
+      position: absolute;
+      left: 340px;
+      top: 1046px;
+      width: 400px;
+      height: 2px;
+      background: #c9a24b;
+      transform-origin: 50% 50%;
+    }
+    #v09-url-wrap {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      top: 1098px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+    }
+    #v09-url-box {
+      position: relative;
+      height: 80px;
+    }
+    #v09-url {
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 56px;
+      line-height: 80px;
+      letter-spacing: 0.02em;
+      color: #c9a24b;
+      white-space: nowrap;
+    }
+    /* full-width track: moving it by xPercent carries the edge across the URL with a pure transform */
+    #v09-edge-track {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #v09-edge {
+      position: absolute;
+      top: 6px;
+      left: 0;
+      width: 5px;
+      height: 68px;
+      background: #e6d3a3;
+      box-shadow: 0 0 18px 4px rgba(201, 162, 75, 0.9);
+    }
+
+    #v09-black {
+      position: absolute;
+      inset: 0;
+      background: #000;
+    }
+  </style>
+
+  <div id="root" data-composition-id="09-cta" data-width="1080" data-height="1920" data-start="0" data-duration="10.28">
+    <svg width="0" height="0" aria-hidden="true" style="position: absolute">
+      <filter id="v09-streak" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+        <feGaussianBlur id="v09-streak-blur" in="SourceGraphic" stdDeviation="0 0" />
+      </filter>
+    </svg>
+
+    <div id="v09-ground" class="clip" data-start="0" data-duration="10.28" data-track-index="0"></div>
+
+    <!-- Scenes 1–3: camera-wrapped stage -->
+    <div id="v09-lens" class="clip" data-start="0" data-duration="6.72" data-track-index="1">
+      <div id="v09-cam">
+        <img id="v09-bg" src="assets/01-title.png" alt="" />
+        <div id="v09-scrim"></div>
+
+        <div id="v09-mark"></div>
+
+        <div id="v09-panel">
+          <img id="v09-panel-tex" src="assets/title.scroll.webp" alt="" />
+          <div id="v09-panel-rim"></div>
+
+          <div id="v09-l1" class="v09-line">开源免费</div>
+          <div id="v09-seal"><span>免</span><span>费</span></div>
+
+          <div id="v09-l2" class="v09-line"><span class="v09-w v09-w2">打开</span><span class="v09-w v09-w2">网页</span><span class="v09-w v09-w2">就能玩</span></div>
+
+          <div id="v09-l3" class="v09-line"><span class="v09-w v09-w3">接入</span>&nbsp;<span class="v09-w v09-w3 v09-glowword" id="v09-codex">Codex<span class="v09-uline" id="v09-ul-codex"></span></span><span class="v09-w v09-w3 v09-dot">·</span><span class="v09-w v09-w3 v09-glowword" id="v09-claude">Claude Code<span class="v09-uline" id="v09-ul-claude"></span></span></div>
+
+          <div id="v09-term">
+            <div class="v09-tline" id="v09-tline1"><span id="v09-prompt">›</span><span class="v09-cmd" id="v09-cmd1"></span><span class="v09-caret" id="v09-caret1"></span></div>
+            <div class="v09-tline" id="v09-tline2"><span class="v09-cmd" id="v09-cmd2"></span><span class="v09-caret" id="v09-caret2"></span></div>
+          </div>
+        </div>
+      </div>
+      <!-- the blot's ink filling the lens at the end of the push (un-transformed) -->
+      <div id="v09-ink" style="position: absolute; inset: 0; background: #0e0d0c; opacity: 0"></div>
+    </div>
+
+    <!-- Scene 4: final question + URL on lacquer -->
+    <div id="v09-final" class="clip" data-start="6.5" data-duration="3.78" data-track-index="2">
+      <div id="v09-final-inner">
+        <div id="v09-q1" class="v09-q">你<span class="v09-punct">，</span>能救</div>
+        <div id="v09-q2" class="v09-q"><span id="v09-datang">大唐</span>吗<span class="v09-punct">？</span></div>
+        <div id="v09-rule"></div>
+        <div id="v09-url-wrap">
+          <div id="v09-url-box">
+            <div id="v09-url">github.com/Yi-111-a/tianbao</div>
+            <div id="v09-edge-track"><div id="v09-edge"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the film's exit: short fade to black -->
+    <div id="v09-black" class="clip" data-start="9.86" data-duration="0.42" data-track-index="3"></div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const $ = (id) => document.getElementById(id);
+      const TOTAL = 10.28;
+
+      // ---------- typed command, wrapped to two lines: one span per character ----------
+      const LINE1 = "codex mcp add tianbao";
+      const LINE2 = "-- tianbao-server mcp";
+      const fill = (el, str) => {
+        el.textContent = "";
+        const out = [];
+        for (let i = 0; i < str.length; i++) {
+          const s = document.createElement("span");
+          s.textContent = str[i] === " " ? " " : str[i];
+          el.appendChild(s);
+          out.push(s);
+        }
+        return out;
+      };
+      const chars1 = fill($("v09-cmd1"), LINE1);
+      const chars2 = fill($("v09-cmd2"), LINE2);
+
+      // ---------- camera: multi-phase (steady push → hard push-through) ----------
+      const cam = $("v09-cam");
+      const C = { x: 540, y: 960 };
+      // darkest ink inside the 「天宝」 blot, above 天 (title px ≈ 300,165) → stage coords
+      const P = { x: 352 + (300 - 105), y: 64 + (165 - 80) };
+      const PUSH_AT = 6.2;
+      const PUSH_DUR = 0.46;
+      const S_END = 22;
+      const eSteady = gsap.parseEase("power1.inOut");
+      const ePushS = gsap.parseEase("power3.in");
+      // Pure function of time -> order-independent, seek-safe (one writer).
+      const writeCam = (t) => {
+        let s = 1 + 0.04 * eSteady(Math.min(1, Math.max(0, (t - 0.3) / 5.8))); // steady push
+        let k = 0;
+        if (t > PUSH_AT) {
+          const u = Math.min(1, (t - PUSH_AT) / PUSH_DUR); // hard push-through
+          const s0 = s;
+          const w = ePushS(u);
+          s = s0 + (S_END - s0) * w;
+          // coordinate-target zoom: the blot point P glides from its on-screen spot to lens center
+          // while scale ramps, so the camera dives INTO the ink (never sweeps across the panel)
+          // (P's screen travel is tied to the scale ramp so the stage's top edge never enters the lens)
+          k = 1 - ((1 - w) * s0) / s;
+        }
+        const p = (t / TOTAL) * Math.PI * 2 * 1.5;
+        const dx = Math.sin(p) * 2 * (1 - k);
+        const dy = Math.sin(p * 1.3) * 4 * (1 - k);
+        const fx = C.x + k * (P.x - C.x);
+        const fy = C.y + k * (P.y - C.y);
+        const tx = C.x - s * fx + dx;
+        const ty = C.y - s * fy + dy;
+        cam.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+      };
+      writeCam(0);
+      const clock = { t: 0 };
+      tl.to(clock, { t: TOTAL, duration: TOTAL, ease: "none", onUpdate: () => writeCam(clock.t) }, 0);
+
+      // horizontal motion blur on the push (lens wrapper, un-transformed)
+      const blurNode = $("v09-streak-blur");
+      const blurProxy = { v: 0 };
+      const writeBlur = () => blurNode.setAttribute("stdDeviation", `${blurProxy.v} 0`);
+      writeBlur();
+      tl.set($("v09-lens"), { filter: "url(#v09-streak)" }, PUSH_AT);
+      tl.to(blurProxy, { v: 20, duration: PUSH_DUR, ease: "power3.in", onUpdate: writeBlur }, PUSH_AT);
+      // the blot's ink fills the lens as the camera reaches it
+      tl.fromTo("#v09-ink", { opacity: 0 }, { opacity: 0.9, duration: 0.2, ease: "power2.in" }, PUSH_AT + PUSH_DUR - 0.2);
+      // cut at peak velocity
+      tl.set($("v09-lens"), { opacity: 0 }, PUSH_AT + PUSH_DUR);
+
+      // ---------- Scene 1 (0.0–1.0): mark settles, 「开源免费」 lands ----------
+      tl.fromTo("#v09-mark", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 0);
+      tl.fromTo(
+        "#v09-panel",
+        { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power3.out" },
+        0.08,
+      );
+      tl.fromTo(
+        "#v09-l1",
+        { opacity: 0, scale: 1.35, y: -20, filter: "blur(10px)" },
+        { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out", transformOrigin: "0% 50%" },
+        0.18,
+      );
+      tl.fromTo(
+        "#v09-seal",
+        { opacity: 0, scale: 1.6, rotation: -18 },
+        { opacity: 1, scale: 1, rotation: -6, duration: 0.34, ease: "power3.out" },
+        0.72,
+      );
+
+      // ---------- Scene 2 (1.12–2.5): 「打开网页就能玩」 per-word ----------
+      tl.fromTo(
+        ".v09-w2",
+        { opacity: 0, x: 60, filter: "blur(8px)" },
+        { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out", stagger: 0.22 },
+        1.12,
+      );
+
+      // ---------- Scene 3 (2.58–5.8): 接入 Codex · Claude Code + terminal ----------
+      tl.fromTo(
+        ".v09-w3",
+        { opacity: 0, x: 60, filter: "blur(8px)" },
+        { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out", stagger: 0.12 },
+        2.58,
+      );
+      tl.fromTo(
+        "#v09-term",
+        { opacity: 0, y: 24, scale: 0.96 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: "power3.out", transformOrigin: "0% 50%" },
+        3.0,
+      );
+      // typing — line 1, then the wrap, then line 2
+      const TYPE_AT = 3.25;
+      const STEP = 0.038;
+      tl.set("#v09-caret2", { opacity: 0 }, 0);
+      chars1.forEach((s, i) => tl.set(s, { display: "inline" }, TYPE_AT + i * STEP));
+      const L2_AT = TYPE_AT + chars1.length * STEP + STEP;
+      tl.set("#v09-caret1", { opacity: 0 }, L2_AT);
+      tl.set("#v09-caret2", { opacity: 1 }, L2_AT);
+      chars2.forEach((s, i) => tl.set(s, { display: "inline" }, L2_AT + i * STEP));
+      // caret blink after the command lands (stepped, deterministic)
+      const typedEnd = L2_AT + chars2.length * STEP;
+      let on = true;
+      for (let t = typedEnd + 0.3; t < PUSH_AT; t += 0.32) {
+        on = !on;
+        tl.set("#v09-caret2", { opacity: on ? 1 : 0 }, t);
+      }
+
+      // gold glow as each name is spoken
+      const glow = (wordId, ulId, at) => {
+        tl.fromTo(
+          "#" + wordId,
+          { textShadow: "0 0 0px rgba(201,162,75,0), 0 0 0px rgba(201,162,75,0)", color: "#17110e" },
+          {
+            textShadow: "0 0 26px rgba(201,162,75,1), 0 0 8px rgba(201,162,75,0.9)",
+            color: "#6e4f12",
+            duration: 0.22,
+            ease: "power2.out",
+          },
+          at,
+        );
+        tl.to(
+          "#" + wordId,
+          { textShadow: "0 0 0px rgba(201,162,75,0), 0 0 0px rgba(201,162,75,0)", color: "#17110e", duration: 0.5, ease: "power2.inOut" },
+          at + 0.42,
+        );
+        tl.fromTo("#" + ulId, { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, at);
+      };
+      glow("v09-codex", "v09-ul-codex", 3.72);
+      glow("v09-claude", "v09-ul-claude", 4.62);
+
+      // ---------- Scene 4 (6.3–10.28): through the blot → the question + URL ----------
+      const CUT = PUSH_AT + PUSH_DUR;
+      // zoom-through entry: continues forward from the cut (matched blur / direction)
+      tl.fromTo(
+        "#v09-final-inner",
+        { opacity: 0.15, scale: 0.75, filter: "blur(10px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.55, ease: "expo.out" },
+        CUT,
+      );
+      tl.fromTo("#v09-final", { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, CUT - 0.01);
+      tl.fromTo("#v09-datang", { rotation: 0, scale: 1.25 }, { rotation: -4, scale: 1, duration: 0.45, ease: "power3.out" }, 6.86);
+      tl.fromTo("#v09-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 7.12);
+      // URL wipe-in, left→right with a glowing leading edge
+      tl.fromTo(
+        "#v09-url",
+        { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.5, ease: "power2.inOut" },
+        6.95,
+      );
+      tl.fromTo("#v09-edge-track", { xPercent: 0 }, { xPercent: 100, duration: 0.5, ease: "power2.inOut" }, 6.95);
+      tl.to("#v09-edge", { opacity: 0, duration: 0.15, ease: "none" }, 7.45);
+      // hold still
+
+      // the film's exit — short fade to black
+      tl.fromTo("#v09-black", { opacity: 0 }, { opacity: 1, duration: 0.38, ease: "power1.in" }, 9.9);
+
+      window.__timelines["09-cta"] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,490 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-display: block;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-display: block;
+    }
+
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+
+    /* ── full-bleed ground (clip, lowest track) ── */
+    #ai08-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+    #ai08-veil {
+      position: absolute;
+      inset: 0;
+      background: #000;
+    }
+
+    /* ── Scenes 1–2 group ── */
+    #ai08-s12 {
+      position: absolute;
+      inset: 0;
+      transform-origin: 960px 450px;
+    }
+
+    /* audience window */
+    .ai08-win-pos {
+      position: absolute;
+      left: 80px;
+      top: 140px;
+      width: 1126px;
+      height: 636px;
+      transform-origin: 0 0;
+    }
+    .ai08-glow1 {
+      position: absolute;
+      inset: -260px;
+      z-index: 1;
+      background: radial-gradient(closest-side, rgba(201, 162, 75, 0.85), rgba(160, 82, 30, 0.35) 55%, rgba(23, 17, 14, 0) 100%);
+      opacity: 0;
+    }
+    .ai08-win-rise {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+    }
+    .ai08-win {
+      position: absolute;
+      inset: 0;
+      border: 3px solid #c9a24b;
+      background: #17110e;
+    }
+    .ai08-win-view {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1120px;
+      height: 630px;
+      overflow: hidden;
+    }
+    .ai08-win-view::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border: 1.5px solid rgba(201, 162, 75, 0.55);
+      pointer-events: none;
+    }
+    .ai08-zo1 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1120px;
+      height: 630px;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    .ai08-zi1 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1120px;
+      height: 630px;
+      will-change: transform;
+    }
+    .ai08-zi1 img {
+      display: block;
+      width: 1120px;
+      height: 630px;
+    }
+    .ai08-tag {
+      position: absolute;
+      z-index: 3;
+      background: #c0392b;
+      color: #e6d3a3;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      padding: 9px 16px 9px 18px;
+      white-space: nowrap;
+    }
+    #ai08-tag-audience {
+      left: 28px;
+      top: -22px;
+    }
+
+    /* lacquer label 「AI 驱动」 */
+    .ai08-lab-pos {
+      position: absolute;
+      left: 1268px;
+      top: 352px;
+      transform-origin: 0 0;
+    }
+    .ai08-lab-tilt {
+      transform: rotate(-4deg);
+      transform-origin: 0 50%;
+    }
+    .ai08-lab-panel {
+      background: #c0392b;
+      padding: 26px 40px 34px 40px;
+      transform-origin: 0 50%;
+      border-bottom: 3px solid #c9a24b;
+    }
+    .ai08-lab-wrap {
+      display: inline-flex;
+      align-items: baseline;
+      min-width: 500px;
+      white-space: pre;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 140px;
+      line-height: 1;
+      color: #e6d3a3;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2), 6px 6px 0 rgba(28, 20, 16, 0.15);
+    }
+    .ai08-caret {
+      display: inline-block;
+      width: 12px;
+      height: 118px;
+      margin-left: 8px;
+      background: #e6d3a3;
+      align-self: center;
+    }
+
+    /* debate cards */
+    .ai08-card {
+      position: absolute;
+      width: 368px;
+      height: 296px;
+      border: 3px solid #c9a24b;
+      background: #2a1d14;
+      overflow: hidden;
+    }
+    .ai08-card {
+      background-image: url("assets/09-debate.png");
+      background-size: 1536px 864px;
+      background-repeat: no-repeat;
+    }
+    #ai08-card1 { left: 751px; top: 252px; z-index: 1; }
+    #ai08-card2 { left: 1121px; top: 224px; z-index: 3; }
+    #ai08-card3 { left: 1491px; top: 252px; z-index: 2; }
+    #ai08-card1 { background-position: -198.4px -222.4px; }
+    #ai08-card2 { background-position: -584px -222.4px; }
+    #ai08-card3 { background-position: -969.6px -222.4px; }
+    #ai08-tag-debate {
+      left: 1257px;
+      top: 166px;
+    }
+
+    .ai08-chip-row {
+      position: absolute;
+      left: 905px;
+      top: 622px;
+      width: 800px;
+      display: flex;
+      justify-content: center;
+    }
+    .ai08-chip {
+      background: #e6d3a3;
+      color: #17110e;
+      border-left: 4px solid #c0392b;
+      border-radius: 4px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.06em;
+      padding: 13px 24px 14px 20px;
+      white-space: nowrap;
+    }
+
+    /* ── Scene 3: good ending ── */
+    #ai08-end {
+      position: absolute;
+      inset: 0;
+    }
+    .ai08-glow2 {
+      position: absolute;
+      inset: -220px;
+      z-index: 1;
+      background: radial-gradient(closest-side, rgba(201, 162, 75, 0.9), rgba(192, 57, 43, 0.4) 50%, rgba(23, 17, 14, 0) 100%);
+      opacity: 0;
+    }
+    .ai08-bloom {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      overflow: hidden;
+      transform-origin: 50% 45%;
+    }
+    .ai08-zo2 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    .ai08-zi2 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      will-change: transform;
+    }
+    .ai08-zi2 img {
+      display: block;
+      width: 1920px;
+      height: 1080px;
+    }
+    .ai08-band {
+      position: absolute;
+      left: 1418px;
+      width: 378px;
+      height: 26px;
+      background: #c9a24b;
+      mix-blend-mode: multiply;
+      opacity: 0.5;
+      transform-origin: 0 50%;
+    }
+    .ai08-seal {
+      position: absolute;
+      left: 1698px;
+      width: 28px;
+      height: 28px;
+      transform-origin: 50% 50%;
+    }
+    .ai08-seal svg {
+      display: block;
+      width: 28px;
+      height: 28px;
+      overflow: visible;
+    }
+  </style>
+
+  <div data-hf-id="hf-nmva" id="root" data-composition-id="08-ai" data-width="1920" data-height="1080" data-duration="7.768">
+    <!-- ground -->
+    <div data-hf-id="hf-3isi" id="ai08-ground" class="clip" data-start="0" data-duration="7.768" data-track-index="0">
+      <div data-hf-id="hf-wevw" id="ai08-veil"></div>
+    </div>
+
+    <!-- Scenes 1–2: audience surface + lacquer label + debate cards -->
+    <div data-hf-id="hf-6ubm" id="ai08-s12" class="clip" data-start="0" data-duration="7.768" data-track-index="1">
+      <div data-hf-id="hf-3u4a" class="ai08-win-pos" id="ai08-win-pos">
+        <div data-hf-id="hf-zvou" class="ai08-glow1" id="ai08-glow1"></div>
+        <div data-hf-id="hf-ggbw" class="ai08-win-rise" id="ai08-win-rise">
+          <div data-hf-id="hf-emif" class="ai08-win">
+            <div data-hf-id="hf-hq2r" class="ai08-win-view">
+              <div data-hf-id="hf-3yc6" class="ai08-zo1" id="ai08-zo1">
+                <div data-hf-id="hf-p5x6" class="ai08-zi1" id="ai08-zi1">
+                  <img data-hf-id="hf-9dtt" src="assets/07-audience.png" alt="" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-hf-id="hf-iu1i" class="ai08-tag" id="ai08-tag-audience">召对</div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-d21a" class="ai08-lab-pos" id="ai08-lab-pos">
+        <div data-hf-id="hf-fcew" class="ai08-lab-tilt">
+          <div data-hf-id="hf-00iy" class="ai08-lab-panel" id="ai08-lab-panel">
+            <div data-hf-id="hf-cx5p" class="ai08-lab-wrap"><span data-hf-id="hf-brom" id="ai08-lab-text"></span><span data-hf-id="hf-9v6f" class="ai08-caret" id="ai08-caret"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-is65" class="ai08-tag" id="ai08-tag-debate">廷议</div>
+      <div data-hf-id="hf-n4hw" class="ai08-card" id="ai08-card1" role="img" aria-label="廷议发言"></div>
+      <div data-hf-id="hf-jvna" class="ai08-card" id="ai08-card3" role="img" aria-label="廷议发言"></div>
+      <div data-hf-id="hf-ok4t" class="ai08-card" id="ai08-card2" role="img" aria-label="廷议发言"></div>
+
+      <div data-hf-id="hf-p796" class="ai08-chip-row">
+        <div data-hf-id="hf-y7ec" class="ai08-chip" id="ai08-chip">每位大臣由大模型扮演</div>
+      </div>
+    </div>
+
+    <!-- Scene 3: good ending blooms up, zoom to the review card, three ticks -->
+    <div data-hf-id="hf-kdhs" id="ai08-end" class="clip" data-start="0" data-duration="7.768" data-track-index="2">
+      <div data-hf-id="hf-evf6" class="ai08-glow2" id="ai08-glow2"></div>
+      <div data-hf-id="hf-tx16" class="ai08-bloom" id="ai08-bloom">
+        <div data-hf-id="hf-td9u" class="ai08-zo2" id="ai08-zo2">
+          <div data-hf-id="hf-v0pe" class="ai08-zi2" id="ai08-zi2">
+            <img data-hf-id="hf-7zed" src="assets/31-ending-good.png" alt="" />
+            <div data-hf-id="hf-yoxu" class="ai08-band" id="ai08-band1" style="top: 598px"></div>
+            <div data-hf-id="hf-enrv" class="ai08-band" id="ai08-band2" style="top: 626px"></div>
+            <div data-hf-id="hf-ceo3" class="ai08-band" id="ai08-band3" style="top: 654px"></div>
+            <div data-hf-id="hf-5g4x" class="ai08-seal" id="ai08-seal1" style="top: 597px">
+              <svg data-hf-id="hf-z8jt" viewBox="0 0 28 28"><circle data-hf-id="hf-3c1d" cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path data-hf-id="hf-06ro" id="ai08-tick1" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+            </div>
+            <div data-hf-id="hf-hg44" class="ai08-seal" id="ai08-seal2" style="top: 625px">
+              <svg data-hf-id="hf-eqd9" viewBox="0 0 28 28"><circle data-hf-id="hf-67qd" cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path data-hf-id="hf-2cbt" id="ai08-tick2" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+            </div>
+            <div data-hf-id="hf-6cgg" class="ai08-seal" id="ai08-seal3" style="top: 653px">
+              <svg data-hf-id="hf-fxac" viewBox="0 0 28 28"><circle data-hf-id="hf-7eng" cx="14" cy="14" r="13" fill="#17110e" stroke="#c9a24b" stroke-width="1.5" /><path data-hf-id="hf-gznu" id="ai08-tick3" d="M8 14.5 L12.5 19 L20.5 9.5" fill="none" stroke="#c9a24b" stroke-width="3.2" stroke-linecap="square" stroke-dasharray="20" stroke-dashoffset="20" /></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const DUR = 7.368;
+
+      // ───────── Scene 1 (0.0–2.7s): light returns, audience rises, zoom to the reply, 「AI 驱动」 types ─────────
+      tl.fromTo("#ai08-veil", { opacity: 1 }, { opacity: 0, duration: 0.6, ease: "power1.out" }, 0);
+
+      // ambient glow blooms behind the audience surface, landing with its settle
+      tl.fromTo("#ai08-glow1", { opacity: 0, scale: 0.85 }, { opacity: 0.22, scale: 1, duration: 0.9, ease: "power2.out" }, 0);
+      tl.fromTo(
+        "#ai08-win-rise",
+        { opacity: 0, y: 70, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.9, ease: "power3.out" },
+        0
+      );
+      tl.fromTo("#ai08-tag-audience", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 0.45);
+
+      // zoom-to-target on An Lushan's reply bubble (nested wrappers: outer scales, inner counter-translates)
+      // bubble centre in window space: (1218, 381) × 0.58333 = (710.5, 222.25); window centre (560, 315)
+      const ZOOM1_S = 1.8;
+      const ZOOM1_AT = 0.95;
+      const ZOOM1_DUR = 1.2;
+      tl.to("#ai08-zo1", { scale: ZOOM1_S, duration: ZOOM1_DUR, ease: "power3.inOut" }, ZOOM1_AT);
+      tl.to("#ai08-zi1", { x: -150.5, y: 92.75, duration: ZOOM1_DUR, ease: "power3.inOut" }, ZOOM1_AT);
+
+      // lacquer label panel snaps open, then 「AI 驱动」 types with a caret (discrete-text-sequence)
+      tl.fromTo("#ai08-lab-panel", { scaleX: 0, opacity: 1 }, { scaleX: 1, duration: 0.32, ease: "power3.out" }, 0.5);
+      const SEQUENCE = [
+        { t: 0.0, text: "" },
+        { t: 0.7, text: "A" },
+        { t: 0.8, text: "AI" },
+        { t: 0.92, text: "AI " },
+        { t: 1.12, text: "AI 驱" },
+        { t: 1.34, text: "AI 驱动" },
+      ];
+      function textAt(time) {
+        for (let i = SEQUENCE.length - 1; i >= 0; i--) {
+          if (time >= SEQUENCE[i].t) return SEQUENCE[i].text;
+        }
+        return "";
+      }
+      const textEl = document.getElementById("ai08-lab-text");
+      const caretEl = document.getElementById("ai08-caret");
+      const TYPE_TOTAL = 2.6;
+      const driver = { t: 0 };
+      tl.to(
+        driver,
+        {
+          t: TYPE_TOTAL,
+          duration: TYPE_TOTAL,
+          ease: "none",
+          onUpdate: () => {
+            textEl.textContent = textAt(driver.t);
+          },
+        },
+        0
+      );
+      // caret blink: deterministic sin square wave, then the caret retires once the line has settled
+      const BLINK_START = 0.5;
+      const BLINK_DUR = 2.3;
+      const BLINK_CYCLES = 3.5;
+      const blink = { p: 0 };
+      tl.fromTo(
+        blink,
+        { p: 0 },
+        {
+          p: Math.PI * 2 * BLINK_CYCLES,
+          duration: BLINK_DUR,
+          ease: "none",
+          immediateRender: false,
+          onUpdate: () => {
+            caretEl.style.opacity = Math.cos(blink.p) > 0 ? "1" : "0";
+          },
+        },
+        BLINK_START
+      );
+      tl.set(caretEl, { opacity: 0 }, 0);
+      tl.set(caretEl, { opacity: 0 }, BLINK_START + BLINK_DUR);
+
+      // ───────── Scene 2 (3.29–5.4s): audience yields left, three ministers' speech cards fan in ─────────
+      const S2 = 3.29;
+      // weight-transfer slide: the surface slides aside + scales down into the left column
+      tl.to("#ai08-win-pos", { x: -16, y: 30, scale: 0.55, duration: 0.75, ease: "power3.inOut" }, S2);
+      tl.to("#ai08-glow1", { opacity: 0.12, duration: 0.75, ease: "power2.inOut" }, S2);
+      // the 「AI 驱动」 label docks under the shrunken surface
+      tl.to("#ai08-lab-pos", { x: -1192, y: 238, scale: 0.62, duration: 0.75, ease: "power3.inOut" }, S2);
+
+      tl.fromTo("#ai08-tag-debate", { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }, 3.5);
+      const cards = [
+        { id: "#ai08-card1", rot: -4, at: 3.58 },
+        { id: "#ai08-card2", rot: 0, at: 3.9 },
+        { id: "#ai08-card3", rot: 4, at: 4.22 },
+      ];
+      cards.forEach((c) => {
+        tl.fromTo(
+          c.id,
+          { opacity: 0, x: 280, y: 50, rotation: c.rot + 14, scale: 0.88 },
+          { opacity: 1, x: 0, y: 0, rotation: c.rot, scale: 1, duration: 0.6, ease: "back.out(1.3)" },
+          c.at
+        );
+      });
+
+      tl.fromTo("#ai08-chip", { opacity: 0, y: 18, scaleX: 0.6 }, { opacity: 1, y: 0, scaleX: 1, duration: 0.4, ease: "power3.out" }, 4.7);
+
+      // ───────── Scene 3 (5.57–7.368s): both surfaces clear, good ending blooms up, zoom to review card, ticks ─────────
+      const S3 = 5.57;
+      // zoom-through clear: Z-scale toward camera + blur + fade
+      tl.to("#ai08-s12", { opacity: 0, scale: 1.07, filter: "blur(10px)", duration: 0.4, ease: "power2.in" }, S3);
+
+      // ambient-glow-bloom behind the ending, landing with its settle (bloom-and-hold: short scene)
+      tl.fromTo("#ai08-glow2", { opacity: 0, scale: 0.85 }, { opacity: 0.35, scale: 1, duration: 0.6, ease: "power2.out" }, S3);
+      tl.fromTo(
+        "#ai08-bloom",
+        { opacity: 0, scale: 0.9, filter: "blur(14px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.6, ease: "power2.out" },
+        S3 + 0.04
+      );
+
+      // gentle push (1.12×) that keeps BOTH the title card 「天宝中兴·夺镇弭兵」 and the review card's
+      // three 「达成」 rows in frame above y 896. Nested wrappers: outer scales about centre, inner translates.
+      // Translate kept inside ±(960/S − 960, 540/S − 540) so the image edge never shows.
+      // Landed: title ≈ x 319–837, y ≈ 311; 达成 rows ≈ y 586–649; review card bottom ≈ y 803.
+      const ZOOM2_S = 1.12;
+      const ZOOM2_AT = 5.9;
+      const ZOOM2_DUR = 1.0;
+      tl.to("#ai08-zo2", { scale: ZOOM2_S, duration: ZOOM2_DUR, ease: "power2.inOut" }, ZOOM2_AT);
+      tl.to("#ai08-zi2", { x: -100, y: -30, duration: ZOOM2_DUR, ease: "power2.inOut" }, ZOOM2_AT);
+
+      // three 「达成」 rows: gold band sweeps, seal pops, tick draws — in sequence; last lands by ~6.9s
+      [1, 2, 3].forEach((n, i) => {
+        const at = 6.36 + i * 0.14;
+        tl.fromTo("#ai08-band" + n, { scaleX: 0 }, { scaleX: 1, duration: 0.24, ease: "power2.out" }, at);
+        tl.fromTo("#ai08-seal" + n, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2)" }, at);
+        tl.fromTo("#ai08-tick" + n, { strokeDashoffset: 20 }, { strokeDashoffset: 0, duration: 0.18, ease: "power2.out" }, at + 0.08);
+      });
+
+      // hold to the end of the frame (no exit — the root transition owns it)
+      tl.set({}, {}, DUR);
+
+      window.__timelines["08-ai"] = tl;
+    })();
+  </script>
+</template>

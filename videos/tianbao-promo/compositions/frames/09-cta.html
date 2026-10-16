@@ -1,0 +1,521 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+
+    /* ---------- full-bleed lacquer ground (lowest track) ---------- */
+    #cta09-ground {
+      position: absolute;
+      inset: 0;
+      background: #17110e;
+    }
+
+    /* ---------- lens: un-transformed wrapper that carries the push streak filter ---------- */
+    #cta09-lens {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    #cta09-cam {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    /* title painting, heavy scrim */
+    #cta09-bg {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+    #cta09-scrim {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(23, 17, 14, 0) 55%, rgba(23, 17, 14, 0.75) 100%),
+        linear-gradient(90deg, rgba(23, 17, 14, 0.68) 0%, rgba(23, 17, 14, 0.58) 45%, rgba(23, 17, 14, 0.7) 100%);
+    }
+
+    /* the ink-blot 「天宝」 mark — cropped from 01-title at its native position */
+    #cta09-mark {
+      position: absolute;
+      left: 105px;
+      top: 80px;
+      width: 375px;
+      height: 575px;
+      overflow: hidden;
+      -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 72%, transparent 100%);
+      mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 72%, transparent 100%);
+    }
+    #cta09-mark-img {
+      position: absolute;
+      left: -105px;
+      top: -80px;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+      background: url("assets/01-title.png") 0 0 / 1920px 1080px no-repeat;
+    }
+
+    /* parchment strip behind the three lines */
+    #cta09-panel {
+      position: absolute;
+      left: 610px;
+      top: 150px;
+      width: 1210px;
+      height: 640px;
+      background: #e6d3a3;
+      border-left: 6px solid #c0392b;
+      overflow: hidden;
+    }
+    #cta09-panel-tex {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.08;
+      filter: grayscale(1) sepia(0.6);
+      mix-blend-mode: multiply;
+    }
+    #cta09-panel-rim {
+      position: absolute;
+      inset: 12px;
+      border: 1.5px solid #c9a24b;
+      pointer-events: none;
+    }
+
+    .cta09-line {
+      position: absolute;
+      left: 84px;
+      white-space: nowrap;
+      font-weight: 900;
+      color: #17110e;
+    }
+    #cta09-l1 {
+      top: 58px;
+      font-size: 124px;
+      line-height: 1;
+    }
+    #cta09-seal {
+      position: absolute;
+      left: 600px;
+      top: 66px;
+      width: 104px;
+      height: 104px;
+      background: #c0392b;
+      color: #e6d3a3;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 40px;
+      line-height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border: 3px solid #c0392b;
+      outline: 1.5px solid #e6d3a3;
+      outline-offset: -9px;
+    }
+    #cta09-l2 {
+      top: 228px;
+      font-size: 92px;
+      line-height: 1;
+    }
+    .cta09-w {
+      display: inline-block;
+    }
+    #cta09-l3 {
+      top: 372px;
+      font-size: 66px;
+      line-height: 1;
+    }
+    .cta09-dot {
+      color: #c0392b;
+      margin: 0 0.18em;
+    }
+    .cta09-glowword {
+      position: relative;
+      display: inline-block;
+    }
+    .cta09-uline {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -10px;
+      height: 6px;
+      background: #c9a24b;
+      transform-origin: 0 50%;
+    }
+
+    /* lacquer terminal pill */
+    #cta09-term {
+      position: absolute;
+      left: 84px;
+      top: 490px;
+      height: 84px;
+      padding: 0 34px 0 30px;
+      background: #17110e;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 34px;
+      color: #e6d3a3;
+      white-space: nowrap;
+      box-sizing: border-box;
+    }
+    #cta09-prompt {
+      color: #c0392b;
+      margin-right: 18px;
+      font-weight: 700;
+    }
+    #cta09-cmd span {
+      display: none;
+    }
+    #cta09-caret {
+      display: inline-block;
+      width: 16px;
+      height: 40px;
+      margin-left: 4px;
+      background: #c9a24b;
+    }
+
+    /* ---------- final lockup on lacquer ---------- */
+    #cta09-final {
+      position: absolute;
+      inset: 0;
+    }
+    #cta09-final-inner {
+      position: absolute;
+      inset: 0;
+    }
+    #cta09-q {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 250px;
+      text-align: center;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 160px;
+      line-height: 1;
+      color: #e6d3a3;
+      white-space: nowrap;
+    }
+    #cta09-datang {
+      display: inline-block;
+      color: #c0392b;
+      margin: 0 0.04em;
+    }
+    #cta09-rule {
+      position: absolute;
+      left: 760px;
+      top: 500px;
+      width: 400px;
+      height: 2px;
+      background: #c9a24b;
+      transform-origin: 50% 50%;
+    }
+    #cta09-url-wrap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 548px;
+      height: 70px;
+      display: flex;
+      justify-content: center;
+    }
+    #cta09-url-box {
+      position: relative;
+      height: 70px;
+    }
+    #cta09-url {
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 52px;
+      line-height: 70px;
+      letter-spacing: 0.03em;
+      color: #c9a24b;
+      white-space: nowrap;
+    }
+    /* full-width track: moving it by xPercent carries the edge across the URL with a pure transform */
+    #cta09-edge-track {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #cta09-edge {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      width: 5px;
+      height: 62px;
+      background: #e6d3a3;
+      box-shadow: 0 0 18px 4px rgba(201, 162, 75, 0.9);
+    }
+
+    #cta09-black {
+      position: absolute;
+      inset: 0;
+      background: #000;
+    }
+  </style>
+
+  <div data-hf-id="hf-kf5c" id="root" data-composition-id="09-cta" data-width="1920" data-height="1080" data-start="0" data-duration="10.28">
+    <svg data-hf-id="hf-p3r6" width="0" height="0" aria-hidden="true" style="position: absolute">
+      <filter data-hf-id="hf-rq7j" id="cta09-streak" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+        <feGaussianBlur data-hf-id="hf-j407" id="cta09-streak-blur" in="SourceGraphic" stdDeviation="0 0" />
+      </filter>
+    </svg>
+
+    <div data-hf-id="hf-mmcg" id="cta09-ground" class="clip" data-start="0" data-duration="10.28" data-track-index="0"></div>
+
+    <!-- Scenes 1–3: camera-wrapped stage -->
+    <div data-hf-id="hf-7yn2" id="cta09-lens" class="clip" data-start="0" data-duration="6.72" data-track-index="1">
+      <div data-hf-id="hf-pn0a" id="cta09-cam">
+        <img data-hf-id="hf-9ckw" id="cta09-bg" src="assets/01-title.png" alt="" />
+        <div data-hf-id="hf-k56p" id="cta09-scrim"></div>
+
+        <div data-hf-id="hf-t9za" id="cta09-mark">
+          <div data-hf-id="hf-3les" id="cta09-mark-img"></div>
+        </div>
+
+        <div data-hf-id="hf-aiul" id="cta09-panel">
+          <img data-hf-id="hf-figr" id="cta09-panel-tex" src="assets/title.scroll.webp" alt="" />
+          <div data-hf-id="hf-an8y" id="cta09-panel-rim"></div>
+
+          <div data-hf-id="hf-4dxb" id="cta09-l1" class="cta09-line">开源免费</div>
+          <div data-hf-id="hf-8v1e" id="cta09-seal"><span data-hf-id="hf-m32c">免</span><span data-hf-id="hf-3sug">费</span></div>
+
+          <div data-hf-id="hf-i2ia" id="cta09-l2" class="cta09-line"><span data-hf-id="hf-s8k4" class="cta09-w cta09-w2">打开</span><span data-hf-id="hf-44et" class="cta09-w cta09-w2">网页</span><span data-hf-id="hf-uwoc" class="cta09-w cta09-w2">就能玩</span></div>
+
+          <div data-hf-id="hf-m0mb" id="cta09-l3" class="cta09-line"><span data-hf-id="hf-0u1w" class="cta09-w cta09-w3">接入</span>&nbsp;<span data-hf-id="hf-bowr" class="cta09-w cta09-w3 cta09-glowword" id="cta09-codex">Codex<span data-hf-id="hf-iedr" class="cta09-uline" id="cta09-ul-codex"></span></span><span data-hf-id="hf-e71o" class="cta09-w cta09-w3 cta09-dot">·</span><span data-hf-id="hf-u3ek" class="cta09-w cta09-w3 cta09-glowword" id="cta09-claude">Claude Code<span data-hf-id="hf-13o8" class="cta09-uline" id="cta09-ul-claude"></span></span></div>
+
+          <div data-hf-id="hf-hevj" id="cta09-term">
+            <span data-hf-id="hf-cdaq" id="cta09-prompt">›</span><span data-hf-id="hf-dp6y" id="cta09-cmd"></span><span data-hf-id="hf-9n57" id="cta09-caret"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scene 4: final question + URL on lacquer -->
+    <div data-hf-id="hf-w53t" id="cta09-final" class="clip" data-start="6.5" data-duration="3.78" data-track-index="2">
+      <div data-hf-id="hf-g55k" id="cta09-final-inner">
+        <div data-hf-id="hf-rtiy" id="cta09-q">你，能救<span data-hf-id="hf-vyqo" id="cta09-datang">大唐</span>吗？</div>
+        <div data-hf-id="hf-pgob" id="cta09-rule"></div>
+        <div data-hf-id="hf-gcxp" id="cta09-url-wrap">
+          <div data-hf-id="hf-xcg0" id="cta09-url-box">
+            <div data-hf-id="hf-ekbk" id="cta09-url">github.com/Yi-111-a/tianbao</div>
+            <div data-hf-id="hf-59ws" id="cta09-edge-track"><div data-hf-id="hf-jqfy" id="cta09-edge"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- the film's exit: short fade to black -->
+    <div data-hf-id="hf-zm4b" id="cta09-black" class="clip" data-start="9.86" data-duration="0.42" data-track-index="3"></div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const $ = (id) => document.getElementById(id);
+      const TOTAL = 10.28;
+
+      // ---------- typed command: one span per character (deterministic reveal) ----------
+      const CMD = "codex mcp add tianbao -- tianbao-server mcp";
+      const cmdEl = $("cta09-cmd");
+      cmdEl.textContent = "";
+      const chars = [];
+      for (let i = 0; i < CMD.length; i++) {
+        const s = document.createElement("span");
+        s.textContent = CMD[i] === " " ? " " : CMD[i];
+        cmdEl.appendChild(s);
+        chars.push(s);
+      }
+
+      // ---------- camera: multi-phase (steady push → hard push-through) ----------
+      const cam = $("cta09-cam");
+      const C = { x: 960, y: 540 };
+      const P = { x: 295, y: 150 }; // darkest ink inside the 「天宝」 blot (stage coords)
+      const PUSH_AT = 6.2;
+      const PUSH_DUR = 0.46;
+      const eSteady = gsap.parseEase("power1.inOut");
+      const ePushS = gsap.parseEase("power3.in");
+      const ePushK = gsap.parseEase("power2.in");
+      // Pure function of time -> order-independent, seek-safe (one writer).
+      const writeCam = (t) => {
+        let s = 1 + 0.04 * eSteady(Math.min(1, Math.max(0, (t - 0.3) / 5.8))); // steady push
+        let k = 0;
+        if (t > PUSH_AT) {
+          const u = Math.min(1, (t - PUSH_AT) / PUSH_DUR); // hard push-through
+          s = s + (18 - s) * ePushS(u);
+          k = ePushK(u);
+        }
+        const p = (t / TOTAL) * Math.PI * 2 * 1.5;
+        const dx = Math.sin(p) * 4 * (1 - k);
+        const dy = Math.sin(p * 1.3) * 2 * (1 - k);
+        const fx = C.x + k * (P.x - C.x);
+        const fy = C.y + k * (P.y - C.y);
+        const tx = C.x - s * fx + dx;
+        const ty = C.y - s * fy + dy;
+        cam.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+      };
+      writeCam(0);
+      const clock = { t: 0 };
+      tl.to(clock, { t: TOTAL, duration: TOTAL, ease: "none", onUpdate: () => writeCam(clock.t) }, 0);
+
+      // horizontal motion blur on the push (lens wrapper, un-transformed)
+      const blurNode = $("cta09-streak-blur");
+      const blurProxy = { v: 0 };
+      const writeBlur = () => blurNode.setAttribute("stdDeviation", `${blurProxy.v} 0`);
+      writeBlur();
+      tl.set($("cta09-lens"), { filter: "url(#cta09-streak)" }, PUSH_AT);
+      tl.to(blurProxy, { v: 20, duration: PUSH_DUR, ease: "power3.in", onUpdate: writeBlur }, PUSH_AT);
+      // cut at peak velocity — the blot's ink has filled the lens
+      tl.set($("cta09-lens"), { opacity: 0 }, PUSH_AT + PUSH_DUR);
+
+      // ---------- Scene 1 (0.0–1.0): mark settles, 「开源免费」 lands ----------
+      tl.fromTo("#cta09-mark", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.7, ease: "power3.out" }, 0);
+      tl.fromTo(
+        "#cta09-panel",
+        { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power3.out" },
+        0.08,
+      );
+      tl.fromTo(
+        "#cta09-l1",
+        { opacity: 0, scale: 1.35, y: -20, filter: "blur(10px)" },
+        { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out", transformOrigin: "0% 50%" },
+        0.18,
+      );
+      tl.fromTo(
+        "#cta09-seal",
+        { opacity: 0, scale: 1.7, rotation: -18 },
+        { opacity: 1, scale: 1, rotation: -6, duration: 0.32, ease: "back.out(2.2)" },
+        0.72,
+      );
+
+      // ---------- Scene 2 (1.12–2.5): 「打开网页就能玩」 per-word ----------
+      tl.fromTo(
+        ".cta09-w2",
+        { opacity: 0, x: 60, filter: "blur(8px)" },
+        { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out", stagger: 0.22 },
+        1.12,
+      );
+
+      // ---------- Scene 3 (2.58–5.8): 接入 Codex · Claude Code + terminal ----------
+      tl.fromTo(
+        ".cta09-w3",
+        { opacity: 0, x: 60, filter: "blur(8px)" },
+        { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out", stagger: 0.12 },
+        2.58,
+      );
+      tl.fromTo(
+        "#cta09-term",
+        { opacity: 0, y: 24, scale: 0.94 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: "back.out(1.6)", transformOrigin: "0% 50%" },
+        3.0,
+      );
+      // typing
+      const TYPE_AT = 3.25;
+      const STEP = 0.038;
+      chars.forEach((s, i) => tl.set(s, { display: "inline" }, TYPE_AT + i * STEP));
+      // caret blink after the command lands (stepped, deterministic)
+      const typedEnd = TYPE_AT + chars.length * STEP;
+      let on = true;
+      for (let t = typedEnd + 0.3; t < PUSH_AT; t += 0.32) {
+        on = !on;
+        tl.set("#cta09-caret", { opacity: on ? 1 : 0 }, t);
+      }
+
+      // gold glow as each name is spoken
+      const glow = (wordId, ulId, at) => {
+        tl.fromTo(
+          "#" + wordId,
+          { textShadow: "0 0 0px rgba(201,162,75,0), 0 0 0px rgba(201,162,75,0)", color: "#17110e" },
+          {
+            textShadow: "0 0 26px rgba(201,162,75,1), 0 0 8px rgba(201,162,75,0.9)",
+            color: "#6e4f12",
+            duration: 0.22,
+            ease: "power2.out",
+          },
+          at,
+        );
+        tl.to(
+          "#" + wordId,
+          { textShadow: "0 0 0px rgba(201,162,75,0), 0 0 0px rgba(201,162,75,0)", color: "#17110e", duration: 0.5, ease: "power2.inOut" },
+          at + 0.42,
+        );
+        tl.fromTo("#" + ulId, { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, at);
+      };
+      glow("cta09-codex", "cta09-ul-codex", 3.72);
+      glow("cta09-claude", "cta09-ul-claude", 4.62);
+
+      // ---------- Scene 4 (6.3–8.28): through the blot → the question + URL ----------
+      const CUT = PUSH_AT + PUSH_DUR;
+      // zoom-through entry: continues forward from the cut (matched blur / direction)
+      tl.fromTo(
+        "#cta09-final-inner",
+        { opacity: 0.15, scale: 0.75, filter: "blur(10px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.55, ease: "expo.out" },
+        CUT,
+      );
+      tl.fromTo("#cta09-final", { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, CUT - 0.01);
+      tl.fromTo("#cta09-datang", { rotation: 0, scale: 1.25 }, { rotation: -4, scale: 1, duration: 0.45, ease: "power3.out" }, 6.86);
+      tl.fromTo("#cta09-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 7.12);
+      // URL wipe-in, left→right with a glowing leading edge
+      tl.fromTo(
+        "#cta09-url",
+        { clipPath: "inset(0% 100% 0% 0%)" },
+        { clipPath: "inset(0% 0% 0% 0%)", duration: 0.5, ease: "power2.inOut" },
+        6.95,
+      );
+      tl.fromTo(
+        "#cta09-edge-track",
+        { xPercent: 0 },
+        { xPercent: 100, duration: 0.5, ease: "power2.inOut" },
+        6.95,
+      );
+      tl.to("#cta09-edge", { opacity: 0, duration: 0.15, ease: "none" }, 7.45);
+      // life in the hold
+
+      // the film's exit — short fade to black
+      tl.fromTo("#cta09-black", { opacity: 0 }, { opacity: 1, duration: 0.38, ease: "power1.in" }, 9.9);
+
+      window.__timelines["09-cta"] = tl;
+    })();
+  </script>
+</template>

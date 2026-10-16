@@ -1,0 +1,374 @@
+<template>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      container-type: size;
+      font-family: "Noto Serif SC", serif;
+      color: #17110e;
+    }
+    #v04-ground {
+      position: absolute;
+      inset: 0;
+      background: #e6d3a3;
+    }
+    #v04-stage {
+      position: absolute;
+      inset: 0;
+    }
+
+    /* ── the held tall surface: ink rule · gold mat · ink hairline · screen
+          canvas x 40–1040, y 200–1460 (bottom < 1600 keep-out) ── */
+    #v04-surface {
+      position: absolute;
+      left: 40px;
+      top: 200px;
+      width: 1000px;
+      height: 1260px;
+      box-sizing: border-box;
+      border: 3px solid #17110e;
+      padding: 8px;
+      background: #c9a24b;
+    }
+    /* screen: 975 × 1235 inner (inside the 1.5px hairline) */
+    #v04-screen {
+      position: relative;
+      width: 978px;
+      height: 1238px;
+      box-sizing: border-box;
+      border: 1.5px solid #17110e;
+      background: #17110e;
+      overflow: hidden;
+    }
+    .v04-gate,
+    .v04-slide {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 975px;
+      height: 1235px;
+    }
+    /* per-slide virtual camera: outer scales about the screen centre, inner counter-translates */
+    .v04-cam-outer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 975px;
+      height: 1235px;
+      transform-origin: 487.5px 617.5px;
+    }
+    .v04-cam-inner {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+    }
+    .v04-shot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      display: block;
+    }
+
+    /* 迟到之报 — vermilion outline stamp over the memorial list (source px) */
+    #v04-stamp {
+      position: absolute;
+      left: 414px;
+      top: 486px;
+      width: 352px;
+      height: 112px;
+      box-sizing: border-box;
+      border: 5px solid #c0392b;
+      background: rgba(230, 211, 163, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 64px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      color: #c0392b;
+      white-space: nowrap;
+    }
+    #v04-stamp-rule {
+      position: absolute;
+      inset: 6px;
+      border: 1.5px solid #c0392b;
+    }
+    #v04-stamp-text {
+      position: relative;
+      margin-right: -0.1em;
+    }
+
+    /* reply bubble: a patch (empty parchment cropped from the same screenshot) hides it;
+       a crop of the real bubble re-reveals it top-to-bottom */
+    .v04-cut {
+      position: absolute;
+      left: 845px;
+      top: 316px;
+      width: 700px;
+      height: 128px;
+      background-image: url("assets/07-audience.png");
+      background-size: 1920px 1080px;
+      background-repeat: no-repeat;
+    }
+    #v04-reply-patch {
+      background-position: -845px -470px;
+    }
+    #v04-reply {
+      --v04-wipe: -20%;
+      background-position: -845px -316px;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 var(--v04-wipe),
+        transparent calc(var(--v04-wipe) + 20%)
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        #000 0%,
+        #000 var(--v04-wipe),
+        transparent calc(var(--v04-wipe) + 20%)
+      );
+    }
+    /* 卿以为范阳之兵如何？ — vermilion marker underline (source px) */
+    #v04-marker {
+      position: absolute;
+      left: 1416px;
+      top: 297px;
+      width: 178px;
+      height: 14px;
+      overflow: visible;
+    }
+
+    /* lacquer chip at the surface's top-left (canvas x ≈ 64–212) */
+    #v04-chip {
+      position: absolute;
+      left: 24px;
+      top: -22px;
+      width: 148px;
+      height: 62px;
+      box-sizing: border-box;
+      background: #17110e;
+      border: 2px solid #c9a24b;
+      overflow: hidden;
+    }
+    .v04-chip-word {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Noto Sans SC", sans-serif;
+      font-weight: 600;
+      font-size: 32px;
+      line-height: 1;
+      letter-spacing: 0.1em;
+      color: #e6d3a3;
+      white-space: nowrap;
+    }
+  </style>
+
+  <div
+    id="root"
+    data-composition-id="04-audience"
+    data-width="1080"
+    data-height="1920"
+    data-duration="8.396"
+  >
+    <div
+      id="v04-ground"
+      class="clip"
+      data-start="0"
+      data-duration="8.396"
+      data-track-index="0"
+    ></div>
+
+    <div id="v04-stage" class="clip" data-start="0" data-duration="8.396" data-track-index="1">
+      <div id="v04-surface">
+        <div id="v04-screen">
+          <!-- screen 1: 奏疏 (memorial list + open memorial, tall crop) -->
+          <div id="v04-mem-gate" class="v04-gate" data-layout-allow-overflow>
+            <div id="v04-slide-mem" class="v04-slide" data-layout-allow-overflow>
+              <div id="v04-mem-outer" class="v04-cam-outer" data-layout-allow-overflow>
+                <div id="v04-mem-inner" class="v04-cam-inner" data-layout-allow-overflow>
+                  <img class="v04-shot" src="assets/06-memorial.png" alt="" />
+                  <div id="v04-stamp">
+                    <span id="v04-stamp-rule"></span>
+                    <span id="v04-stamp-text">迟到之报</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- screen 2: 召对 (portrait crop → dialogue) -->
+          <div id="v04-aud-gate" class="v04-gate" data-layout-allow-overflow>
+            <div id="v04-slide-aud" class="v04-slide" data-layout-allow-overflow>
+              <div id="v04-aud-outer" class="v04-cam-outer" data-layout-allow-overflow>
+                <div id="v04-aud-inner" class="v04-cam-inner" data-layout-allow-overflow>
+                  <img class="v04-shot" src="assets/07-audience.png" alt="" />
+                  <div id="v04-reply-patch" class="v04-cut"></div>
+                  <div id="v04-reply" class="v04-cut"></div>
+                  <svg
+                    id="v04-marker"
+                    viewBox="0 0 178 14"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      id="v04-marker-path"
+                      d="M2,7 Q13,1 24,7 Q35,13 46,7 Q57,1 68,7 Q79,13 90,7 Q101,1 112,7 Q123,13 134,7 Q145,1 156,7 Q167,13 176,7"
+                      pathLength="1"
+                      fill="none"
+                      stroke="#c0392b"
+                      stroke-width="3.5"
+                      stroke-linecap="round"
+                      stroke-dasharray="1 1"
+                      stroke-dashoffset="1"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="v04-chip">
+          <span id="v04-chip-a" class="v04-chip-word">奏疏</span>
+          <span id="v04-chip-b" class="v04-chip-word">召对</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      // Nested-wrapper camera: outer scales S about the screen centre O,
+      // inner translates T = O − c, so source point c lands at O. Screen = 975 × 1235.
+      var OX = 487.5,
+        OY = 617.5;
+      function cam(cx, cy, s) {
+        return { x: OX - cx, y: OY - cy, s: s };
+      }
+      var MEM = cam(797, 545, 1.22); // list + open memorial, src x ≈ 397–1197
+      var MEM_PUSH = cam(797, 545, 1.25);
+      var PORTRAIT = cam(527, 540, 1.45); // An Lushan full-length, src x ≈ 191–863, y ≈ 114–966
+      var PORTRAIT_IN = cam(527, 540, 1.5);
+      var QUESTION = cam(1335, 466, 1.6); // question bubble fully in view
+      var REPLY = cam(1210, 466, 1.6); // reply text 913–1507 at 1.6× (src x ≈ 905–1515)
+
+      // initial states
+      gsap.set("#v04-aud-gate", { opacity: 0 });
+      gsap.set("#v04-mem-outer", { scale: MEM.s });
+      gsap.set("#v04-mem-inner", { x: MEM.x, y: MEM.y });
+      gsap.set("#v04-aud-outer", { scale: PORTRAIT.s });
+      gsap.set("#v04-aud-inner", { x: PORTRAIT.x, y: PORTRAIT.y });
+      gsap.set("#v04-reply", { "--v04-wipe": "-20%" });
+      gsap.set("#v04-chip-b", { y: 30, opacity: 0 });
+
+      // ── Scene 1 (0.0–1.7): the tall memorial window rises; 奏疏 chip ──
+      tl.fromTo(
+        "#v04-surface",
+        { y: 160, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.0, ease: "expo.out" },
+        0.0,
+      );
+      tl.fromTo(
+        "#v04-chip",
+        { y: -16, opacity: 0, rotation: -3 },
+        { y: 0, opacity: 1, rotation: -3, duration: 0.45, ease: "power3.out" },
+        0.55,
+      );
+      // always-on micro push while the memorial holds
+      tl.to("#v04-mem-outer", { scale: MEM_PUSH.s, duration: 2.2, ease: "sine.inOut" }, 0.9);
+
+      // ── Scene 2 (1.8–2.6): 迟到之报 stamp thumps onto the memorial list ──
+      tl.fromTo(
+        "#v04-stamp",
+        { scale: 2.6, opacity: 0, rotation: -11 },
+        { scale: 1, opacity: 1, rotation: -4, duration: 0.2, ease: "power4.in" },
+        1.95,
+      );
+      tl.to("#v04-surface", { y: 7, duration: 0.05, ease: "power1.out" }, 2.15);
+      tl.to("#v04-surface", { y: 0, duration: 0.32, ease: "power2.out" }, 2.2);
+
+      // ── Scene 3 (3.1–5.2): velocity-matched push LEFT to 召对 (portrait crop) ──
+      // exit: power4.in, 220px; fade dies right at the cut (3.40)
+      tl.to("#v04-slide-mem", { x: -220, duration: 0.3, ease: "power4.in" }, 3.1);
+      tl.to("#v04-slide-mem", { opacity: 0, duration: 0.22, ease: "power1.in" }, 3.18);
+      tl.to("#v04-chip-a", { y: -30, opacity: 0, duration: 0.22, ease: "power2.in" }, 3.18);
+      // hard cut at 3.40 — entry: mirrored power4.out, same distance
+      tl.set("#v04-mem-gate", { opacity: 0 }, 3.4);
+      tl.set("#v04-aud-gate", { opacity: 1 }, 3.4);
+      tl.fromTo(
+        "#v04-slide-aud",
+        { x: 220, opacity: 0.35 },
+        { x: 0, opacity: 1, duration: 0.34, ease: "power4.out", immediateRender: false },
+        3.4,
+      );
+      tl.fromTo(
+        "#v04-chip-b",
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.36, ease: "power3.out", immediateRender: false },
+        3.4,
+      );
+      // 当面问他 — gentle push on the portrait
+      tl.to("#v04-aud-outer", { scale: PORTRAIT_IN.s, duration: 1.4, ease: "power2.inOut" }, 3.8);
+
+      // ── Scene 4 (5.3–7.896): pan/zoom to the dialogue; marker under the question;
+      //    camera follows down-left to the reply as it wipes in; hold ──
+      tl.to("#v04-aud-outer", { scale: QUESTION.s, duration: 0.8, ease: "power3.inOut" }, 5.3);
+      tl.to(
+        "#v04-aud-inner",
+        { x: QUESTION.x, y: QUESTION.y, duration: 0.8, ease: "power3.inOut" },
+        5.3,
+      );
+      tl.fromTo("#v04-marker-path", { opacity: 0 }, { opacity: 1, duration: 0.05 }, 5.9);
+      tl.fromTo(
+        "#v04-marker-path",
+        { strokeDashoffset: 1 },
+        { strokeDashoffset: 0, duration: 0.55, ease: "power1.inOut" },
+        5.9,
+      );
+      tl.to(
+        "#v04-aud-inner",
+        { x: REPLY.x, y: REPLY.y, duration: 0.8, ease: "power3.inOut" },
+        6.3,
+      );
+      tl.fromTo(
+        "#v04-reply",
+        { "--v04-wipe": "-20%" },
+        { "--v04-wipe": "100%", duration: 0.85, ease: "power1.inOut" },
+        6.35,
+      );
+      // 7.2–7.896: static hold on the revealed reply (no push)
+
+      window.__timelines["04-audience"] = tl;
+    })();
+  </script>
+</template>

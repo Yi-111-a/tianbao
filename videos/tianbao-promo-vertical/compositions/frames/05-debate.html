@@ -1,0 +1,306 @@
+<template>
+  <style>
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("assets/fonts/NotoSerifSC-VF.ttf") format("truetype");
+      font-weight: 200 900;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: "Noto Sans SC";
+      src: url("assets/fonts/NotoSansSC-VF.ttf") format("truetype");
+      font-weight: 100 900;
+      font-style: normal;
+    }
+
+    #root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+    }
+
+    /* ---- ground: the real debate screenshot, cover-cropped to full height, dimmed ---- */
+    .v05-ground {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      background: #17110e;
+      container-type: size;
+    }
+    .v05-ground-img {
+      position: absolute;
+      left: -1167px; /* 3413px wide (1920 tall), centred on the screenshot's middle */
+      top: 0;
+      width: 3413px;
+      height: 1920px;
+      display: block;
+      transform-origin: 50% 40%;
+    }
+    .v05-ground-dim {
+      position: absolute;
+      inset: 0;
+      background: rgba(23, 17, 14, 0.8);
+    }
+
+    /* ---- content layer ---- */
+    .v05-stage {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+    }
+
+    /* header chip 「廷议」 — top band */
+    .v05-chip {
+      position: absolute;
+      left: 410px;
+      top: 104px;
+      width: 260px;
+      height: 106px;
+      background: #c0392b;
+      border-top: 3px solid #c9a24b;
+      border-bottom: 3px solid #c9a24b;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 50%;
+    }
+    .v05-chip-text {
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 64px;
+      line-height: 1;
+      letter-spacing: 0.3em;
+      padding-left: 0.3em;
+      color: #e6d3a3;
+      text-shadow: 2px 2px 0 rgba(28, 20, 16, 0.25), 4px 4px 0 rgba(28, 20, 16, 0.2),
+        6px 6px 0 rgba(28, 20, 16, 0.15);
+    }
+
+    /* portrait cards — crops of the real screenshot at 1.7x, 1-over-2 pyramid */
+    .v05-card {
+      position: absolute;
+      width: 380px;
+      height: 428px;
+      transform-origin: 50% 100%;
+    }
+    .v05-card-a { left: 350px; top: 284px; }  /* 李林甫 — 附议, alone on top */
+    .v05-card-b { left: 124px; top: 790px; }  /* 杨国忠 — 反对 */
+    .v05-card-c { left: 576px; top: 790px; }  /* 颜真卿 — 反对 */
+    .v05-crop {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      outline: 3px solid #17110e;
+      background-image: url("assets/09-debate.png");
+      background-repeat: no-repeat;
+      background-size: 3264px 1836px; /* screenshot at 1.7x */
+    }
+    .v05-card-a .v05-crop { background-position: -622px -469px; }  /* x 366–590, y 276–528 */
+    .v05-card-b .v05-crop { background-position: -1442px -469px; } /* x 848–1072 */
+    .v05-card-c .v05-crop { background-position: -2261px -469px; } /* x 1330–1554 */
+
+    /* seals 「可」/「否」 on each card's top-right corner */
+    .v05-seal {
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 116px;
+      height: 116px;
+      box-sizing: border-box;
+      border: 3px solid #c9a24b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: 50% 50%;
+    }
+    .v05-seal-inner {
+      position: absolute;
+      inset: 6px;
+      border: 2px solid rgba(230, 211, 163, 0.85);
+    }
+    .v05-seal-ke { background: #285647; }
+    .v05-seal-fou { background: #c0392b; }
+    .v05-seal-char {
+      position: relative;
+      font-family: "Noto Serif SC", serif;
+      font-weight: 900;
+      font-size: 66px;
+      line-height: 1;
+      color: #e6d3a3;
+    }
+
+    /* tally bar — crop of the screenshot's tally line (first clause, x 430–864, y 820–853) at 2.0x */
+    .v05-tally {
+      position: absolute;
+      left: 74px;
+      top: 1316px;
+      width: 932px;
+      height: 100px;
+      box-sizing: border-box;
+      border-top: 3px solid #c9a24b;
+      border-bottom: 3px solid #c9a24b;
+      background: #e6d3a3;
+    }
+    .v05-tally-crop {
+      position: absolute;
+      left: 32px;
+      top: 14px;
+      width: 868px;
+      height: 66px;
+      overflow: hidden;
+      background-image: url("assets/09-debate.png");
+      background-repeat: no-repeat;
+      background-size: 3840px 2160px; /* screenshot at 2.0x */
+      background-position: -860px -1640px;
+    }
+    .v05-mark {
+      position: absolute;
+      height: 6px;
+      top: 70px;
+      transform-origin: 0% 50%;
+    }
+    .v05-mark-yes { left: 52px; width: 64px; background: #285647; }  /* under 赞成 */
+    .v05-mark-no { left: 406px; width: 66px; background: #c0392b; }  /* under 反对 */
+  </style>
+
+  <div
+    id="root"
+    data-composition-id="05-debate"
+    data-width="1080"
+    data-height="1920"
+    data-duration="4.556"
+  >
+    <div
+      id="v05-ground"
+      class="clip v05-ground"
+      data-start="0"
+      data-duration="4.556"
+      data-track-index="0"
+    >
+      <img class="v05-ground-img" src="assets/09-debate.png" alt="" />
+      <div class="v05-ground-dim"></div>
+    </div>
+
+    <div
+      id="v05-stage"
+      class="clip v05-stage"
+      data-start="0"
+      data-duration="4.556"
+      data-track-index="1"
+    >
+      <div class="v05-chip" id="v05-chip"><span class="v05-chip-text">廷议</span></div>
+
+      <div class="v05-card v05-card-a" id="v05-card-a">
+        <div class="v05-crop"></div>
+        <div class="v05-seal v05-seal-ke" id="v05-seal-a">
+          <div class="v05-seal-inner"></div><span class="v05-seal-char">可</span>
+        </div>
+      </div>
+
+      <div class="v05-card v05-card-b" id="v05-card-b">
+        <div class="v05-crop"></div>
+        <div class="v05-seal v05-seal-fou" id="v05-seal-b">
+          <div class="v05-seal-inner"></div><span class="v05-seal-char">否</span>
+        </div>
+      </div>
+
+      <div class="v05-card v05-card-c" id="v05-card-c">
+        <div class="v05-crop"></div>
+        <div class="v05-seal v05-seal-fou" id="v05-seal-c">
+          <div class="v05-seal-inner"></div><span class="v05-seal-char">否</span>
+        </div>
+      </div>
+
+      <div class="v05-tally" id="v05-tally">
+        <div class="v05-tally-crop"></div>
+        <div class="v05-mark v05-mark-yes" id="v05-mark-yes"></div>
+        <div class="v05-mark v05-mark-no" id="v05-mark-no"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const q = (s) => document.querySelector('[data-composition-id="05-debate"] ' + s);
+      const byId = (id) => document.getElementById(id);
+
+      // Scene 1 (0.0–0.8s): dimmed screenshot ground + header chip 「廷议」.
+      // Faint push that decelerates to rest before the final hold (no motion during the hold).
+      tl.fromTo(
+        q(".v05-ground-img"),
+        { scale: 1.0 },
+        { scale: 1.03, duration: 2.64, ease: "power2.out" },
+        0
+      );
+      tl.fromTo(
+        byId("v05-chip"),
+        { y: -24, opacity: 0, rotation: -2 },
+        { y: 0, opacity: 1, rotation: -2, duration: 0.5, ease: "power3.out" },
+        0.1
+      );
+
+      // Scene 2 (0.84–2.5s): three portrait crops cascade up into a 1-over-2 pyramid, one per beat
+      const cardIn = (id, at) =>
+        tl.fromTo(
+          byId(id),
+          { y: 110, opacity: 0, scale: 0.94 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power3.out" },
+          at
+        );
+      cardIn("v05-card-a", 0.84); // 「谁附议」
+      cardIn("v05-card-b", 1.71); // 「谁反对」
+      cardIn("v05-card-c", 1.95);
+
+      // 「可」 seal — calm stamp, no overshoot
+      tl.fromTo(
+        byId("v05-seal-a"),
+        { scale: 1.9, opacity: 0, rotation: -14 },
+        { scale: 1, opacity: 1, rotation: -8, duration: 0.42, ease: "power3.out" },
+        1.22
+      );
+      // 「否」 seals — the film's one allowed overshoot
+      tl.fromTo(
+        byId("v05-seal-b"),
+        { scale: 2.1, opacity: 0, rotation: 2 },
+        { scale: 1, opacity: 1, rotation: 7, duration: 0.45, ease: "back.out(1.8)" },
+        2.05
+      );
+      tl.fromTo(
+        byId("v05-seal-c"),
+        { scale: 2.1, opacity: 0, rotation: -12 },
+        { scale: 1, opacity: 1, rotation: -6, duration: 0.45, ease: "back.out(1.8)" },
+        2.27
+      );
+
+      // Scene 3 (2.64–4.056s): on 「一目了然」 the tally bar slides up under the cards; hold
+      tl.fromTo(
+        byId("v05-tally"),
+        { y: 80, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" },
+        2.64
+      );
+      tl.fromTo(
+        byId("v05-mark-yes"),
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.35, ease: "power3.out" },
+        3.05
+      );
+      tl.fromTo(
+        byId("v05-mark-no"),
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.35, ease: "power3.out" },
+        3.25
+      );
+
+      window.__timelines["05-debate"] = tl;
+    })();
+  </script>
+</template>
