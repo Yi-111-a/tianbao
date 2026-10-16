@@ -110,7 +110,7 @@ npm --prefix app install
 npm --prefix app run dev                          # 打开 http://localhost:5173
 ```
 
-想让大臣由大模型扮演，在游戏「设置 · 模型路由」里填任意 OpenAI 兼容接口；不填也能完整玩一局。
+想让大臣由大模型扮演，在游戏「设置 · 模型路由」里选「Claude（本机）」或「Codex（本机）」——直接用你电脑上已登录的 Claude Code / Codex，不需要 API key（第一次先点「测试连接」；Claude 未登录时在终端运行 `claude auth login`）；也可以填任意 OpenAI 兼容接口。不接模型也能完整玩一局。
 
 ## 它是怎么做的
 

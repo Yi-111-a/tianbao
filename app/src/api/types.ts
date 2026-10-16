@@ -653,7 +653,7 @@ export interface Settings {
   provider_configs?: Record<string, { api_key?: string; base_url?: string; model?: string }>;
   input_cost_per_million?: number;
   output_cost_per_million?: number;
-  presets?: Record<string, { base_url?: string; model?: string; api_key_url?: string; api_key_env?: string }>;
+  presets?: Record<string, { base_url?: string; model?: string; api_key_url?: string; api_key_env?: string; label?: string; local_cli?: boolean }>;
   [key: string]: unknown;
 }
 

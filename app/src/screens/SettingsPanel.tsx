@@ -24,6 +24,14 @@ const PROVIDER_NAMES: Record<string, string> = {
   qwen: '通义千问',
   glm: '智谱 GLM',
   ollama: 'Ollama 本地',
+  claude_cli: 'Claude（本机 Claude Code，免 API key）',
+  codex_cli: 'Codex（本机 Codex CLI，免 API key）',
+};
+
+/** 本机 CLI 服务的说明：用的是本机已登录的账号，不填地址和密钥。 */
+const LOCAL_CLI_NOTES: Record<string, { login: string; who: string }> = {
+  claude_cli: { who: 'Claude', login: 'claude auth login（Claude 桌面版用户：%APPDATA%\Claude\claude-code\<版本>\claude.exe auth login）' },
+  codex_cli: { who: 'Codex', login: 'codex login' },
 };
 
 const CLAUDE_CMD = `claude mcp add tianbao --env SIM_MCP_MODE=client --env LLM_SIM_HOME="%APPDATA%\\tianbao" -- sim mcp`;
@@ -147,6 +155,8 @@ export function SettingsPanel() {
   const setRole = (role: string, field: 'provider' | 'model', value: string) =>
     setForm((f) => ({ ...f, roles: { ...(f.roles ?? {}), [role]: { provider: 'default', model: 'default', ...(f.roles?.[role] ?? {}), [field]: value } } }));
 
+  const localCli = Boolean(presets[form.provider ?? '']?.local_cli);
+
   const pickProvider = (p: string) => {
     const preset = presets[p] ?? {};
     setForm((f) => ({ ...f, provider: p, base_url: preset.base_url ?? f.base_url, model: preset.model ?? f.model }));
@@ -238,19 +248,22 @@ export function SettingsPanel() {
                     <select className="field" data-testid="settings.provider" value={form.provider ?? 'mock'} onChange={(e) => pickProvider(e.target.value)}>
                       {providerIds.map((p) => (
                         <option key={p} value={p}>
-                          {PROVIDER_NAMES[p] ?? p}
+                          {PROVIDER_NAMES[p] ?? presets[p]?.label ?? p}
                         </option>
                       ))}
                     </select>
                   </label>
-                  <label>
-                    <span className="t-title">接口地址</span>
-                    <input className="field" data-testid="settings.baseUrl" value={form.base_url ?? ''} onChange={(e) => setForm((f) => ({ ...f, base_url: e.target.value }))} placeholder="https://…/v1" />
-                  </label>
+                  {!localCli && (
+                    <label>
+                      <span className="t-title">接口地址</span>
+                      <input className="field" data-testid="settings.baseUrl" value={form.base_url ?? ''} onChange={(e) => setForm((f) => ({ ...f, base_url: e.target.value }))} placeholder="https://…/v1" />
+                    </label>
+                  )}
                   <label>
                     <span className="t-title">模型</span>
                     <input className="field" data-testid="settings.model" value={form.model ?? ''} onChange={(e) => setForm((f) => ({ ...f, model: e.target.value }))} />
                   </label>
+                  {!localCli && (
                   <label>
                     <span className="t-title">密钥</span>
                     <input
@@ -264,7 +277,14 @@ export function SettingsPanel() {
                     />
                     {presets[form.provider ?? '']?.api_key_url && <small className="muted">申请地址：{presets[form.provider ?? ''].api_key_url}</small>}
                   </label>
+                  )}
                 </div>
+                {localCli && (
+                  <p className="muted settings-note" data-testid="settings.localCli">
+                    由本机已登录的 {LOCAL_CLI_NOTES[form.provider ?? '']?.who ?? '编程助手'} 扮演群臣、解释诏令，不需要接口地址和密钥，用的是你自己的账号额度。模型填 <code>default</code>
+                    即跟随它当前的模型。每句回话约需 5–20 秒。先点下方「测试」：若提示未登录，在终端运行 <code>{LOCAL_CLI_NOTES[form.provider ?? '']?.login}</code> 后再试。
+                  </p>
+                )}
 
                 <div className="section-label">按职分配模型</div>
                 <table className="role-table">
