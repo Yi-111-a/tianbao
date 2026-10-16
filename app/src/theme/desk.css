@@ -1591,3 +1591,50 @@
     transform: translateY(8px);
   }
 }
+
+/* Map zoom controls: a small lacquer cluster on the sea, bottom-right of the fitted map frame. */
+.map-zoom {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-100%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+.map-zoom button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--gold-500, #c9a45a);
+  background: rgba(28, 20, 14, 0.82);
+  color: var(--gold-200, #f1dfae);
+  font-family: var(--font-title, serif);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.map-zoom button[data-testid='map.zoomReset'] {
+  font-size: 15px;
+}
+.map-zoom button:hover {
+  background: rgba(60, 38, 22, 0.92);
+}
+.map-zoom-hint {
+  margin-right: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(28, 20, 14, 0.6);
+  color: var(--gold-200, #f1dfae);
+  font-size: 14px;
+  white-space: nowrap;
+}
+@media (max-width: 1400px) {
+  .map-zoom button { min-width: 30px; height: 30px; font-size: 16px; }
+  .map-zoom-hint { font-size: 13px; }
+}
+
+/* Keep the big painted map on its own compositing layer so zooming never shows unpainted strips. */
+.map-stage { will-change: transform; }

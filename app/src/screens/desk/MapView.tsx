@@ -476,11 +476,15 @@ export function MapView({
   };
   const onWheel = (e: WheelEvent) => {
     const host = rootRef.current?.getBoundingClientRect();
-    if (!host || !layout) return;
-    const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    if (!host) return;
+    // Zoom by how far the wheel turned: one mouse notch (~100px) ≈ ×1.16, touchpads glide smoothly.
+    const pixels = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+    const f = Math.min(1.8, Math.max(1 / 1.8, Math.exp(-pixels * 0.0015)));
+    zoomAt(f, e.clientX - host.left, e.clientY - host.top);
+  };
+  const zoomAt = (f: number, px: number, py: number) => {
+    if (!layout || f === 1) return;
     const s = Math.max(layout.fit.s, Math.min(maxScale, t.s * f));
-    const px = e.clientX - host.left;
-    const py = e.clientY - host.top;
     if (f < 1 && s <= layout.fit.s * 1.0001) {
       // zoomed all the way out: glide back to the fitted view (whole map in the safe area)
       if (t.s <= layout.fit.s * 1.0001 && Math.abs(t.x - layout.fit.x) < 1 && Math.abs(t.y - layout.fit.y) < 1) return;
@@ -630,6 +634,37 @@ export function MapView({
         }
       }}
     >
+      {layout && shown && (
+        // Zoom controls sit on the sea in the fitted frame's bottom-right corner.
+        <div
+          className="map-zoom"
+          data-testid="map.zoom"
+          style={{
+            left: layout.fit.x + geo.width * layout.fit.s - 12,
+            top: layout.fit.y + geo.height * layout.fit.s - 12,
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <span className="map-zoom-hint">滚轮缩放 · 按住左键拖动</span>
+          <button type="button" data-testid="map.zoomIn" aria-label="放大" onClick={() => zoomAt(1.3, box.w / 2, box.h / 2)}>＋</button>
+          <button type="button" data-testid="map.zoomOut" aria-label="缩小" onClick={() => zoomAt(1 / 1.3, box.w / 2, box.h / 2)}>－</button>
+          <button
+            type="button"
+            data-testid="map.zoomReset"
+            aria-label="复位"
+            onClick={() => {
+              userMoved.current = false;
+              setTf({ ...layout.fit, key: geoKey });
+              setEasing(true);
+              window.clearTimeout(easeTimer.current);
+              easeTimer.current = window.setTimeout(() => setEasing(false), 700);
+            }}
+          >
+            复位
+          </button>
+        </div>
+      )}
       <div
         className={cls('map-stage', shown && 'is-shown', easing && 'is-easing')}
         data-testid="map.stage"
