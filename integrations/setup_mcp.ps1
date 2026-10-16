@@ -157,6 +157,14 @@ function Find-Claude {
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($bundled) { return $bundled.FullName }
     }
+    if ($env:LOCALAPPDATA) {
+        # Claude desktop is an MSIX app: its %APPDATA% is redirected to Packages\Claude_*\LocalCache\Roaming
+        $packages = Join-Path $env:LOCALAPPDATA 'Packages'
+        $msix = Get-ChildItem -Path $packages -Directory -Filter 'Claude_*' -ErrorAction SilentlyContinue |
+            ForEach-Object { Get-ChildItem -Path (Join-Path $_.FullName 'LocalCache\Roaming\Claude\claude-code') -Filter claude.exe -Recurse -ErrorAction SilentlyContinue } |
+            Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($msix) { return $msix.FullName }
+    }
     return $null
 }
 
