@@ -20,7 +20,7 @@ export const SCREENS = [
   'timeline',
   'settings',
 ] as const;
-export type ScreenName = (typeof SCREENS)[number] | 'advice';
+export type ScreenName = (typeof SCREENS)[number] | 'advice' | 'command';
 
 /** Collects console errors / page errors; tests assert it stays empty. */
 export function watchErrors(page: Page): string[] {
@@ -180,6 +180,14 @@ export async function openScreen(page: Page, name: ScreenName, fresh = true): Pr
       await expect(page.getByTestId('settings.root')).toBeVisible();
       await settle(page, 600);
       return true;
+    case 'command':
+      await onDesk(page);
+      await page.getByTestId('desk.memorialBook').click();
+      await expect(page.getByTestId('memorial.command')).toBeVisible();
+      await page.getByTestId('memorial.command').click();
+      await expect(page.getByTestId('command.root')).toBeVisible();
+      await settle(page, 600);
+      return true;
     case 'advice':
       await onDesk(page);
       await page.getByTestId('desk.medallion.advice').click();
@@ -208,7 +216,7 @@ export async function collectText(page: Page): Promise<string> {
 
 declare global {
   interface Window {
-    __tianbaoMock?: { forceOutcome: (s: string, e: string) => void; openChoice: (s: string) => void; reset: () => void };
+    __tianbaoMock?: { forceOutcome: (s: string, e: string) => void; openChoice: (s: string) => void; reset: () => void; stress: (s: string, on?: boolean) => void };
     __tianbaoApiLog?: { method: string; path: string; at: number }[];
   }
 }

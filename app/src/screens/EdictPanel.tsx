@@ -125,7 +125,7 @@ export function EdictPanel() {
                     </div>
                   </motion.div>
                 ) : (
-                  <Receipt key="receipt" receipt={receipt} catName={catName} resName={resName} entName={entName} hidden={hidden} />
+                  <Receipt key="receipt" receipt={receipt} turn={g.view?.state.turn ?? 0} catName={catName} resName={resName} entName={entName} hidden={hidden} />
                 )}
               </AnimatePresence>
 
@@ -163,6 +163,7 @@ export function EdictPanel() {
                 </button>
               )}
               <div className="edict-hint">先「预览」，由有司逐条回执，再用宝颁布。</div>
+
             </>
           )}
           {receipt && !receipt.confirmed && (
@@ -194,7 +195,7 @@ export function EdictPanel() {
   );
 }
 
-function Receipt({ receipt, catName, resName, entName, hidden }: { receipt: EdictReceipt; catName: (id: string) => string; resName: (id: string) => string; entName: (id: string) => string; hidden: (id: string) => boolean }) {
+function Receipt({ receipt, turn, catName, resName, entName, hidden }: { receipt: EdictReceipt; turn: number; catName: (id: string) => string; resName: (id: string) => string; entName: (id: string) => string; hidden: (id: string) => boolean }) {
   const counts = receipt.clauses.reduce<Record<string, number>>((acc, c) => ({ ...acc, [c.status]: (acc[c.status] ?? 0) + 1 }), {});
   return (
     <motion.div className="receipt" data-testid="edict.receipt" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -213,7 +214,7 @@ function Receipt({ receipt, catName, resName, entName, hidden }: { receipt: Edic
       </div>
       <ol className="receipt-list">
         {groupClauses(receipt.clauses).map((g, i) => (
-          <ClauseRow key={i} c={g.first} group={g.items} i={i} catName={catName} resName={resName} entName={entName} hidden={hidden} />
+          <ClauseRow key={i} c={g.first} group={g.items} i={i} turn={turn} catName={catName} resName={resName} entName={entName} hidden={hidden} />
         ))}
       </ol>
     </motion.div>
@@ -232,12 +233,20 @@ export function groupClauses(clauses: Clause[]): { first: Clause; items: Clause[
   return out;
 }
 
-function ClauseRow({ c, group, i, catName, resName, entName, hidden }: { c: Clause; group: Clause[]; i: number; catName: (id: string) => string; resName: (id: string) => string; entName: (id: string) => string; hidden: (id: string) => boolean }) {
+/** Rejection codes worth naming for the player (the reason text carries the detail). */
+const CODE_NAMES: Record<string, string> = {
+  OP_NOT_PERMITTED: '非君命所及',
+  INVALID_TARGET: '查无其人其地',
+};
+
+function ClauseRow({ c, group, i, turn, catName, resName, entName, hidden }: { c: Clause; group: Clause[]; i: number; turn: number; catName: (id: string) => string; resName: (id: string) => string; entName: (id: string) => string; hidden: (id: string) => boolean }) {
   const st = STATUS[c.status] ?? STATUS.narrative_only;
   const ops = group
     .flatMap((g) => (g.summary ? [g.summary] : (g.ops?.length ? g.ops : g.op ? [g.op] : []).map((o) => opSummary(o, { res: resName, ent: entName, hidden }))))
     .filter((x) => x && !/记入档案/.test(x));
-  const reason = Array.from(new Set(group.map((g) => g.reason).filter(Boolean))).join('；');
+  const reason = Array.from(new Set(group.map((g) => g.delay_reason || g.reason).filter(Boolean))).join('；');
+  const due = c.status === 'delayed' && c.due_turn != null ? (c.due_turn <= turn + 1 ? '次季施行' : `${c.due_turn - turn}季后施行`) : '';
+  const code = c.code ? CODE_NAMES[c.code] : undefined;
   return (
     <motion.li className={cls('clause', st.cls)} data-testid={`edict.clause.${i}`} data-status={c.status} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}>
       <span className="clause-seal t-title">{st.glyph}</span>
@@ -246,6 +255,8 @@ function ClauseRow({ c, group, i, catName, resName, entName, hidden }: { c: Clau
           {c.category !== 'memorial' && c.category !== 'client' && <span>{catName(c.category)}</span>}
           {c.source && <span className="clause-source">{SOURCE[c.source] ?? c.source}</span>}
           <span className="clause-status">{st.name}</span>
+          {due && <span className="clause-due">{due}</span>}
+          {code && <span className="clause-code" data-code={c.code}>{code}</span>}
         </div>
         <div className="clause-text">{c.text}</div>
         {ops.length > 0 && <div className="clause-ops">{ops.join('　')}</div>}

@@ -129,6 +129,11 @@ export function MemorialPanel() {
               <button className="btn btn-ink" data-testid="memorial.toEdict" onClick={() => g.openPanel('edict')}>
                 拟诏{g.draft.adopted.length ? `（${g.draft.adopted.length}）` : ''}
               </button>
+              {view.command_table && (
+                <button className="btn btn-outline" data-testid="memorial.command" onClick={() => g.openPanel('command')}>
+                  官职兵权{view.command_table.alerts?.length ? `·${view.command_table.alerts.length}` : ''}
+                </button>
+              )}
               <button className="btn btn-outline" data-testid="memorial.done" onClick={g.closePanel}>
                 朕已阅
               </button>

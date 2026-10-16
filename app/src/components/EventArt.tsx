@@ -1,5 +1,5 @@
 // Event illustration with a painted ink-wash fallback (green-blue landscape, seeded).
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { useAsset } from '../api/assets';
 import { cls, mulberry32, strSeed } from '../lib/util';
 
@@ -73,13 +73,22 @@ export function InkScene({ seed, className }: { seed: string; className?: string
   );
 }
 
-export function EventArt({ ids, seed, className, round = false }: { ids: (string | undefined)[]; seed: string; className?: string; round?: boolean }) {
+/**
+ * Event illustration. While the art resolves or decodes, the seeded ink-wash scene shows
+ * underneath, so the frame is never an empty box; `url` skips resolution when the caller
+ * already knows the image.
+ */
+export function EventArt({ ids, seed, className, round = false, url: known }: { ids: (string | undefined | null)[]; seed: string; className?: string; round?: boolean; url?: string | null }) {
   const list = ids.filter(Boolean) as string[];
-  const expanded = list.flatMap((id) => [id, `${id}.illustration`]);
-  const [url, settled] = useAsset(expanded);
+  const expanded = known ? [] : list.flatMap((id) => [id, `${id}.illustration`]);
+  const [resolved, settled] = useAsset(expanded);
+  const url = known ?? resolved;
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const ready = Boolean(url && loaded === url);
   return (
-    <div className={cls('event-art', round && 'event-art--round', className)} data-art={url ? 'image' : 'fallback'}>
-      {url ? <img src={url} alt="" draggable={false} /> : settled ? <InkScene seed={seed} /> : null}
+    <div className={cls('event-art', round && 'event-art--round', className)} data-art={url ? 'image' : settled ? 'fallback' : 'pending'}>
+      {(!ready || !url) && (url || settled) ? <InkScene seed={seed} /> : null}
+      {url && <img src={url} alt="" draggable={false} onLoad={() => setLoaded(url)} className={ready ? 'is-loaded' : 'is-loading'} />}
     </div>
   );
 }

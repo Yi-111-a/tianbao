@@ -6,7 +6,7 @@ import type { CrisisTerm, CrisisView, PublicState, ViewResponse } from '../../ap
 import { ResourceIcon } from '../../components/Icons';
 import { Baoxiang, CornerFlourish } from '../../components/Ornaments';
 import type { MapLayer } from '../../store/game';
-import { cls, deltaClass, fmtDelta, resourceValueText } from '../../lib/util';
+import { cls, deltaClass, fmtDelta, fmtRange, fmtValueOrRange, resourceValueText } from '../../lib/util';
 
 // ---------------------------------------------------------------- resource bar
 const BAR_RESOURCES = ['treasury', 'grain', 'authority', 'morale', 'corruption', 'frontier_pressure', 'fanzhen_power', 'court_strife'];
@@ -272,7 +272,9 @@ export function CrisisDrum({ view }: { view: ViewResponse }) {
   const [pinned, setPinned] = useState(false);
   const c = view.crisis;
   const value = Array.isArray(c.value_or_estimate) ? (c.value_or_estimate[0] + c.value_or_estimate[1]) / 2 : c.value_or_estimate;
-  const label = Array.isArray(c.value_or_estimate) ? `${Math.round(c.value_or_estimate[0])}–${Math.round(c.value_or_estimate[1])}` : `${Math.round(value)}`;
+  const label = Array.isArray(c.value_or_estimate)
+    ? fmtRange(Math.round(c.value_or_estimate[0]), Math.round(c.value_or_estimate[1]), false, false)
+    : `${Math.round(value)}`;
   const bands = c.bands?.length ? c.bands : [{ max: 39, name: '承平' }, { max: 59, name: '风闻' }, { max: 79, name: '山雨欲来' }, { max: 100, name: '鼙鼓动地' }];
   const color = bandColor(c.band, bands);
   const R = 48;
@@ -334,9 +336,7 @@ export function CrisisDrum({ view }: { view: ViewResponse }) {
             {an?.hidden && an.estimate && (
               <div className="res-pop-row">
                 <span>禄山异志（风闻）</span>
-                <b className="t-num">
-                  {Math.round(an.estimate[0])}–{Math.round(an.estimate[1])}
-                </b>
+                <b className="t-num">{fmtRange(Math.round(an.estimate[0]), Math.round(an.estimate[1]))}</b>
               </div>
             )}
             <div className="crisis-bands">
@@ -358,9 +358,7 @@ export const termMid = (v: number | [number, number]) => (Array.isArray(v) ? (v[
 
 export function CrisisTermRow({ term, max, paper }: { term: CrisisTerm; max: number; paper?: boolean }) {
   const mid = termMid(term.value);
-  const text = Array.isArray(term.value)
-    ? `${fmtDelta(term.value[0])}～${fmtDelta(term.value[1]).replace(/^\+/, '')}`
-    : fmtDelta(term.value);
+  const text = fmtValueOrRange(term.value, true);
   return (
     <div className={cls('crisis-term', paper && 'crisis-term--paper', Array.isArray(term.value) && 'is-estimate')} title={term.display}>
       <span className="crisis-term-label">{term.label}</span>
@@ -368,7 +366,7 @@ export function CrisisTermRow({ term, max, paper }: { term: CrisisTerm; max: num
         <span className="crisis-term-mid" />
         <span className={cls('crisis-term-fill', mid >= 0 ? 'is-up' : 'is-down')} style={{ width: `${(Math.abs(mid) / max) * 50}%`, [mid >= 0 ? 'left' : 'right']: '50%' }} />
       </span>
-      <b className={cls('t-num', mid > 0 ? 'delta-up-bad' : mid < 0 ? 'delta-down-good' : '')}>{text}</b>
+      <b className={cls('t-num crisis-term-value', mid > 0 ? 'delta-up-bad' : mid < 0 ? 'delta-down-good' : '')}>{text}</b>
     </div>
   );
 }

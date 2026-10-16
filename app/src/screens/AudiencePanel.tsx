@@ -7,6 +7,7 @@ import { PanelShell } from '../components/PanelShell';
 import { Portrait } from '../components/Portrait';
 import { useToast } from '../components/Toast';
 import { useGame } from '../store/game';
+import { humanize } from '../lib/names';
 import { cls } from '../lib/util';
 
 interface Msg {
@@ -32,6 +33,7 @@ export function AudiencePanel() {
   const [who, setWho] = useState<string>(() => g.panelArg ?? roster.find((c) => c.region === 'jingji')?.id ?? roster[0]?.id ?? '');
   const key = `${g.sessionId}:${who}`;
   const [msgs, setMsgs] = useState<Msg[]>(() => logs.get(key) ?? []);
+  const [modes, setModes] = useState<Record<string, { label: string; note?: string }>>({});
   const [text, setText] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [sel, setSel] = useState<{ text: string; x: number; y: number } | null>(null);
@@ -69,6 +71,8 @@ export function AudiencePanel() {
             copy[copy.length - 1] = { ...last, text: last.text + ev.text };
             return copy;
           });
+        } else if (ev.type === 'status' && ev.mode_label) {
+          setModes((m) => ({ ...m, [who]: { label: ev.mode_label!, note: ev.mode_note } }));
         } else if (ev.type === 'status' && ev.status !== 'ok') {
           setMsgs((m) => [...m.slice(0, -1), { role: 'system', text: ev.status === 'remote' ? '远镇之臣，以表章代对。' : '此人无从召对。' }, m[m.length - 1]]);
         } else if (ev.type === 'error') {
@@ -132,6 +136,11 @@ export function AudiencePanel() {
                 </button>
               ))}
             </div>
+            {modes[who] && (
+              <span className="audience-mode t-title" data-testid="audience.mode" title={modes[who].note}>
+                {modes[who].label}
+              </span>
+            )}
             <button className="btn btn-outline btn-small audience-library" data-testid="audience.adviceLibrary" onClick={() => g.openPanel('advice')}>
               谏言库{g.advice.length ? `·${g.advice.length}` : ''}
             </button>
@@ -148,10 +157,10 @@ export function AudiencePanel() {
                 {m.role === 'minister' && <Portrait id={who} className="portrait--mini msg-avatar" />}
                 {m.role === 'player' && <Portrait id="xuanzong" className="portrait--mini msg-avatar" />}
                 <div className="msg-slip">
-                  {m.text}
+                  {humanize(m.text)}
                   {m.streaming && <span className="brush-caret" aria-hidden="true" />}
                   {m.role === 'minister' && !m.streaming && m.text && (
-                    <button className="msg-save" data-testid={`audience.saveMessage.${i}`} onClick={() => g.saveAdvice(who, m.text, 'audience')} title="整段存入谏言库">
+                    <button className="msg-save" data-testid={`audience.saveMessage.${i}`} onClick={() => g.saveAdvice(who, humanize(m.text), 'audience')} title="整段存入谏言库">
                       存谏
                     </button>
                   )}

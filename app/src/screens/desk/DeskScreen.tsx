@@ -61,6 +61,12 @@ export function DeskScreen() {
       </div>
 
       <div className="hud-bottom-center">
+        {view.final_notice?.next_is_final && (
+          <div className="final-notice" data-testid="desk.finalNotice" role="status" title={view.final_notice.text}>
+            <b className="t-title">下次结算即终局</b>
+            <span>{view.final_notice.text.replace(/^下次结算即终局[：:]?/, '')}</span>
+          </div>
+        )}
         <LayerSwitcher layer={g.mapLayer} onChange={g.setMapLayer} />
       </div>
 

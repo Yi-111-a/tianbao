@@ -8,6 +8,7 @@ import type {
   Battle,
   Character,
   Clause,
+  DebateSpeech,
   EdictReceipt,
   Fact,
   HistoryEntry,
@@ -100,6 +101,8 @@ interface Session {
   lastReport: TurnReport | null;
   drafts: Record<string, Draft>;
   updated: string;
+  /** test hook: pad every report/memorial/list with lots of content (layout stress) */
+  stress?: boolean;
 }
 
 function initialState(): PublicState {
@@ -403,15 +406,28 @@ function publicView(sess: Session): PublicState {
 }
 
 function visibleMemorials(sess: Session): MemorialItem[] {
+  const list = baseMemorials(sess);
+  if (!sess.stress) return list;
+  // stress: a dozen long memorials (copies carry their own ids)
+  const out = [...list];
+  for (let i = 0; out.length < 12 && list.length; i++) {
+    const m = clone(list[i % list.length]);
+    out.push({ ...m, id: `${m.id}__${i}`, title: `${m.title}（续${i + 1}）` });
+  }
+  return out;
+}
+
+function baseMemorials(sess: Session): MemorialItem[] {
   const s = sess.state;
   return db.memorials
     .filter((m) => !(m.id in sess.handled))
     .filter((m) => (m.turn != null ? m.turn === s.turn : m.conditions ? evalCond(m.conditions, s) : false))
-    .slice(0, 6)
+    .slice(0, sess.stress ? 99 : 6)
     .map((m) => {
       const { conditions: _c, expires_after: _e, ...rest } = clone(m);
       void _c;
       void _e;
+      if (sess.stress) rest.summary = [rest.summary, rest.summary, rest.summary].join('');
       return rest;
     });
 }
@@ -453,6 +469,55 @@ function view(sess: Session): ViewResponse {
     outcome: sess.state.outcome ?? null,
     last_report: sess.lastReport,
     can_advance: !sess.state.outcome,
+    command_table: commandTable(sess.state),
+    final_notice:
+      !sess.state.outcome && sess.state.turn + 1 >= (sess.state.flags?.[db.overtimeFlag] ? db.overtimeLastTurn : db.lastTurn)
+        ? { next_is_final: true, last_turn: db.lastTurn, overtime_possible: true, text: '下次结算即终局：本季结算后即到时限，此后不能再下诏、处置事件或推进回合；本季是最后的决策窗口。' }
+        : null,
+    review: sess.state.outcome
+      ? {
+          outcome: sess.state.outcome,
+          satisfied: ['范阳未反，或反而速平', '君威不低于五十'],
+          objectives: objectives(sess.state).map((o) => ({ ...o, status: o.status === 'ok' ? 'achieved' : o.status === 'warn' ? 'at_risk' : 'failed' })),
+          stats: db.resources.filter((d) => !d.hidden).map((d) => ({ id: d.id, display: `${d.name} ${Math.round(amount(sess.state, d.id))}${d.unit ?? ''}` })),
+          highlights: sess.entries.filter((e) => e.type === 'turn').slice(-8).map((e) => e.label),
+          turns_played: sess.state.turn,
+        }
+      : null,
+  };
+}
+
+/** 官职—所在—所统—指挥状态, derived like the engine's domain/command.py (simplified). */
+function commandTable(s: PublicState) {
+  const offices = (s.offices ?? {}) as Record<string, { name: string }>;
+  const rows = Object.values(s.characters)
+    .filter((c) => c.id !== 'xuanzong' && (c.faction ?? 'tang') === 'tang' && (c.status ?? 'alive') === 'alive')
+    .map((c) => {
+      const commands = Object.values(s.armies ?? {})
+        .filter((a) => a.commander === c.id)
+        .map((a) => {
+          const status = a.region === c.region ? 'present' : 'remote';
+          return { army: a.id, name: a.name, strength: a.strength, station: a.region, station_name: s.regions[a.region]?.name, status, label: status === 'present' ? '在营' : `遥领（今在${s.regions[c.region]?.name ?? ''}）` };
+        });
+      return {
+        character: c.id,
+        name: c.name,
+        offices: (c.offices ?? (c.office ? [c.office] : [])).map((o) => ({ id: o, name: offices[o]?.name ?? o })),
+        location: { region: c.region, name: s.regions[c.region]?.name, in_transit: null, display: s.regions[c.region]?.name ?? '' },
+        commands,
+      };
+    })
+    .filter((r) => r.offices.length || r.commands.length);
+  const leaderless = Object.values(s.armies ?? {}).filter((a) => (a.faction ?? 'tang') === 'tang' && !a.commander && a.strength > 0);
+  const alerts = [
+    ...rows.flatMap((r) => r.commands.filter((c) => c.status === 'remote').map((c) => `${r.name}遥领${c.name}，不在营中`)),
+    ...leaderless.map((a) => `${a.name}无统帅，副将暂摄`),
+  ];
+  return {
+    columns: ['官职', '人物', '所在', '所统', '指挥状态'],
+    rows,
+    vacancies: { offices: [], armies: leaderless.map((a) => ({ army: a.id, name: a.name, strength: a.strength, station: a.region, station_name: s.regions[a.region]?.name, status: 'acting', label: '无统帅（副将暂摄）' })) },
+    alerts,
   };
 }
 
@@ -583,6 +648,7 @@ function resolveTurn(sess: Session): TurnReport {
   const choicesOpened: PendingChoice[] = [];
   const next = s.turn + 1;
   const riskBefore = amount(s, 'rebellion_risk');
+  const opening = Object.fromEntries(db.resources.filter((d) => !d.hidden).map((d) => [d.id, amount(s, d.id)]));
 
   // 1. expired choices → default option
   for (const pc of [...(s.pending_choices ?? [])]) {
@@ -716,6 +782,15 @@ function resolveTurn(sess: Session): TurnReport {
   // 13. calendar
   s.calendar = { year: 751 + Math.floor(next / 4), season: SEASONS[next % 4], label: calendarLabel(next) };
 
+  if (sess.stress) stressReport(sess, facts, ledger, battles, eventsFired);
+  const reconciliation = db.resources
+    .filter((d) => !d.hidden && d.id in opening)
+    .map((d) => {
+      const regular = round1(ledger.filter((l) => l.resource === d.id).reduce((a, l) => a + l.amount, 0));
+      const closing = round1(amount(s, d.id));
+      const events = round1(closing - opening[d.id] - regular);
+      return { resource: d.id, name: d.name, unit: d.unit, opening: round1(opening[d.id]), edicts: 0, delayed: 0, regular, events, closing };
+    });
   const riskAfter = amount(s, 'rebellion_risk');
   return {
     turn: next,
@@ -728,7 +803,44 @@ function resolveTurn(sess: Session): TurnReport {
     choices_opened: choicesOpened,
     outcome,
     crisis: { before: round1(riskBefore), value: round1(riskAfter), band: bandOf(riskAfter), terms },
+    crisis_change: {
+      title: db.crisisTitle,
+      hidden: false,
+      total: round1(riskAfter - riskBefore),
+      total_display: fmtSigned(riskAfter - riskBefore),
+      items: [
+        ...terms.map((t) => ({ kind: 'drift', kind_label: '漂移', label: t.label, value: typeof t.value === 'number' ? t.value : 0, display: fmtSigned(typeof t.value === 'number' ? t.value : 0) })),
+        ...eventsFired.slice(0, 3).map((e) => ({ kind: 'event', kind_label: '事件', label: typeof e === 'string' ? e : e.title ?? '', value: 0, display: '±0' })),
+      ],
+      drift: { base_display: fmtSigned(terms.reduce((a, t) => a + (typeof t.value === 'number' ? t.value : 0), 0)), difficulty_label: '难度', difficulty_display: '×1.0' },
+      lines: [],
+    },
+    reconciliation,
   };
+}
+
+/** Layout stress: a season with far more facts, ledger lines, battles and events than any real one. */
+function stressReport(sess: Session, facts: Fact[], ledger: LedgerLine[], battles: Battle[], eventsFired: TurnReport['events_fired']) {
+  const regions = Object.values(sess.state.regions);
+  for (let i = 0; i < 36; i++) {
+    const rg = regions[i % regions.length];
+    facts.push({ kind: i % 3 ? 'region' : 'army', text: `${rg.name}奏报第${i + 1}事：仓廪、城防、户口诸项有所变动，州县官吏奉诏施行，百姓颇有议论。` });
+  }
+  facts.push({ kind: 'flag', text: '旗标改变：stress_internal', internal: true });
+  for (const res of ['treasury', 'grain', 'authority', 'morale', 'corruption', 'frontier_pressure']) {
+    for (let i = 0; i < 5; i++) ledger.push({ name: `杂项支用${i + 1}`, amount: -(i + 1) * 3, kind: 'event', resource: res, reason: '诸司杂支' });
+  }
+  for (let i = 0; i < 8; i++) {
+    const rg = regions[(i * 3) % regions.length];
+    battles.push({ region: rg.id, attacker: 'yan', defender: 'tang', winner: i % 2 ? 'tang' : 'yan', attacker_loss: 1200 + i * 100, defender_loss: 900 + i * 50 });
+  }
+  const evs = db.events.filter((e) => e.kind !== 'system').slice(0, 14);
+  for (const ev of evs) eventsFired.push({ id: ev.id, title: ev.title, text: ev.text, illustration: ev.illustration });
+}
+
+function fmtSigned(n: number): string {
+  const v = round1(n);
+  return v === 0 ? '±0' : `${v > 0 ? '+' : '−'}${Math.abs(v)}`;
 }
 
 function narrate(report: TurnReport, label: string): string {
@@ -966,7 +1078,7 @@ const routes: [string, RegExp, Handler][] = [
       }
       await sleep(1100, signal);
       const rule = TOPIC_STANCE.find((t) => t.re.test(topic));
-      const speeches = [] as { character: string; stance: string; text: string }[];
+      const speeches: DebateSpeech[] = [];
       const stanceOf = (id: string) => {
         const bloc = sess.state.characters[id].bloc ?? 'neiting';
         return rule?.stance[bloc] ?? (['support', 'oppose', 'neutral'] as const)[hash(topic + id) % 3];
@@ -975,7 +1087,14 @@ const routes: [string, RegExp, Handler][] = [
         const c = sess.state.characters[id];
         const stance = stanceOf(id);
         const lines = DEBATE_STANCE_TEXT[c.bloc ?? 'neiting'] ?? DEBATE_STANCE_TEXT.neiting;
-        speeches.push({ character: id, stance, text: `「${topic}」一事——${lines[stance as 'support']}` });
+        speeches.push({
+          character: id,
+          stance,
+          text: `「${topic}」一事——${lines[stance as 'support']}`,
+          target_option_id: null,
+          position: `${stance === 'support' ? '赞成' : stance === 'oppose' ? '反对' : '持中'}「${topic}」`,
+          proposition: topic,
+        });
       }
       const [a, b] = participants;
       if (stanceOf(a) !== stanceOf(b)) {
@@ -986,6 +1105,9 @@ const routes: [string, RegExp, Handler][] = [
       const con = participants.filter((id) => stanceOf(id) === 'oppose').map((id) => sess.state.characters[id].name);
       trackUsage('court_debate', sess.state.turn, 2200, 640);
       return json({
+        topic,
+        proposition: topic,
+        memorial: null,
         speeches,
         summary: `${pro.length ? `${pro.join('、')}以为可行` : '无人力主其事'}；${con.length ? `${con.join('、')}以为不可` : '无人力阻'}。议定与否，伏候圣裁。`,
       });
@@ -1020,6 +1142,15 @@ const routes: [string, RegExp, Handler][] = [
       const sess = getSession(m[1]);
       if (!sess) return notFound();
       return json(sess.entries.map(({ snapshot: _s, ...e }) => ({ ...e, head: e.id === sess.headId })));
+    },
+  ],
+  [
+    'GET',
+    /^\/api\/sessions\/([^/]+)\/export$/,
+    async (m) => {
+      const sess = getSession(m[1]);
+      if (!sess) return notFound();
+      return json({ session_id: sess.id, scenario: 'tianbao_751', seed: sess.seed, turn: sess.state.turn, calendar_label: calendarLabel(sess.state.turn), outcome: sess.state.outcome ?? null, seasons: sess.entries.map(({ snapshot: _s, ...e }) => e) });
     },
   ],
   [
@@ -1070,7 +1201,8 @@ const routes: [string, RegExp, Handler][] = [
         async start(controller) {
           const send = (event: string, data: unknown) =>
             controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
-          send('status', { status });
+          const mode = status === 'remote' ? { mode: 'written', mode_label: '书面奏对', mode_note: '远镇之臣，以表章代对。' } : { mode: 'in_person', mode_label: '面见', mode_note: '' };
+          send('status', status === 'refused' ? { status } : { status: 'ok', ...mode });
           for (let i = 0; i < content.length; i += 4) {
             if (signal?.aborted) break;
             await new Promise((res) => setTimeout(res, 38));
@@ -1167,6 +1299,7 @@ declare global {
       forceOutcome: (sessionId: string, endingId: string) => void;
       openChoice: (sessionId: string) => void;
       reset: () => void;
+      stress: (sessionId: string, on?: boolean) => void;
     };
   }
 }
@@ -1188,6 +1321,19 @@ if (typeof window !== 'undefined') {
     },
     reset() {
       sessions = {};
+      saveStore();
+    },
+    stress(sessionId, on = true) {
+      const sess = sessions[sessionId];
+      if (!sess) return;
+      sess.stress = on;
+      if (on) {
+        const chars = Object.keys(sess.state.characters).slice(0, 10);
+        for (let i = 0; i < 30; i++)
+          sess.advice.push({ id: uid(), character: chars[i % chars.length], text: `第${i + 1}条谏言：陛下宜慎择将帅，节用爱人，勿使边镇坐大，以固根本。`, source: 'audience', turn: sess.state.turn });
+        for (let i = 0; i < 40; i++)
+          sess.entries.push({ id: uid(), type: i % 2 ? 'turn' : 'edict', turn: sess.state.turn, label: `史册第${i + 1}页·奏议施行`, parentId: sess.headId, timestamp: new Date().toISOString(), snapshot: sess.entries[0].snapshot });
+      }
       saveStore();
     },
   };

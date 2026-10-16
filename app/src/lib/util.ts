@@ -53,6 +53,29 @@ export function fmtDelta(n: number): string {
   return `${v > 0 ? '+' : '−'}${Math.abs(v).toLocaleString('zh-CN')}`;
 }
 
+/**
+ * A hidden value's range, compact: signed deltas "+0.3～+0.9", "−0.2～+0.4"; values "约 52–60".
+ * When both ends round to the same number a single value is shown ("约 ±0", "约 +0.9", "约 55").
+ * Callers render it in a `white-space: nowrap` element so it never wraps mid-range.
+ */
+export function fmtRange(lo: number, hi: number, signed = false, approx = true): string {
+  const a = Math.min(lo, hi);
+  const b = Math.max(lo, hi);
+  const one = (n: number) => (signed ? fmtDelta(n) : fmtNum(n, Math.abs(n) < 10 ? 1 : 0));
+  const left = one(a);
+  const right = one(b);
+  const pre = approx ? '约 ' : '';
+  if (left === right) return `${approx ? '约 ' : ''}${left}`;
+  return signed ? `${left}～${right}` : `${pre}${left}–${right}`;
+}
+
+/** A number or a [lo, hi] estimate, formatted for display. */
+export function fmtValueOrRange(v: number | [number, number] | null | undefined, signed = false): string {
+  if (v == null) return '—';
+  if (Array.isArray(v)) return fmtRange(v[0], v[1], signed);
+  return signed ? fmtDelta(v) : fmtNum(v, Math.abs(v) < 10 ? 1 : 0);
+}
+
 export function fmtWan(n: number): string {
   if (n >= 10000) return `${(n / 10000).toFixed(n >= 100000 ? 0 : 1)}万`;
   return n.toLocaleString('zh-CN');
@@ -60,7 +83,7 @@ export function fmtWan(n: number): string {
 
 export function resourceValueText(r: PublicResource | undefined): string {
   if (!r) return '—';
-  if (r.hidden && r.estimate) return `${Math.round(r.estimate[0])}–${Math.round(r.estimate[1])}`;
+  if (r.hidden && r.estimate) return fmtRange(Math.round(r.estimate[0]), Math.round(r.estimate[1]), false, false);
   return fmtNum(r.amount);
 }
 

@@ -67,6 +67,29 @@ export function TimelinePanel() {
     }
   };
 
+  const [exporting, setExporting] = useState(false);
+  const exportLog = async () => {
+    if (!g.sessionId) return;
+    setExporting(true);
+    try {
+      const log = await api.exportLog(g.sessionId);
+      const blob = new Blob([JSON.stringify(log, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `天宝史册-${g.view?.calendar_label ?? g.sessionId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast.success('史册已导出为 JSON。', '导出');
+    } catch (err) {
+      toast.error(err, '导出未成');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <PanelShell screen="timeline" onClose={g.closePanel}>
       <Paper variant="paper" seed={333} className="timeline-paper">
@@ -82,6 +105,11 @@ export function TimelinePanel() {
           <button role="tab" aria-selected={tab === 'saves'} className={cls('tab t-title', tab === 'saves' && 'is-on')} data-testid="timeline.tab.saves" disabled={tab === 'saves'} onClick={() => setTab('saves')}>
             存档
           </button>
+          {g.sessionId && (
+            <button className="btn btn-outline btn-small timeline-export" data-testid="timeline.export" disabled={exporting} onClick={exportLog} title="导出本局结构化复盘日志（JSON）">
+              {exporting ? '导出中…' : '导出史册'}
+            </button>
+          )}
         </div>
 
         {tab === 'history' && (

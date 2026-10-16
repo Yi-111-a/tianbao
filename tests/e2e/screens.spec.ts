@@ -12,7 +12,7 @@ const SIZES = [
   { w: 1920, h: 1080 },
   { w: 1366, h: 768 },
 ];
-const EXTRA: ScreenName[] = ['advice'];
+const EXTRA: ScreenName[] = ['advice', 'command'];
 
 for (const size of SIZES) {
   test.describe(`${size.w}x${size.h}`, () => {

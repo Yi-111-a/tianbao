@@ -67,7 +67,7 @@
   top: 18%;
   right: 34px;
   padding: 6px 5px;
-  font-size: 15px;
+  font-size: var(--fs-small);
   line-height: 1.2;
   color: #fff1d6;
   background: radial-gradient(circle at 35% 30%, #d44a3a, #8a2219);
@@ -118,7 +118,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: var(--fs-label);
   color: var(--on-lacquer-muted);
   text-shadow: 0 1px 2px #000;
 }
@@ -188,7 +188,7 @@
   margin: 0;
   color: var(--ink-muted);
   letter-spacing: 0.25em;
-  font-size: 15px;
+  font-size: var(--fs-small);
 }
 .newgame-hook {
   margin: 0;
@@ -222,8 +222,9 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
+  font-size: var(--fs-small);
   color: #fff3d8;
-  background: var(--zhusha);
+  background: #6f1b12;
 }
 .newgame-objectives b {
   font-weight: 500;
@@ -231,7 +232,7 @@
   letter-spacing: 0.15em;
 }
 .newgame-objectives span:last-child {
-  font-size: 14.5px;
+  font-size: var(--fs-small);
   color: var(--ink-muted);
 }
 .newgame-cast {
@@ -247,7 +248,7 @@
   gap: 4px;
 }
 .newgame-cast figcaption {
-  font-size: 15px;
+  font-size: var(--fs-small);
   letter-spacing: 0.12em;
 }
 .newgame-cast .portrait--chip {
@@ -263,7 +264,7 @@
   gap: 12px;
 }
 .newgame-situation li {
-  font-size: 14.5px;
+  font-size: var(--fs-small);
   line-height: 1.7;
   padding: 8px 12px;
   background: rgba(255, 252, 240, 0.35);
@@ -287,6 +288,7 @@
 }
 .newgame-seed small {
   flex-basis: 100%;
+  font-size: var(--fs-small);
 }
 .newgame-actions {
   flex: none;
@@ -365,7 +367,7 @@
   color: var(--mo);
 }
 .ending-turn {
-  font-size: 14px;
+  font-size: var(--fs-small);
   color: var(--ink-muted);
   letter-spacing: 0.3em;
 }
@@ -394,10 +396,58 @@
   letter-spacing: 0.6em;
   margin-bottom: 8px;
 }
-.chronicle-list {
+.chronicle-scroll {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  padding-right: 6px;
+}
+.review {
+  margin-bottom: 6px;
+}
+.review-summary {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+}
+.review-list,
+.review-objectives,
+.review-stats {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: var(--fs-small);
+  line-height: 1.7;
+}
+.review-list li::before {
+  content: '·';
+  margin-right: 6px;
+  color: var(--zhusha-deep);
+}
+.review-objectives li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px dashed rgba(110, 80, 40, 0.22);
+}
+.review-objectives b {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.review-objectives .obj--achieved b,
+.review-objectives .obj--on_track b {
+  color: var(--good-ink);
+}
+.review-objectives .obj--failed b,
+.review-objectives .obj--at_risk b {
+  color: var(--bad-ink);
+}
+.review-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 14px;
+}
+.chronicle-list {
+  flex: none;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -409,7 +459,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  font-size: 14.5px;
+  font-size: var(--fs-small);
   padding: 3px 0;
   border-bottom: 1px dashed rgba(110, 80, 40, 0.22);
 }
@@ -419,12 +469,12 @@
   place-items: center;
   width: 24px;
   height: 24px;
-  font-size: 13px;
+  font-size: var(--fs-label);
   color: #fff3d8;
   background: var(--mo-soft);
 }
 .chronicle-edict .chronicle-glyph {
-  background: var(--zhusha);
+  background: var(--zhusha-deep);
 }
 .chronicle-turn .chronicle-glyph {
   background: var(--shiqing);
@@ -469,7 +519,7 @@
     font-size: 40px;
   }
   .newgame-hook {
-    font-size: 15px;
+    font-size: var(--fs-small);
     line-height: 1.7;
   }
   .newgame-objectives {
@@ -477,7 +527,7 @@
   }
   .newgame-objectives span:last-child,
   .newgame-situation li {
-    font-size: 13px;
+    font-size: var(--fs-small);
   }
   .newgame-situation li {
     padding: 5px 10px;
@@ -487,7 +537,7 @@
     height: 50px;
   }
   .ending-text {
-    font-size: 16px;
+    font-size: var(--fs-body);
     line-height: 1.85;
   }
 }

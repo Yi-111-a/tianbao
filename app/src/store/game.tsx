@@ -14,7 +14,7 @@ import type {
 import { useToast } from '../components/Toast';
 
 export type Screen = 'title' | 'newgame' | 'desk' | 'ending';
-export type PanelName = 'memorial' | 'audience' | 'debate' | 'edict' | 'result' | 'timeline' | 'settings' | 'advice' | 'region';
+export type PanelName = 'memorial' | 'audience' | 'debate' | 'edict' | 'result' | 'timeline' | 'settings' | 'advice' | 'region' | 'command';
 export type MapLayer = 'jurisdiction' | 'morale' | 'troops' | 'canal' | 'beacon';
 
 export interface AdoptedEntry extends AdoptedOption {

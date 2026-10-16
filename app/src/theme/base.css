@@ -167,7 +167,7 @@ button:disabled {
   color: var(--ink-text);
   background: rgba(255, 248, 228, 0.35);
   box-shadow: inset 0 0 0 1px rgba(60, 40, 20, 0.65), inset 0 0 0 3px rgba(255, 248, 228, 0.4), inset 0 0 0 4px rgba(60, 40, 20, 0.25);
-  font-size: 16px;
+  font-size: var(--fs-body);
   min-height: 36px;
   padding: 0 1.1em;
 }
@@ -191,7 +191,7 @@ button:disabled {
 
 .btn-small {
   min-height: 30px;
-  font-size: 14px;
+  font-size: var(--fs-small);
   padding: 0 0.8em;
   letter-spacing: 0.06em;
 }
@@ -294,7 +294,7 @@ textarea.field {
 }
 .section-label {
   font-family: var(--font-title);
-  font-size: 15px;
+  font-size: var(--fs-small);
   letter-spacing: 0.25em;
   color: var(--zhusha-deep);
   display: flex;
@@ -351,7 +351,7 @@ textarea.field {
   z-index: 30;
   min-width: 240px;
   padding: 14px 16px;
-  font-size: 14px;
+  font-size: var(--fs-small);
   line-height: 1.6;
   pointer-events: none;
 }
@@ -370,6 +370,18 @@ textarea.field {
 .delta-up-bad,
 .delta-down-bad {
   color: var(--bad);
+}
+/* on paper the mineral green/red are too light for small numbers: deepen them */
+.paper .delta-up-good,
+.paper .delta-down-good {
+  color: var(--good-ink);
+}
+.paper .delta-up-bad,
+.paper .delta-down-bad {
+  color: var(--bad-ink);
+}
+.paper small {
+  font-size: var(--fs-small);
 }
 .on-dark .delta-up-good,
 .on-dark .delta-down-good {

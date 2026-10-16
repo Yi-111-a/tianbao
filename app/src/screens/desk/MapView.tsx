@@ -2,6 +2,7 @@
 // army tokens, the canal lifeline and the historical rebel route.
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type WheelEvent } from 'react';
 import { useAsset, useMapData, type MapData } from '../../api/assets';
+import { nameOf } from '../../lib/names';
 import type { Army, PublicState, ViewResponse } from '../../api/types';
 import type { MapLayer } from '../../store/game';
 import { cls, fmtWan, mulberry32 } from '../../lib/util';
@@ -241,6 +242,13 @@ export function MapView({
 
   const geo = useMemo(() => geometryFrom(mapData, Boolean(baseUrl), imgSize), [mapData, baseUrl, imgSize]);
   const k = geo.scale;
+  // 「自A赴B，约n季后到」 for armies and characters on the road
+  const transit = (t: Record<string, unknown> | null | undefined) => {
+    if (!t || typeof t.to_region !== 'string') return '';
+    const to = state.regions[t.to_region]?.name ?? nameOf(t.to_region) ?? '';
+    const eta = typeof t.eta_turn === 'number' ? Math.max(1, t.eta_turn - state.turn) : null;
+    return `赴${to}${eta ? `，约${eta}季后到` : ''}`;
+  };
   const armiesBy = useMemo(() => {
     const out: Record<string, Army[]> = {};
     for (const a of Object.values(state.armies ?? {})) {
@@ -512,11 +520,11 @@ export function MapView({
               return (
                 <g
                   key={a.id}
-                  className={cls('army-token', hostile && 'is-rebel', foreign && 'is-foreign')}
+                  className={cls('army-token', hostile && 'is-rebel', foreign && 'is-foreign', a.in_transit && 'is-moving')}
                   transform={`translate(${p[0] + ((shape?.foreign ?? FOREIGN.has(rid)) ? -30 : 14) * k} ${p[1] + ((shape?.foreign ?? FOREIGN.has(rid)) ? 26 : -2) * k + i * 22 * k}) scale(${k})`}
                   data-testid={`map.army.${a.id}`}
                 >
-                  <title>{`${a.name}　${a.strength.toLocaleString('zh-CN')}人`}</title>
+                  <title>{`${a.name}　${a.strength.toLocaleString('zh-CN')}人${transit(a.in_transit) ? `（行军${transit(a.in_transit)}）` : ''}`}</title>
                   <rect x="0" y="-10" width="60" height="19" rx="3" />
                   <circle cx="9" cy="-0.5" r="4.5" className="army-dot" />
                   <text x="36" y="4.5" textAnchor="middle" className="t-num">
@@ -552,8 +560,16 @@ export function MapView({
             {(armiesBy[hovered.id] ?? []).map((a) => (
               <div key={a.id} className="map-tip-army">
                 {a.name}　<span className="t-num">{a.strength.toLocaleString('zh-CN')}</span>
+                {transit(a.in_transit) && <small>　行军{transit(a.in_transit)}</small>}
               </div>
             ))}
+            {Object.values(state.characters ?? {})
+              .filter((c) => c.in_transit && c.region === hovered.id && c.status !== 'dead')
+              .map((c) => (
+                <div key={c.id} className="map-tip-army map-tip-traveller">
+                  {c.name}　<small>{transit(c.in_transit)}</small>
+                </div>
+              ))}
           </>
         )}
       </div>

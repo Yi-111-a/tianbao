@@ -15,6 +15,7 @@ import { NewGameScreen } from './screens/NewGameScreen';
 import { ResultPanel } from './screens/ResultPanel';
 import { SettingsPanel } from './screens/SettingsPanel';
 import { TimelinePanel } from './screens/TimelinePanel';
+import { CommandPanel } from './screens/CommandPanel';
 import { TitleScreen } from './screens/TitleScreen';
 
 function Shell() {
@@ -58,6 +59,7 @@ function Shell() {
         {g.panel === 'timeline' && <TimelinePanel key="timeline" />}
         {g.panel === 'settings' && <SettingsPanel key="settings" />}
         {g.panel === 'advice' && <AdvicePanel key="advice" />}
+        {g.panel === 'command' && <CommandPanel key="command" />}
         {showChoice && <ChoiceModal key="choice" />}
       </AnimatePresence>
     </div>

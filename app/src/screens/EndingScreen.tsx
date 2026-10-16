@@ -8,12 +8,15 @@ import { Baoxiang, CuancaoBand } from '../components/Ornaments';
 import { Paper } from '../components/Paper';
 import { useToast } from '../components/Toast';
 import { useGame } from '../store/game';
+import { SCENARIO_META } from '../lib/names';
+
+const OBJECTIVE_STATUS: Record<string, string> = { on_track: '守住', at_risk: '未达', failed: '已失', achieved: '达成', pending: '待定', ok: '守住', warn: '危', fail: '已失', done: '达成' };
 
 export function EndingScreen() {
   const g = useGame();
   const toast = useToast();
   const outcome = g.view?.outcome;
-  const [art] = useAsset(outcome ? [`ending.${outcome.id}`, `ending.${outcome.id.replace(/^(e\d)_.*/i, '$1').toLowerCase()}`, 'ending.default'] : null);
+  const [art] = useAsset(outcome ? [...(SCENARIO_META.endings[outcome.id] ? [SCENARIO_META.endings[outcome.id]] : []), `ending.${outcome.id}`, `ending.${outcome.id.replace(/^(e\d)_.*/i, '$1').toLowerCase()}`, 'ending.default'] : null);
   const [chronicle, setChronicle] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function EndingScreen() {
     );
   }
   const fail = outcome.kind === 'fail';
+  const review = g.view?.review ?? null;
   const byTurn = chronicle.filter((e) => e.type !== 'message');
 
   return (
@@ -62,7 +66,59 @@ export function EndingScreen() {
       </motion.div>
       <motion.aside className="ending-chronicle" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6, duration: 1 }}>
         <Paper variant="paper" seed={77} className="chronicle-paper">
-          <div className="chronicle-title t-title">本纪</div>
+          <div className="chronicle-title t-title">{review ? '复盘' : '本纪'}</div>
+          <div className="chronicle-scroll">
+          {review && (
+            <section className="review" data-testid="ending.review">
+              <p className="review-summary">
+                {fail ? '败局' : '终局'}于{g.view?.calendar_label}，共历 <b className="t-num">{review.turns_played}</b> 季。
+              </p>
+              {review.satisfied.length > 0 && (
+                <>
+                  <div className="section-label">判定</div>
+                  <ul className="review-list">
+                    {review.satisfied.map((line, i) => (
+                      <li key={i}>{line.replace(/^T\d+\s*时/, '')}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {review.objectives.length > 0 && (
+                <>
+                  <div className="section-label">目标</div>
+                  <ul className="review-objectives">
+                    {review.objectives.map((o) => (
+                      <li key={o.id} className={`obj--${o.status}`}>
+                        <span>{o.title}</span>
+                        <b className="t-title">{OBJECTIVE_STATUS[o.status] ?? o.status}</b>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {review.stats.length > 0 && (
+                <>
+                  <div className="section-label">关键数值</div>
+                  <ul className="review-stats">
+                    {review.stats.map((x) => (
+                      <li key={x.id}>{x.display}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {review.highlights.length > 0 && (
+                <>
+                  <div className="section-label">要事</div>
+                  <ul className="review-list">
+                    {review.highlights.map((line, i) => (
+                      <li key={i}>{line.replace(/^T\d+\s*/, '')}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              <div className="section-label">本纪</div>
+            </section>
+          )}
           <ol className="chronicle-list" data-testid="ending.chronicle">
             {byTurn.length === 0 && <li className="muted">史官尚未落笔。</li>}
             {byTurn.map((e) => (
@@ -72,6 +128,7 @@ export function EndingScreen() {
               </li>
             ))}
           </ol>
+          </div>
         </Paper>
       </motion.aside>
       <div className="ending-actions">

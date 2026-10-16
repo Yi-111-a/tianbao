@@ -11,6 +11,7 @@ import type {
   EdictReceipt,
   Health,
   HistoryEntry,
+  PublicState,
   ScenarioInfo,
   SessionSummary,
   Settings,
@@ -19,6 +20,7 @@ import type {
   UsageResponse,
   ViewResponse,
 } from './types';
+import { humanizeDeep, registerStateNames } from '../lib/names';
 
 export const SCENARIO_ID = 'tianbao_751';
 export const IS_MOCK = import.meta.env.VITE_MOCK === '1' || import.meta.env.MODE === 'mock';
@@ -121,7 +123,13 @@ async function request<T>(method: string, path: string, body?: unknown, signal?:
   if (!res.ok) throw await parseError(res);
   if (res.status === 204) return undefined as T;
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  const data = (text ? JSON.parse(text) : undefined) as T;
+  // Game payloads: learn the runtime names first, then make sure no raw id reaches a screen.
+  if (data && path.startsWith('/sessions')) {
+    registerStateNames((data as { state?: PublicState }).state);
+    return humanizeDeep(data);
+  }
+  return data;
 }
 
 const enc = encodeURIComponent;
@@ -150,6 +158,8 @@ export const api = {
   saveAdvice: (id: string, advice: Omit<Advice, 'id'>) =>
     request<Advice>('POST', `/sessions/${enc(id)}/advice`, advice),
   history: (id: string) => request<HistoryEntry[]>('GET', `/sessions/${enc(id)}/history`),
+  /** structured replay log of the whole game (GET /sessions/{id}/export) */
+  exportLog: (id: string) => request<unknown>('GET', `/sessions/${enc(id)}/export`),
   rewind: (id: string, entryId: string) =>
     request<unknown>('POST', `/sessions/${enc(id)}/rewind`, { entry_id: entryId }),
   fork: (id: string, entryId: string | null) =>
@@ -158,6 +168,22 @@ export const api = {
   settings: () => request<Settings>('GET', '/settings'),
   saveSettings: (settings: Partial<Settings>) => request<Settings>('PUT', '/settings', settings),
   testSettings: () => request<SettingsTestResult>('POST', '/settings/test'),
+  /**
+   * MCP integration commands for this install (GET /api/integration). Returns null when the
+   * engine does not offer the route (checked via its OpenAPI listing first, so an older engine
+   * never produces a 404 in the console) or in mock mode.
+   */
+  integration: async (): Promise<unknown | null> => {
+    if (IS_MOCK) return null;
+    try {
+      const base = await getApiBase();
+      const spec = (await fetch(`${base}/openapi.json`).then((r) => (r.ok ? r.json() : null))) as { paths?: Record<string, unknown> } | null;
+      if (!spec?.paths?.['/api/integration']) return null;
+      return await request<unknown>('GET', '/integration');
+    } catch {
+      return null;
+    }
+  },
 
   /** SSE audience chat. Yields parsed events until `done`. */
   async *chat(id: string, character: string, text: string, signal?: AbortSignal): AsyncGenerator<ChatEvent> {
@@ -201,7 +227,14 @@ export const api = {
         } catch {
           payload = { text: data.join('\n') };
         }
-        if (event === 'status') yield { type: 'status', status: String(payload.status ?? '') };
+        if (event === 'status')
+          yield {
+            type: 'status',
+            status: String(payload.status ?? ''),
+            mode: payload.mode == null ? undefined : String(payload.mode),
+            mode_label: payload.mode_label == null ? undefined : String(payload.mode_label),
+            mode_note: payload.mode_note == null ? undefined : String(payload.mode_note),
+          };
         else if (event === 'message') yield { type: 'message', text: String(payload.text ?? '') };
         else if (event === 'error')
           yield { type: 'error', code: String(payload.code ?? ''), message: String(payload.message ?? '召对中断') };

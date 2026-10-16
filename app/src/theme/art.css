@@ -11,6 +11,11 @@
   background-image: linear-gradient(rgba(240, 214, 150, 0.22), rgba(240, 214, 150, 0.22)), var(--art-paper);
   background-size: 100% 100%, 108% 112%;
 }
+/* the ledger holds small figures: a lighter veil keeps them ≥ 4.5:1 against the silk */
+.art-paper .ledger-paper .paper.paper--silk {
+  background-image: linear-gradient(rgba(255, 246, 222, 0.32), rgba(255, 246, 222, 0.32)), var(--art-paper);
+  background-size: 100% 100%, 108% 112%;
+}
 .art-paper .paper.paper--slip,
 .art-paper .calendar-paper,
 .art-paper .book-slip,

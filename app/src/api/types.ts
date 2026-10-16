@@ -238,6 +238,8 @@ export interface Battle {
   defender_loss?: number;
   result?: string;
   text?: string;
+  winner_name?: string;
+  captured?: boolean;
 }
 
 export interface CrisisReport {
@@ -261,6 +263,22 @@ export interface TurnReport {
   outcome?: Outcome | null;
   crisis?: CrisisReport | Record<string, unknown>;
   resource_deltas?: Record<ID, number>;
+  /** player-facing events of the season, most important first (engine ≥ round 3) */
+  events?: ReportEvent[];
+  featured_event?: ReportEvent | null;
+  reconciliation?: ReconciliationRow[];
+  crisis_change?: CrisisChange | null;
+}
+
+export interface ReportEvent {
+  id: ID;
+  title: string;
+  text?: string;
+  illustration?: string | null;
+  /** 3 outcome > 2 war > 1 has choices > 0 other */
+  importance?: number;
+  outcome?: boolean;
+  internal?: boolean;
 }
 
 export interface ViewResponse {
@@ -273,6 +291,65 @@ export interface ViewResponse {
   outcome: Outcome | null;
   last_report: TurnReport | null;
   can_advance: boolean;
+  /** 终局复盘, present once the game has an outcome */
+  review?: FinalReview | null;
+  /** 官职—所在—所统—指挥状态 (engine ≥ round 5) */
+  command_table?: CommandTable | null;
+  /** present when the next settlement reaches the time limit */
+  final_notice?: { next_is_final: boolean; last_turn?: number; overtime_possible?: boolean; text: string } | null;
+}
+
+export interface CommandTable {
+  columns?: string[];
+  rows: {
+    character: ID;
+    name: string;
+    offices: { id: ID; name: string; station?: ID; station_name?: string; status?: string }[];
+    location: { region?: ID; name?: string; in_transit?: unknown; display?: string };
+    commands: { army: ID; name: string; strength?: number; station?: ID; station_name?: string; status?: 'present' | 'en_route' | 'remote' | string; label?: string }[];
+  }[];
+  vacancies?: {
+    offices?: { id: ID; name: string; army?: ID }[];
+    armies?: { army: ID; name: string; strength?: number; station_name?: string; status?: string; label?: string }[];
+  };
+  alerts?: string[];
+}
+
+export interface CrisisChange {
+  title?: string;
+  hidden?: boolean;
+  total?: number | [number, number] | null;
+  total_display?: string;
+  items?: { kind: string; kind_label?: string; label?: string; value?: number | [number, number] | null; display?: string }[];
+  drift?: { base_display?: string; difficulty_label?: string; difficulty_display?: string; factor?: number; clamp?: unknown; terms?: unknown };
+  other?: unknown;
+  lines?: string[];
+}
+
+export interface FinalReview {
+  outcome: Outcome;
+  satisfied: string[];
+  objectives: Objective[];
+  stats: { id: ID; display: string }[];
+  highlights: string[];
+  turns_played: number;
+}
+
+/** One resource's season, step by step: 期初 → 诏令 → 延期执行 → 经常收支 → 事件/选择 → 期末. */
+export interface ReconciliationRow {
+  resource: ID;
+  name: string;
+  unit?: string;
+  opening: number;
+  edicts: number;
+  delayed: number;
+  regular: number;
+  events: number;
+  closing: number;
+  shown?: Partial<Record<'opening' | 'edicts' | 'delayed' | 'regular' | 'events' | 'closing' | 'rounding', number>>;
+  display?: string;
+  regular_detail?: { kind: string; label: string; amount?: number; shown?: number; display?: string }[];
+  regular_display?: string;
 }
 
 export interface ScenarioInfo {
@@ -330,6 +407,9 @@ export interface Clause {
   summary?: string;
   label?: string;
   group?: number | string;
+  /** delayed clauses: why, and the turn they take effect */
+  delay_reason?: string;
+  due_turn?: number;
 }
 
 export interface EdictReceipt {
@@ -351,9 +431,20 @@ export interface DebateSpeech {
   character: ID;
   stance: Stance;
   text: string;
+  reason?: string;
+  /** the memorial option this minister argues for (null for a free topic) */
+  target_option_id?: ID | null;
+  target_option_label?: string | null;
+  against_option_label?: string | null;
+  /** 「主张「驳回」，反对「准减赋」」 / 「赞成「议题」」 */
+  position?: string;
+  proposition?: string;
 }
 
 export interface DebateResponse {
+  topic?: string;
+  proposition?: string;
+  memorial?: { id: ID; title: string; options: { id: ID; label: string }[] } | null;
   speeches: DebateSpeech[];
   summary: string;
 }
@@ -431,7 +522,7 @@ export interface ApiErrorBody {
 }
 
 export type ChatEvent =
-  | { type: 'status'; status: string }
+  | { type: 'status'; status: string; mode?: string; mode_label?: string; mode_note?: string }
   | { type: 'message'; text: string }
   | { type: 'done' }
   | { type: 'error'; code?: string; message: string };

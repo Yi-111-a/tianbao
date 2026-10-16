@@ -118,12 +118,14 @@ export function DebatePanel() {
         {result && (
           <div className="debate-stage">
             <div className="debate-topic-line t-title" data-testid="debate.topicLine">
-              议：{topic}
+              议：{result.proposition || topic}
             </div>
             <div className="debate-cards" style={{ gridTemplateColumns: `repeat(${speakers.length}, minmax(0, 1fr))` }}>
               {speakers.map((id) => {
                 const own = result.speeches.map((s, i) => ({ ...s, i })).filter((s) => s.character === id && s.i < shown);
-                const stance = STANCE[result.speeches.find((s) => s.character === id)?.stance ?? 'neutral'] ?? STANCE.neutral;
+                const first = result.speeches.find((s) => s.character === id);
+                const stance = STANCE[first?.stance ?? 'neutral'] ?? STANCE.neutral;
+                const supports = first?.target_option_label ? `主张「${first.target_option_label}」` : first?.position ?? '';
                 return (
                   <div key={id} className="debate-col">
                     <div className="debate-card">
@@ -134,6 +136,11 @@ export function DebatePanel() {
                           <i className="t-title">{stance.glyph}</i>
                           {stance.name}
                         </span>
+                        {supports && (
+                          <small className="debate-position" data-testid={`debate.position.${id}`} title={first?.position}>
+                            {supports}
+                          </small>
+                        )}
                       </div>
                     </div>
                     <AnimatePresence>

@@ -61,20 +61,25 @@
   --crisis-fire: #c0392b;
 
   /* semantics */
-  --ink-text: #2b2118;
-  --ink-muted: #6a5640;
+  --ink-text: #241a12;
+  --ink-muted: #54412d;
   --on-lacquer: #efe0bb;
   --on-lacquer-muted: #b59d6c;
   --good: #2f7a5f;
   --bad: #b2321f;
   --good-on-dark: #8fd0ad;
+  --good-ink: #164a36;
+  --bad-ink: #7c1e12;
   --bad-on-dark: #f08a74;
 
   /* typography */
   --font-fallback: 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', serif;
   --font-title: 'TB WenKai', 'LXGW WenKai', var(--font-fallback);
   --font-body: 'TB Serif', 'Noto Serif SC', 'Source Han Serif SC', var(--font-fallback);
-  --fs-body: 16px;
+  /* reading sizes on paper (≥16px at 1080p, ≥14px at 768p — see tests/e2e/readability.spec.ts) */
+  --fs-body: 17px;
+  --fs-small: 16px;
+  --fs-label: 15px;
   --lh-body: 1.75;
   --ls-title: 0.08em;
 
@@ -93,4 +98,12 @@
   --tex-fiber: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.012 .18' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5  0 0 0 0 .36  0 0 0 0 .18  0 0 0 .16 0'/></filter><rect width='400' height='400' filter='url(%23f)'/></svg>");
   --tex-wood: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='300'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='.004 .09' numOctaves='3' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .2  0 0 0 0 .1  0 0 0 0 .05  0 0 0 .55 0'/></filter><rect width='600' height='300' filter='url(%23w)'/></svg>");
   --tex-lacquer: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='120'><filter id='l'><feTurbulence type='fractalNoise' baseFrequency='.02 .4' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .25 0'/></filter><rect width='300' height='120' filter='url(%23l)'/></svg>");
+}
+
+@media (max-height: 860px) {
+  :root {
+    --fs-body: 15px;
+    --fs-small: 14px;
+    --fs-label: 13px;
+  }
 }

@@ -34,6 +34,64 @@ env = { SIM_MCP_MODE = "client", LLM_SIM_HOME = "C:\\\\Users\\\\<用户名>\\\\A
 
 type Tab = 'models' | 'mcp' | 'usage';
 
+interface IntegrationBlock {
+  id: string;
+  title: string;
+  text: string;
+  note?: string;
+}
+
+const CLIENT_NAMES: Record<string, string> = { claude: 'Claude Code', claude_code: 'Claude Code', codex: 'Codex' };
+
+/** Tolerant reader for GET /api/integration: a list or a map of clients, each a string or an object with command/config text. */
+export function parseIntegration(raw: unknown): IntegrationBlock[] {
+  if (!raw || typeof raw !== 'object') return [];
+  const obj = raw as Record<string, unknown>;
+  // the engine's documented shape (CONTRACT §2 GET /api/integration)
+  if ((obj.claude && typeof obj.claude === 'object') || (obj.codex && typeof obj.codex === 'object')) {
+    const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v : undefined);
+    const claude = (obj.claude ?? {}) as Record<string, unknown>;
+    const codex = (obj.codex ?? {}) as Record<string, unknown>;
+    const setup = (obj.setup ?? {}) as Record<string, unknown>;
+    const flags = Array.isArray(codex.exec_flags) ? (codex.exec_flags as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+    const blocks: (IntegrationBlock | null)[] = [
+      str(setup.claude) ? { id: 'setup_claude', title: 'Claude Code · 一键配置（PowerShell）', text: str(setup.claude)! } : null,
+      str(claude.add) ? { id: 'claude', title: 'Claude Code · 本项目', text: str(claude.add)! } : null,
+      str(claude.add_user) ? { id: 'claude_user', title: 'Claude Code · 全局（--scope user）', text: str(claude.add_user)! } : null,
+      str(claude.mcp_json) ? { id: 'claude_json', title: 'Claude Code · .mcp.json', text: str(claude.mcp_json)!.trimEnd() } : null,
+      str(setup.codex) ? { id: 'setup_codex', title: 'Codex · 一键配置（PowerShell）', text: str(setup.codex)! } : null,
+      str(codex.add) ? { id: 'codex', title: 'Codex', text: str(codex.add)! } : null,
+      str(codex.toml) ? { id: 'codex_toml', title: 'Codex · ~/.codex/config.toml', text: str(codex.toml)!.trimEnd(), note: str(codex.note) } : null,
+      flags.length ? { id: 'codex_exec', title: 'Codex · codex exec 参数', text: flags.map((f) => `-c ${f}`).join(' ') } : null,
+    ];
+    const out = blocks.filter((b): b is IntegrationBlock => Boolean(b));
+    if (out.length && str(obj.home)) out[out.length - 1] = { ...out[out.length - 1], note: [out[out.length - 1].note, `存档目录：${obj.home}（与本应用共用）`].filter(Boolean).join(' ') };
+    if (out.length) return out;
+  }
+  const list: [string, unknown][] = Array.isArray(raw)
+    ? (raw as Record<string, unknown>[]).map((r, i) => [String(r?.id ?? r?.client ?? i), r])
+    : Array.isArray(obj.clients)
+      ? (obj.clients as Record<string, unknown>[]).map((r, i) => [String(r?.id ?? r?.client ?? i), r])
+      : Object.entries((obj.clients as Record<string, unknown>) ?? obj).filter(([, v]) => v && (typeof v === 'string' || typeof v === 'object'));
+  const out: IntegrationBlock[] = [];
+  for (const [id, v] of list) {
+    if (typeof v === 'string') {
+      out.push({ id, title: CLIENT_NAMES[id] ?? id, text: v });
+      continue;
+    }
+    const r = v as Record<string, unknown>;
+    const parts = ['command', 'commands', 'config', 'toml', 'json', 'snippet', 'text']
+      .map((k) => r[k])
+      .flatMap((x) => (Array.isArray(x) ? x : [x]))
+      .filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
+    if (!parts.length) continue;
+    const file = [r.file, r.path, r.config_path].find((x) => typeof x === 'string') as string | undefined;
+    const title = String(r.title ?? r.name ?? CLIENT_NAMES[id] ?? id);
+    out.push({ id, title: file ? `${title}（${file}）` : title, text: parts.join(String.fromCharCode(10)), note: typeof r.note === 'string' ? r.note : typeof r.hint === 'string' ? r.hint : undefined });
+  }
+  return out;
+}
+
 export function SettingsPanel() {
   const g = useGame();
   const toast = useToast();
@@ -44,6 +102,15 @@ export function SettingsPanel() {
   const [busy, setBusy] = useState<'' | 'save' | 'test'>('');
   const [test, setTest] = useState<string>('');
   const [usage, setUsage] = useState<UsageResponse | null>(null);
+  const [integration, setIntegration] = useState<IntegrationBlock[] | null>(null);
+  useEffect(() => {
+    if (tab !== 'mcp' || integration) return;
+    let alive = true;
+    api.integration().then((raw) => alive && setIntegration(parseIntegration(raw)));
+    return () => {
+      alive = false;
+    };
+  }, [tab, integration]);
 
   const load = useCallback(async () => {
     try {
@@ -267,21 +334,22 @@ export function SettingsPanel() {
                     <input className="field t-num" type="number" step="0.01" data-testid="settings.outputCost" value={form.output_cost_per_million ?? 0} onChange={(e) => setForm((f) => ({ ...f, output_cost_per_million: Number(e.target.value) }))} />
                   </label>
                 </div>
-
-                <div className="settings-actions">
-                  <span className="settings-test" data-testid="settings.testResult">
-                    {test}
-                  </span>
-                  <button className="btn btn-outline" data-testid="settings.test" disabled={busy !== ''} onClick={runTest}>
-                    {busy === 'test' ? '探测中…' : '测试连接'}
-                  </button>
-                  <button className="btn btn-ink" data-testid="settings.save" disabled={busy !== ''} onClick={save}>
-                    {busy === 'save' ? '存档中…' : '保存'}
-                  </button>
-                </div>
               </>
             )}
           </div>
+        )}
+        {tab === 'models' && settings && (
+          <footer className="settings-actions">
+            <span className="settings-test" data-testid="settings.testResult">
+              {test}
+            </span>
+            <button className="btn btn-outline" data-testid="settings.test" disabled={busy !== ''} onClick={runTest}>
+              {busy === 'test' ? '探测中…' : '测试连接'}
+            </button>
+            <button className="btn btn-ink" data-testid="settings.save" disabled={busy !== ''} onClick={save}>
+              {busy === 'save' ? '存档中…' : '保存'}
+            </button>
+          </footer>
         )}
 
         {tab === 'mcp' && (
@@ -289,6 +357,19 @@ export function SettingsPanel() {
             <p>
               《天宝》可作为 MCP 服务接入 Claude Code 或 Codex：由你所用的模型扮演群臣、解释诏令，引擎照常结算。存档与桌面版共用（<code>%APPDATA%\tianbao</code>）。
             </p>
+            {integration && integration.length > 0 ? (
+              integration.map((b) => (
+                <div className="mcp-block" key={b.id} data-testid={`settings.integration.${b.id}`}>
+                  <div className="section-label">{b.title}</div>
+                  <pre className="code">{b.text}</pre>
+                  {b.note && <p className="muted">{b.note}</p>}
+                  <button className="btn btn-outline btn-small" data-testid={`settings.copy.${b.id}`} onClick={() => copy(b.text)}>
+                    复制
+                  </button>
+                </div>
+              ))
+            ) : (
+            <>
             <div className="mcp-block">
               <div className="section-label">Claude Code</div>
               <pre className="code">{CLAUDE_CMD}</pre>
@@ -303,6 +384,8 @@ export function SettingsPanel() {
                 复制配置
               </button>
             </div>
+            </>
+            )}
             <p className="muted">
               模式：<code>SIM_MCP_MODE=client</code>（默认）由调用方模型扮演；改为 <code>server</code> 则使用本页配置的模型服务。接入后对模型说「开一局天宝，先看简报」即可。<code>sim</code> 需在 PATH 中（引擎 backend 安装后提供）。
             </p>

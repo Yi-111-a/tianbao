@@ -21,3 +21,4 @@ playtests/engine-*/
 playtests/**/home/
 playtests/**/events.jsonl
 playtests/**/stderr.txt
+app/test-results*/
