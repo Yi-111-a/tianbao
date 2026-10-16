@@ -116,7 +116,7 @@
   turn: 0
   title: 高仙芝献俘
   summary: 高仙芝入朝献俘。朝议欲以仙芝代安思顺镇河西，河西诸胡割耳剺面请留思顺。仙芝又请再讨石国余党。
-  region: anxi
+  region: jingji   # 献俘、廷议都在长安（驿程见 regions.yaml：安西奏报晚一季，此条不是安西来奏）
   illustration: event.anxi_triumph
   advisors:
     - {character: li_linfu, stance: neutral, line: 诸胡之心可用，臣以为宜留思顺。, requires: {office: you_xiang}, option: restrain}
@@ -337,13 +337,13 @@
 
 # ============================== T2 天宝十载秋 ==============================
 - id: t2_west
+  turn: 2   # 远地（安西）奏疏：turn 写在条目上，引擎把可见窗口后移一季（T3 奏到）；conditions 发出时与奏到时都须成立
   conditions:
     all:
-      - {kind: turn, operator: eq, value: 2}
       - {kind: flag, operator: eq, key: talas_defeat, value: true}
   title: 怛罗斯败报
-  summary: 高仙芝与大食战于怛罗斯，葛逻禄倒戈，蕃汉兵三万所存无几。仙芝请再发兵以雪前耻。
-  region: anxi
+  summary: 安西奏：今夏高仙芝与大食战于怛罗斯，葛逻禄倒戈，蕃汉兵三万所存无几。四镇去京七千余里，败报辗转，入冬乃至。仙芝请再发兵以雪前耻。
+  region: anxi   # 驿程 54 日，超过 45 日：秋季（T2）所发，冬季（T3）奏到
   illustration: event.talas
   advisors:
     - {character: gao_xianzhi, stance: support, line: 败在葛逻禄反复，非战之罪。再给臣兵，可复此仇。, option: avenge}
@@ -374,13 +374,13 @@
       hint: 封常清实授安西节度、统安西军（不在安西则启程赴镇，行程按实际路线计）；边患 −2；封常清得用
 
 - id: t2_west_calm
+  turn: 2   # 远地奏疏，T3 奏到（见 t2_west）
   conditions:
     all:
-      - {kind: turn, operator: eq, value: 2}
       - {kind: flag, operator: eq, key: anxi_restrained, value: true}
   title: 西域安堵
-  summary: 安西奏西域诸国朝贡不绝，大食未至葱岭以东。四镇将吏请以余粮屯田。
-  region: anxi
+  summary: 安西秋间奏：西域诸国朝贡不绝，大食未至葱岭以东。四镇将吏请以余粮屯田。驿程万里，奏至已入冬。
+  region: anxi   # 秋季（T2）所发，冬季（T3）奏到
   illustration: event.anxi_triumph
   proposal: farm
   advisors:
@@ -1703,7 +1703,7 @@
       - {kind: character_region, operator: eq, character: feng_changqing, region: anxi}
   title: 安西节度人选
   summary: 高仙芝久在京师，安西四镇由判官封常清知留后。或请即以常清为安西节度使。
-  region: anxi
+  region: jingji   # 仙芝在京，朝中议其继任（非安西来奏，不受驿程之迟）
   illustration: event.jiedu_appointment
   advisors:
     - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。, option: feng}
@@ -1727,18 +1727,18 @@
 
 - id: t7_anxi_away
   variant_of: t7_anxi   # 同一议题按局势写的分支（content_lint 检查互斥）
+  turn: 7   # 远地（安西）奏疏：T7 发出、T8 奏到（见 t2_west）
   conditions:
     all:
       - {not: {kind: flag, operator: exists, key: "memorial:t7_anxi"}}   # 同题分支：已处理其一则不再出现
-      - {kind: turn, operator: eq, value: 7}
       - {kind: office_holder, operator: eq, office: anxi_jds, character: gao_xianzhi}
       - {not: {kind: character_region, operator: eq, character: gao_xianzhi, region: anxi}}
       - any:
           - {not: {kind: character_region, operator: eq, character: gao_xianzhi, region: jingji}}
           - {not: {kind: character_region, operator: eq, character: feng_changqing, region: anxi}}
   title: 安西节度人选
-  summary: 安西节度使高仙芝不在镇，四镇军务由副将摄理。或请即以封常清为安西节度使，令其赴镇。
-  region: anxi
+  summary: 安西去冬奏：节度使高仙芝不在镇，四镇军务由副将摄理。驿程万里，今春乃至。或请即以封常清为安西节度使，令其赴镇。
+  region: anxi   # 冬季（T7）所发，次年春（T8）奏到
   illustration: event.jiedu_appointment
   advisors:
     - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。, option: feng}
@@ -2302,9 +2302,9 @@
       hint: 君威 +1，边患 +2
 
 - id: t10_bolu
-  turn: 10
+  turn: 9   # 远地奏疏：夏季（T9）所发，秋季（T10）奏到（史载十二载，未详月）
   title: 安西破大勃律
-  summary: 安西奏击大勃律，破之。将吏请叙功，并请乘胜经略葱岭以西。
+  summary: 安西奏：夏间击大勃律，破之。驿程万里，捷书入秋乃至。将吏请叙功，并请乘胜经略葱岭以西。
   region: anxi
   illustration: event.anxi_triumph
   advisors:
@@ -5294,8 +5294,8 @@
       - {kind: army_region, army: anxi_army, operator: eq, region: anxi}
   title: 西域兵入援
   keywords: [安西, 西域, 入援]
-  summary: 安西四镇兵精于战阵，或请征之东援；然葱岭以西诸胡未靖，四镇空虚则边患加剧，且万里赴援，经年乃至。
-  region: anxi
+  summary: 安西四镇兵精于战阵，或请征之东援；然葱岭以西诸胡未靖，四镇空虚则边患加剧，且万里赴援，经年乃至；诏书西去，亦须一季方达四镇。
+  region: jingji   # 朝中议调西兵（非安西来奏）；调兵之令作用于安西军，令达仍晚一季
   illustration: event.anxi_triumph
   advisors:
     - {character: gao_xianzhi, stance: support, line: 四镇之兵，一可当十。, option: detach}

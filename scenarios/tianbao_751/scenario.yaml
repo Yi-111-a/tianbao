@@ -496,6 +496,34 @@ settings:
   player_faction: tang
   player_character: xuanzong
   hidden_traits: [ambition, fear, loyalty]
+  trait_names: {rashness: 轻躁}
+  # ---- 第 9 轮（CONTRACT §7）----
+  # 朝会日程：每季召对三次（面见、书面奏对、遣使问对都算一次），廷议一次。
+  agenda: {audience_per_season: 3, debate_per_season: 1}
+  # 京城：廷议只有身在京畿且不在途者能当场与议；在外者递书面议状，下季送达。
+  capital_region: jingji
+  # 驿传：各道 courier_days 见 regions.yaml。驿程超过 45 日（安西 54、南诏 50）的地区，奏疏与军报晚一季到，诏令晚一季到达。
+  # 45 日而非契约缺省的 60 日：一季约九十日，驿程过一月半者多半不能当季奏到（本游戏设定，见 FACT_CHECK #65）。
+  courier: {late_threshold_days: 45}
+  # 将领自主（CONTRACT §7.5）：对有统帅之军下的军令（出征 march、移师 move、分兵 detach、军态 hold / attack / scorch），
+  # 按统帅特质算「拒命或擅动」的概率（种子随机）。变量为统帅特质：loyalty 忠诚、ambition 野心、rashness 轻躁（未写的特质按 0）。
+  #   拒命项 = 权重 ×（0.06 × max(0, 6 − 忠诚) + 0.04 × max(0, 野心 − 6)）：忠诚 6 以上、野心 6 以下者不拒命；
+  #   擅动项 = 权重 × 0.04 × max(0, 轻躁 − 5)：轻躁 5 以下者不擅动；守御之令（hold）最易被轻躁之将改作出战。
+  #   各命令类型的两项权重写在 by_order 中；总概率上限 0.6。命中后的结果：迁延一季 / 改作他令 / 擅自出战（outcomes 为其权重）。
+  # 例：令安禄山统范阳军出征约 0.24（高）；令高仙芝坚守约 0.12（中）；郭子仪、哥舒翰任何军令皆 0（低）。
+  # 哥舒翰「被迫出关」不是他本人轻躁：史载由朝廷督战所致，本游戏写作奏疏「出关之议」（r_sortie）由陛下裁断，不进此公式。
+  # 召还（move_character）、换帅不在此列：拥兵之将不奉召，由奏疏与事件处理。
+  autonomy:
+    formula: "min(0.6, 1.0 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 0.5 * 0.04 * max(0, rashness - 5))"
+    by_order:
+      march: "min(0.6, 1.0 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 0.5 * 0.04 * max(0, rashness - 5))"
+      move: "min(0.6, 0.8 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 0.3 * 0.04 * max(0, rashness - 5))"
+      detach: "min(0.6, 0.9 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 0.5 * 0.04 * max(0, rashness - 5))"
+      hold: "min(0.6, 0.6 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 1.5 * 0.04 * max(0, rashness - 5))"
+      attack: "min(0.6, 1.2 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)))"
+      scorch: "min(0.6, 1.3 * (0.06 * max(0, 6 - loyalty) + 0.04 * max(0, ambition - 6)) + 1.0 * 0.04 * max(0, rashness - 5))"
+    outcomes: {delay: 0.5, alter: 0.25, sortie: 0.25}
+    levels: [0.08, 0.2]   # < 0.08 低；< 0.2 中；其余高
   corruption_resource: corruption
   campaign_turns: 20
   epilogue_turns: 4
@@ -530,3 +558,44 @@ settings:
     strife_streak: 朝争高位连续季数
     fanyang_measures: 安抚范阳旧部之策
     war_merit: 官军战功
+
+# 新手引导（CONTRACT §7.6，第 9 轮）：前三季（T0–T2）。target 为前端 data-testid（`<画面>.<元素>`，末段 * 表示该组任一元素）。
+# 次序：读奏疏 → 批答 → 预览颁布 → 推演（T0）；政令卡 → 召对（T1）；廷议 → 兵部 → 驿程（T2）。
+tutorial:
+  # ---- T0 天宝十载春：奏疏与诏书 ----
+  - {turn: 0, step: 1, title: 案上奏疏, target: desk.memorialBook,
+     text: 每季中书门下呈上若干奏疏，是朝政的主线。先打开奏疏册。}
+  - {turn: 0, step: 2, title: 读奏疏, target: memorial.item.t0_hedong,
+     text: 「河东节度出缺」：先看摘要，再看群臣谏言。谏言各有立场与私心，所言未必尽实。}
+  - {turn: 0, step: 3, title: 批答, target: memorial.option.t0_hedong.*,
+     text: 选一项批答，即加入诏书草案。各项下的提示写明代价与后果；不批者留待后议；少数奏疏写明不处置即照例施行，须留意。}
+  - {turn: 0, step: 4, title: 诏书草案, target: desk.edictScroll,
+     text: 批过的奏疏都汇入诏书草案。可以再批几道，也可以留待下季。}
+  - {turn: 0, step: 5, title: 预览, target: edict.preview,
+     text: 颁布之前先预览回执：每一条将如何执行、要花多少钱粮、有司是否可能稽迟，都会列出。}
+  - {turn: 0, step: 6, title: 颁布, target: edict.promulgate,
+     text: 确认无误即颁布。诏书一经颁布，本季不能收回。}
+  - {turn: 0, step: 7, title: 推演, target: desk.advance,
+     text: 颁布后推演一季：钱粮出入、行军、事件依次结算，下季的奏疏随之呈上。}
+  # ---- T1 天宝十载夏：政令卡与召对 ----
+  - {turn: 1, step: 1, title: 政令卡, target: edict.cards,
+     text: 奏疏之外，朝廷日常之事可用政令卡：任免、召还、出征、驻守、赈济、修城等。卡上写明花费与冷却。}
+  - {turn: 1, step: 2, title: 填参数、加入草案, target: edict.cardAdd,
+     text: 选卡后填写人物、官职、军队或地区，加入草案。卡片不直接增减君威、民心等国势，国势的起落仍看奏疏批答。}
+  - {turn: 1, step: 3, title: 召对, target: desk.medallion.audience,
+     text: 召对可当面问计于群臣。每季只有三次：面见、书面奏对、遣使问对都算一次，用前想清楚问谁、问什么。}
+  - {turn: 1, step: 4, title: 择人召对, target: audience.pick.*,
+     text: 在京者可当面召见；不在京者只能遣使问对，回奏于下季送达。}
+  - {turn: 1, step: 5, title: 颁布与推演, target: edict.promulgate,
+     text: 批答、政令卡都在同一道诏书里。预览无误后颁布，再推演一季。}
+  # ---- T2 天宝十载秋：廷议、兵部与驿程 ----
+  - {turn: 2, step: 1, title: 廷议, target: desk.medallion.debate,
+     text: 大事可付廷议，听各派当廷争论后再裁断。每季只有一次。}
+  - {turn: 2, step: 2, title: 只有在京者能当廷议, target: debate.pick.*,
+     text: 只有身在京城、不在途中的大臣能当廷议；出镇在外者只能递书面议状，其立场下季送达，记入谏言库。}
+  - {turn: 2, step: 3, title: 开议, target: debate.start,
+     text: 定好议题与与议之人，即可开议。廷议只供参考，裁断仍在陛下。}
+  - {turn: 2, step: 4, title: 兵部, target: army.root,
+     text: 兵部图上列出各军兵力、统帅是否在营、驻地与行程、可下的军令。统帅忠诚低、野心大或性情轻躁者，军令或被延宕、擅改，预览会标出风险高低。}
+  - {turn: 2, step: 5, title: 驿程, target: desk.advance,
+     text: 远方之事有驿程之迟：安西、南诏奏报晚一季才到，诏令也晚一季才达；奏疏上会注明「某月某日自某地奏到」。推演吧。}

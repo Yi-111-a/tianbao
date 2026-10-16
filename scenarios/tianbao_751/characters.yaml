@@ -1,5 +1,7 @@
 # 人物。官衔经 docs/FACT_CHECK.md 核对；traits 全部为本游戏设定（【虚】）。
 # traits：ability 才干、loyalty 忠诚、ambition 野心、favor 恩宠、fear 畏惧（0–10）。
+#   rashness 轻躁（0–10，缺省 5，第 9 轮）：只给统兵将帅，供 settings.autonomy 算「擅动」之险。数值为本游戏设定（【虚】），依据见 FACT_CHECK #67。
+#   安禄山另有隐藏的 ambition 9（供将领自主公式算「拒命」之险）；其异志的变化仍以隐藏资源「禄山异志」为准。
 # persona / speech_style / card 为扮演用写作（【虚】），不引用未经核实的原话。
 # card 为扮演卡附加字段（立绘 id、诉求、开场白、示例台词），引擎状态不读取。
 - id: xuanzong
@@ -149,7 +151,7 @@
   offices: [pinglu_jds, fanyang_jds]
   bloc: fanyang
   region: jingji
-  traits: {ability: 8, loyalty: 4, favor: 9, fear: 4}
+  traits: {ability: 8, loyalty: 4, favor: 9, fear: 4, ambition: 9, rashness: 4}
   persona: 营州杂胡出身，以边功起家，久镇幽燕，天宝九载封东平郡王。体态肥硕，以胡人憨直自处，深得陛下与贵妃宠信。养同罗、奚、契丹降者为曳落河精骑。心机深而不露，畏惧宰相与东宫，与杨国忠交恶。
   speech_style: 自称「臣胡人」，言辞憨直诙谐，常插科打诨；一问到兵权便转而表忠心，说「臣只知有陛下」。例：「臣胡人，不识汉家礼数，只知有陛下，不知有别人。」
   knowledge: [范阳兵马, 契丹、奚事, 朝中谁欲害己]
@@ -170,7 +172,7 @@
   offices: []
   bloc: fanyang
   region: pinglu
-  traits: {ability: 8, loyalty: 3, ambition: 7, favor: 3, fear: 3}
+  traits: {ability: 8, loyalty: 3, ambition: 7, favor: 3, fear: 3, rashness: 6}
   persona: 与安禄山同乡里的胡将，通诸蕃语，久在安禄山麾下，为其心腹大将。身形瘦削，多智谋。
   speech_style: 话少而冷，称「末将」；只论兵马，不谈朝局。例：「兵在末将手里，不在长安纸上。」
   knowledge: [平卢、范阳兵马, 奚与契丹地形]
@@ -212,7 +214,7 @@
   offices: [longyou_jds]
   bloc: xibei
   region: longyou
-  traits: {ability: 8, loyalty: 7, ambition: 4, favor: 7, fear: 2}
+  traits: {ability: 8, loyalty: 7, ambition: 4, favor: 7, fear: 2, rashness: 3}
   persona: 突骑施哥舒部后裔，天宝六载起为陇右节度使，八载攻拔石堡城，士卒死伤甚众。豪爽刚烈，嗜酒，与安禄山素不相能。
   speech_style: 豪爽直率，酒后更无忌讳，称「臣」，常拍案；提到安禄山便冷笑。例：「那胖胡懂什么兵？不过会讨陛下欢心罢了。」
   knowledge: [陇右兵马, 吐蕃军情, 石堡城旧事]
@@ -234,7 +236,7 @@
   offices: [anxi_jds]
   bloc: xibei
   region: jingji
-  traits: {ability: 8, loyalty: 7, ambition: 4, favor: 7, fear: 2}
+  traits: {ability: 8, loyalty: 7, ambition: 4, favor: 7, fear: 2, rashness: 7}
   persona: 高句丽人，久在安西，骁勇善战。天宝十载正月入朝献俘，加开府仪同三司。朝议曾欲以其代安思顺镇河西，未果。好立边功。
   speech_style: 话短，不绕弯，称「臣」；论兵只说进取。例：「大食远来，不足为惧。给臣三万人，可收葱岭以西。」
   knowledge: [西域诸国, 石国、大食、葛逻禄动向, 安西兵马]
@@ -255,7 +257,7 @@
   offices: []
   bloc: xibei
   region: anxi
-  traits: {ability: 8, loyalty: 9, ambition: 3, favor: 3, fear: 3}
+  traits: {ability: 8, loyalty: 9, ambition: 3, favor: 3, fear: 3, rashness: 6}
   persona: 身材细瘦，一足偏短，貌不惊人而有干才。久为高仙芝判官，常知留后事，文书奏报出其手。
   speech_style: 文辞犀利，务实，先说数目与粮道，再说结论；称「臣」。例：「兵不在多，在粮道与号令。东都若要守，须先修城、募兵、储粮。」
   knowledge: [安西兵马与粮储, 西域道路]
@@ -277,7 +279,7 @@
   offices: [hexi_jds]
   bloc: xibei
   region: hexi
-  traits: {ability: 6, loyalty: 7, ambition: 3, favor: 6, fear: 5}
+  traits: {ability: 6, loyalty: 7, ambition: 3, favor: 6, fear: 5, rashness: 3}
   persona: 粟特裔边帅，久镇河西，深得河西诸胡拥戴。安禄山冒姓安氏，与之约为兄弟，二人并无血亲。
   speech_style: 稳重谨慎，称「臣」；谈到安禄山便格外小心措辞。例：「禄山与臣，不过约为兄弟，臣只知有国家。」
   knowledge: [河西兵马, 河西诸胡部落]
@@ -297,7 +299,7 @@
   offices: []
   bloc: xibei
   region: shuofang
-  traits: {ability: 9, loyalty: 9, ambition: 2, favor: 3, fear: 2}
+  traits: {ability: 9, loyalty: 9, ambition: 2, favor: 3, fear: 2, rashness: 2}
   persona: 华州人，武举出身，起于朔方行伍。宽厚稳重，善抚士卒，不争功名。
   speech_style: 宽厚平和，称「臣」，言必及士卒与粮草，从不夸功。例：「士卒饱暖，方可言战。」
   knowledge: [朔方兵马, 河曲地形, 回纥、突厥动向]
@@ -318,7 +320,7 @@
   offices: []
   bloc: xibei
   region: hexi
-  traits: {ability: 9, loyalty: 8, ambition: 3, favor: 3, fear: 2}
+  traits: {ability: 9, loyalty: 8, ambition: 3, favor: 3, fear: 2, rashness: 3}
   persona: 契丹裔将门之子，起于河西军中。治军严整，沉毅寡言。
   speech_style: 严厉寡言，称「臣」，一句话能说完绝不说两句。例：「军令不严，不可战。」
   knowledge: [河西兵马, 军法]
@@ -381,7 +383,7 @@
   offices: [jiannan_jds]
   bloc: yang
   region: jiannan
-  traits: {ability: 4, loyalty: 6, ambition: 4, favor: 5, fear: 4}
+  traits: {ability: 4, loyalty: 6, ambition: 4, favor: 5, fear: 4, rashness: 7}
   persona: 蜀中豪富，与杨国忠交厚，由其荐引为剑南节度使。性情急躁，轻视南诏。
   speech_style: 自负急躁，称「臣」，好说「蛮夷何足道」。例：「南诏小蛮，臣发兵一举可平。」
   knowledge: [剑南兵马, 南诏动向（多有轻忽）]

@@ -50,6 +50,16 @@
 20. 再造唐室须有战功（round 8）：e3_* 结局须正向要求乱平、官军战功（counter war_merit）或范阳已不在叛军之手之一。
 21. 善后之言须有其事（round 8）：乱平后的奏疏称乱中新募、加税、西兵东调、漕路被毁、州县陷贼等，须有记录其事的旗标。
 22. 察使称谓（round 8）：察看范阳的回奏事件写「中使」须排除遣御史，写「御史」须限于遣御史（memorial:p_envoy）。
+23. 政令卡（round 9，policy_cards.yaml）：id 不重复；category 为 军务 / 内政 / 人事 / 外交 / 财计；params 的 kind 合法；
+    ops 只用玩家层操作（CONTRACT 1.3.1 白名单，另加 set_army_posture）；ops 中的 {参数} 都有定义、每个参数都被用到；
+    start_project 的 on_complete 只能加本工程地区的 adjust_region（0 < delta ≤ 10，且增益合计 × 10 ≤ 总花费）；
+    cost_hint 不能空；cooldown 为正整数。
+24. 驿程（round 9）：每个地区都有正整数 courier_days；驿程超过 settings.courier.late_threshold_days 的地区，
+    其奏疏摘要须写明晚到（「乃至 / 奏到 / 奏至 / 乃达」之类），且回合写在条目 turn 上、conditions 不含 turn（奏到时条件须仍成立）。
+25. 新手引导（round 9）：tutorial 每步有 turn / step / title / text / target；target 形如「画面.元素」（末段可为 *）；
+    同一季 step 从 1 连续编号；target 指向具体奏疏（memorial.item.<id> / memorial.option.<id>.*）时，该奏疏须存在且在当季可见。
+26. 将领自主（round 9）：settings.autonomy 的 formula 与 by_order 各式只用人物特质、is_<命令>、present、strength 与 min / max；
+    by_order 只用引擎的命令类型（march / move / detach / hold / attack / scorch）。
 """
 from __future__ import annotations
 
@@ -137,7 +147,7 @@ POSTWAR_CLAIMS: list[tuple[str, list[str]]] = [   # 善后奏疏的说法 → �
 # ---- 读取 ----
 def load(pack: Path) -> dict[str, Any]:
     data: dict[str, Any] = {}
-    for name in ("scenario", "characters", "events", "memorials"):
+    for name in ("scenario", "characters", "events", "memorials", "regions", "policy_cards"):
         file = pack / f"{name}.yaml"
         data[name] = yaml.safe_load(file.read_text(encoding="utf-8")) if file.is_file() else []
     return data
@@ -739,6 +749,156 @@ def lint(pack: Path) -> list[str]:
             for op in ops_of(choice.get("effects")):
                 check_char(op.get("character"), f"{where} op {op.get('op')}")
             check_title(str(choice.get("text", "")), choice.get("effects"), choice.get("appoints_via"), where)
+    problems.extend(lint_round9(data))
+    return problems
+
+
+# ---- round 9：政令卡、驿程、新手引导、将领自主 ----
+PLAYER_OPS = {"appoint", "dismiss", "move_character", "move_army", "march", "detach", "set_army_commander",
+              "start_project", "add_standing_order", "cancel_standing_order", "cancel_ledger", "remember",
+              "set_character_status", "set_army_posture"}
+CARD_CATEGORIES = {"军务", "内政", "人事", "外交", "财计"}
+PARAM_KINDS = {"character", "office", "army", "region", "amount", "choice"}
+PLACEHOLDER = re.compile(r"\{(\w+)(?:\.name)?\}")
+LATE_WORDS = re.compile(r"乃至|奏到|奏至|乃达")
+TARGET_RE = re.compile(r"^[a-z][A-Za-z0-9]*(\.(?:[A-Za-z0-9_]+|\*))+$")
+AUTONOMY_ORDERS = {"march", "move", "detach", "hold", "attack", "scorch"}
+AUTONOMY_VARS = {"min", "max", "present", "strength"} | {f"is_{k}" for k in AUTONOMY_ORDERS}
+
+
+def _placeholders(value: Any) -> set[str]:
+    if isinstance(value, str):
+        return set(PLACEHOLDER.findall(value))
+    if isinstance(value, dict):
+        return {name for v in value.values() for name in _placeholders(v)}
+    if isinstance(value, list):
+        return {name for v in value for name in _placeholders(v)}
+    return set()
+
+
+def _lint_card(card: dict[str, Any], problems: list[str]) -> None:
+    where = f"[政令卡] {card.get('id')}"
+    if card.get("category") not in CARD_CATEGORIES:
+        problems.append(f"{where} category 不合法：{card.get('category')}")
+    for key in ("title", "summary", "cost_hint"):
+        if not str(card.get(key) or "").strip():
+            problems.append(f"{where} 缺 {key}")
+    if "cooldown" in card and not (isinstance(card["cooldown"], int) and card["cooldown"] > 0):
+        problems.append(f"{where} cooldown 须为正整数")
+    params = {str(p.get("name")): p for p in card.get("params") or []}
+    for name, prm in params.items():
+        if prm.get("kind") not in PARAM_KINDS:
+            problems.append(f"{where} 参数 {name} 的 kind 不合法：{prm.get('kind')}")
+        if prm.get("kind") == "amount" and not all(isinstance(prm.get(k), (int, float)) for k in ("min", "max")):
+            problems.append(f"{where} 数额参数 {name} 须写 min / max")
+        if prm.get("kind") == "choice" and not prm.get("choices"):
+            problems.append(f"{where} 选项参数 {name} 须写 choices")
+    ops = list(card.get("ops") or [])
+    if not ops:
+        problems.append(f"{where} 没有 ops")
+    used = _placeholders(ops)
+    for name in sorted(used - set(params)):
+        problems.append(f"{where} ops 引用未定义的参数 {{{name}}}")
+    for name in sorted(set(params) - used):
+        problems.append(f"{where} 参数 {name} 未被 ops 使用")
+    for op in ops:
+        kind = op.get("op")
+        if kind not in PLAYER_OPS:
+            problems.append(f"{where} 使用了非玩家层操作 {kind}（只许 CONTRACT 1.3.1 白名单与 set_army_posture）")
+        if kind == "set_army_posture" and op.get("posture") not in ("hold", "attack", "scorch"):
+            problems.append(f"{where} posture 不合法：{op.get('posture')}")
+        if kind != "start_project":
+            continue
+        cost = op.get("cost_per_turn") or {}
+        turns = op.get("turns")
+        if not cost or any(not isinstance(v, (int, float)) or v <= 0 for v in cost.values()) or not isinstance(turns, int) or turns < 1:
+            problems.append(f"{where} start_project 的 cost_per_turn / turns 须为正")
+            continue
+        gain = 0.0
+        for sub in op.get("on_complete") or []:
+            if sub.get("op") == "adjust_region":
+                delta = sub.get("delta")
+                if sub.get("region") != op.get("region"):
+                    problems.append(f"{where} 工程竣工只能加本地区指标")
+                if not isinstance(delta, (int, float)) or not 0 < delta <= 10:
+                    problems.append(f"{where} 工程竣工每项增益须在 (0, 10]")
+                else:
+                    gain += delta
+            elif sub.get("op") not in PLAYER_OPS:
+                problems.append(f"{where} 工程竣工含非玩家层操作 {sub.get('op')}")
+        total = sum(cost.values()) * turns
+        if gain * 10 > total:
+            problems.append(f"{where} 工程增益合计 {gain:g} × 10 超过总花费 {total:g}")
+
+
+def lint_round9(data: dict[str, Any]) -> list[str]:
+    problems: list[str] = []
+    scenario = data["scenario"] or {}
+    settings = scenario.get("settings") or {}
+    regions = [r for r in data.get("regions") or [] if isinstance(r, dict)]
+    memos = {m["id"]: m for m in data["memorials"] or [] if isinstance(m, dict) and m.get("id")}
+    # 23 政令卡
+    seen: set[str] = set()
+    for card in data.get("policy_cards") or []:
+        if str(card.get("id")) in seen:
+            problems.append(f"[政令卡] {card.get('id')} id 重复")
+        seen.add(str(card.get("id")))
+        _lint_card(card, problems)
+    # 24 驿程
+    threshold = float((settings.get("courier") or {}).get("late_threshold_days", 60))
+    late: set[str] = set()
+    for region in regions:
+        days = region.get("courier_days")
+        if not isinstance(days, int) or days <= 0:
+            problems.append(f"[驿程] 地区 {region.get('id')} 缺正整数 courier_days")
+        elif days > threshold:
+            late.add(str(region.get("id")))
+    for mid, memo in memos.items():
+        if memo.get("region") not in late:
+            continue
+        if not LATE_WORDS.search(str(memo.get("summary", ""))):
+            problems.append(f"[驿程] 奏疏 {mid} 来自驿程过远之地（{memo.get('region')}，晚一季奏到），摘要须写明晚到")
+        if any(leaf.get("kind") == "turn" for leaf in leaf_conditions(memo.get("conditions")) + negated_leaves(memo.get("conditions"))):
+            problems.append(f"[驿程] 远地奏疏 {mid} 的回合须写在条目的 turn 上（引擎后移一季）；conditions 奏到时须仍成立，不能含 turn 条件")
+    # 25 新手引导
+    steps: dict[int, list[int]] = {}
+    for row in scenario.get("tutorial") or []:
+        where = f"[引导] T{row.get('turn')} 第{row.get('step')}步"
+        if not isinstance(row.get("turn"), int) or not isinstance(row.get("step"), int):
+            problems.append(f"{where} turn / step 须为整数")
+            continue
+        steps.setdefault(row["turn"], []).append(row["step"])
+        for key in ("title", "text"):
+            if not str(row.get(key) or "").strip():
+                problems.append(f"{where} 缺 {key}")
+        target = str(row.get("target") or "")
+        if not TARGET_RE.match(target):
+            problems.append(f"{where} target 不合「画面.元素」格式：{target!r}")
+            continue
+        parts = target.split(".")
+        if parts[0] == "memorial" and len(parts) >= 3 and parts[1] in ("item", "option"):
+            memo = memos.get(parts[2])
+            vt = visible_turns(memo) if memo else None
+            if memo is None:
+                problems.append(f"{where} target 指向不存在的奏疏 {parts[2]}")
+            elif vt is not None and row["turn"] not in vt:
+                problems.append(f"{where} target 奏疏 {parts[2]} 不在 T{row['turn']} 可见")
+    for turn, nums in steps.items():
+        if sorted(nums) != list(range(1, len(nums) + 1)):
+            problems.append(f"[引导] T{turn} 的 step 须自 1 连续编号：{sorted(nums)}")
+    # 26 将领自主
+    autonomy = settings.get("autonomy")
+    if autonomy is not None:
+        traits = {str(k) for c in data["characters"] or [] for k in (c.get("traits") or {})}
+        by_order = autonomy.get("by_order") or {}
+        if not autonomy.get("formula") and not by_order:
+            problems.append("[将领自主] settings.autonomy 缺 formula")
+        for order in sorted(set(by_order) - AUTONOMY_ORDERS):
+            problems.append(f"[将领自主] by_order 的命令类型无效：{order}")
+        for formula in [autonomy.get("formula") or "", *by_order.values()]:
+            names = set(re.findall(r"[A-Za-z_]\w*", str(formula)))
+            for name in sorted(names - AUTONOMY_VARS - traits):
+                problems.append(f"[将领自主] 公式用了未定义的变量 {name}")
     return problems
 
 

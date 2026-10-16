@@ -173,6 +173,7 @@
 - id: talas
   title: 怛罗斯之战
   kind: scheduled
+  region: anxi   # 安西驿程 54 日（> 45）：引擎据此将此事军报晚一季见于简报（CONTRACT §7.3）
   when: {turn: 2}
   conditions: {not: {kind: flag, operator: eq, key: anxi_restrained, value: true}}
   gravity: 0.75

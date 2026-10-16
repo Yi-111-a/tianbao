@@ -26,6 +26,14 @@
 - ops_disarm（仅 engine 后端）：不经奏疏，以通用诏令把禄山调入京畿、免其范阳 / 平卢节度、以郭子仪接范阳，
   验证事件「禄山留京解镇」把这一局面并入留京路线（gpt-07）。model 后端不模拟玩家 ops，此策略退化为 wise。
 
+- wise_cards（round 9）：wise 之外，每季按局势颁行政令卡（policy_cards.yaml：疏浚漕渠、赈济、修城、常平仓、营田……），
+  量入为出、遵守冷却。用来确认政令卡有用而不喧宾夺主：E1 类不应比 wise 高出许多，国库不应因卡片而日丰。
+
+round 9 的朝会日程（settings.agenda：每季召对 3、廷议 1）：本脚本的策略只批奏疏、颁政令卡，不召对、不廷议，故不受其限；
+若日后加入召对策略，须遵守 agenda_limits() 给出的上限。
+驿传（settings.courier 与各地区 courier_days）：驿程超过阈值的地区（安西、南诏），奏疏晚一季才出现——
+当季条件成立即「发出」，下季「奏到」可见（model 后端按此模拟；engine 后端若引擎已原生实现则交给引擎）。
+
 输出另附「E1 类」合计（e1_* 结局，含按朝争分段的同名结局）。
 
 --difficulty yanyi|shishi|diyu 选难度档（scenario.yaml 的 difficulties）；引擎未原生支持时由本脚本改写剧本。
@@ -55,7 +63,7 @@ PACK = ROOT / "scenarios" / "tianbao_751"
 # ============================================================================
 def load_pack(path: Path = PACK) -> dict[str, Any]:
     data: dict[str, Any] = {"root": str(path)}
-    for name in ("scenario", "characters", "regions", "factions", "armies", "events", "memorials"):
+    for name in ("scenario", "characters", "regions", "factions", "armies", "events", "memorials", "policy_cards"):
         file = path / f"{name}.yaml"
         data[name] = yaml.safe_load(file.read_text(encoding="utf-8")) if file.is_file() else []
     return data
@@ -129,6 +137,10 @@ class Model:
         self.max_offices = int(sc.get("settings", {}).get("max_concurrent_offices", 1))
         self.log: list[str] = []
         self._now = 0  # 写 flag_turns 用的回合
+        # 驿传（round 9）：驿程超过阈值的地区，其奏疏当季发出、下季奏到
+        self.late_regions = late_regions(pack)
+        self.late_sent: set[str] = set()
+        self.card_last: dict[str, int] = {}
 
     # ---------------- 条件 ----------------
     def matches(self, c: Any, turn: int | None = None) -> bool:
@@ -366,13 +378,23 @@ class Model:
 
     # ---------------- 奏疏 ----------------
     def visible_memorials(self) -> list[dict[str, Any]]:
+        """当季可见奏疏。驿程过远地区的奏疏（同引擎 domain.memorials.is_visible）：写 turn 者可见窗口后移一季；
+        写 conditions 者须上季已可见（记为发出），且此刻条件仍成立。每季只调用一次。"""
         out = []
         for m in self.pack["memorials"]:
             if f"memorial:{m['id']}" in self.flags:
                 continue
-            if "turn" in m and m["turn"] != self.turn:
+            far = m.get("region") in self.late_regions
+            if "turn" in m and m["turn"] + (1 if far else 0) != self.turn:
+                if far and m["turn"] == self.turn and self.matches(m.get("conditions")):
+                    self.late_sent.add(m["id"])
                 continue
             if "conditions" in m and not self.matches(m["conditions"]):
+                continue
+            if far and "conditions" in m and m["id"] not in self.late_sent:
+                self.late_sent.add(m["id"])   # 本季发出，下季奏到
+                continue
+            if far and "turn" in m and "conditions" in m and m["id"] not in self.late_sent:
                 continue
             out.append(m)
         return out
@@ -572,6 +594,39 @@ def _eval(expr: str, values: dict[str, Any]) -> float:
     return float(eval(expr, {"__builtins__": {}, "max": max, "min": min}, dict(values)))  # 剧本公式只含算术与 min/max
 
 
+def late_regions(pack: dict[str, Any]) -> set[str]:
+    """驿程超过 settings.courier.late_threshold_days（缺省 60）的地区：奏疏晚一季奏到、诏令晚一季到达（CONTRACT §7.3）。"""
+    settings = (pack.get("scenario") or {}).get("settings") or {}
+    threshold = float((settings.get("courier") or {}).get("late_threshold_days", 60))
+    return {str(r["id"]) for r in pack.get("regions") or [] if float(r.get("courier_days") or 0) > threshold}
+
+
+def agenda_limits(pack: dict[str, Any]) -> dict[str, int | None]:
+    """每季召对、廷议上限（settings.agenda；未写为不限）。召对类策略须据此限次。"""
+    agenda = ((pack.get("scenario") or {}).get("settings") or {}).get("agenda") or {}
+    return {"audience": agenda.get("audience_per_season"), "debate": agenda.get("debate_per_season")}
+
+
+def _fill(value: Any, params: dict[str, Any]) -> Any:
+    """政令卡 ops 模板的占位替换：整值 "{name}" 保留参数类型，嵌在文字中的替换为字符串。"""
+    if isinstance(value, str):
+        if value.startswith("{") and value.endswith("}") and value[1:-1] in params:
+            return params[value[1:-1]]
+        for k, v in params.items():
+            value = value.replace("{" + k + "}", str(v))
+        return value
+    if isinstance(value, dict):
+        return {k: _fill(v, params) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_fill(v, params) for v in value]
+    return value
+
+
+def expand_card(pack: dict[str, Any], card_id: str, params: dict[str, Any]) -> list[dict[str, Any]]:
+    card = next(c for c in pack.get("policy_cards") or [] if c["id"] == card_id)
+    return [_fill(op, params) for op in card["ops"]]
+
+
 # ============================================================================
 # 策略
 # ============================================================================
@@ -730,6 +785,70 @@ def wise(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
             continue  # 量入为出
         picks.append((memo["id"], oid))
     choices = {p["id"]: WISE_CHOICE[p["event_id"]] for p in pending if p["event_id"] in WISE_CHOICE}
+    return picks, choices
+
+
+# ---- 政令卡（round 9）：wise 加按局势颁行的卡片 ----
+_CARD_USE: dict[tuple[int, str], int] = {}   # (种子, 卡 id) → 最近颁行回合（策略函数无状态，故记于此）
+_CARD_PACK: dict[str, Any] = {}
+
+
+def _cards_pack() -> dict[str, Any]:
+    if not _CARD_PACK:
+        _CARD_PACK.update(load_pack())
+    return _CARD_PACK
+
+
+def _card_ready(m: Any, card_id: str) -> bool:
+    card = next(c for c in _cards_pack().get("policy_cards") or [] if c["id"] == card_id)
+    last = _CARD_USE.get((m.seed, card_id))
+    if m.turn == 0:
+        last = None
+        _CARD_USE.pop((m.seed, card_id), None)
+    return last is None or m.turn - last > int(card.get("cooldown") or 0)
+
+
+def _region_stat(m: Any, rid: str, stat: str) -> float:
+    st = getattr(m, "st", None)
+    if st is not None:
+        return float(st.regions[rid].stats.get(stat, 0))
+    return float(m.regions[rid]["stats"].get(stat, 0))
+
+
+def _controlled(m: Any, rid: str) -> bool:
+    st = getattr(m, "st", None)
+    ctrl = st.regions[rid].controller if st is not None else m.regions[rid]["controller"]
+    return ctrl in (None, m.main)
+
+
+def wise_cards(m: Any, visible: list[dict], pending: list[dict]) -> Decision:
+    """wise 批奏疏，另每季至多颁两张政令卡（钱粮宽裕时，守冷却）：漕渠、赈济最乱之道、乱起修潼关、边地营田、常平仓。"""
+    picks, choices = wise(m, visible, pending)
+    spend = sum(_treasury_cost(next(o for o in x["options"] if o["id"] == oid))
+                for x in visible for mid, oid in picks if mid == x["id"])
+    budget = m.r("treasury") - spend - 400   # 留足一年开支，余钱才办地方之事
+    plan: list[tuple[str, dict[str, Any], float]] = []
+    rebellion = bool(getattr(m, "st", None).flags.get("rebellion_started") if getattr(m, "st", None) is not None
+                     else m.flags.get("rebellion_started"))
+    if rebellion and _controlled(m, "tongguan"):
+        plan.append(("int_walls", {"region": "tongguan"}, 60))
+    if 1 <= m.turn <= 12 and _controlled(m, "henan"):
+        plan.append(("int_canal", {"region": "henan"}, 90))
+    rows = [r for r in ("hebei", "henan", "jingji", "duji", "huainan", "jiangnan", "shannan", "jiannan") if _controlled(m, r)]
+    if rows:
+        worst = min(rows, key=lambda r: _region_stat(m, r, "order"))
+        if _region_stat(m, worst, "order") < 65 and m.r("grain") > 900:
+            plan.append(("int_relief", {"region": worst}, 10))
+    if m.turn <= 14 and _controlled(m, "longyou"):
+        plan.append(("fin_tuntian", {"region": "longyou"}, 90))
+    used = 0
+    for card_id, params, cost in plan:
+        if used >= 2 or cost > budget or not _card_ready(m, card_id):
+            continue
+        picks.append((OPS, expand_card(_cards_pack(), card_id, params)))
+        _CARD_USE[(m.seed, card_id)] = m.turn
+        budget -= cost
+        used += 1
     return picks, choices
 
 
@@ -961,7 +1080,7 @@ POLICIES: dict[str, Callable[[Model, list, list], Decision]] = {
     "do_nothing": do_nothing, "historical": historical, "wise": wise, "half_wise": half_wise,
     "defender": defender, "purge": purge, "chaos": chaos, "bankrupt": bankrupt, "mawei_refuse": mawei_refuse,
     "detain": detain, "detain_careless": detain_careless, "detain_early": detain_early, "ops_disarm": ops_disarm,
-    "first": first, "last": last, "passive_war": passive_war,
+    "first": first, "last": last, "passive_war": passive_war, "wise_cards": wise_cards,
 }
 
 
@@ -1016,7 +1135,11 @@ def play_model(pack: dict, policy: Callable, seed: int, trace: bool = False, on_
         memos, choices = policy(m, visible, list(m.pending))
         for mid, oid in memos:
             if mid == OPS:
-                continue  # 参考模型不模拟玩家自拟的 ops
+                for op in oid:  # 玩家自拟 / 政令卡的 ops：参考模型只模拟工程（start_project），调兵、任免、军态从略
+                    if op.get("op") == "start_project":
+                        m._now = m.turn
+                        m.try_apply(op, "政令卡")
+                continue
             memo = next(x for x in m.pack["memorials"] if x["id"] == mid)
             m.adopt(memo, oid)
         for cid, oid in choices.items():
