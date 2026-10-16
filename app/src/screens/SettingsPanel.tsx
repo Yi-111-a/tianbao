@@ -32,7 +32,7 @@ command = "sim"
 args = ["mcp"]
 env = { SIM_MCP_MODE = "client", LLM_SIM_HOME = "C:\\\\Users\\\\<用户名>\\\\AppData\\\\Roaming\\\\tianbao" }`;
 
-type Tab = 'models' | 'mcp' | 'usage';
+type Tab = 'models' | 'mcp' | 'usage' | 'game';
 
 interface IntegrationBlock {
   id: string;
@@ -213,6 +213,7 @@ export function SettingsPanel() {
               ['models', '模型路由'],
               ['mcp', 'MCP 接入'],
               ['usage', '用量与花费'],
+              ['game', '对局'],
             ] as [Tab, string][]
           ).map(([id, name]) => (
             <button key={id} role="tab" aria-selected={tab === id} className={cls('tab t-title', tab === id && 'is-on')} data-testid={`settings.tab.${id}`} disabled={tab === id} onClick={() => setTab(id)}>
@@ -389,6 +390,50 @@ export function SettingsPanel() {
             <p className="muted">
               模式：<code>SIM_MCP_MODE=client</code>（默认）由调用方模型扮演；改为 <code>server</code> 则使用本页配置的模型服务。接入后对模型说「开一局天宝，先看简报」即可。<code>sim</code> 需在 PATH 中（引擎 backend 安装后提供）。
             </p>
+          </div>
+        )}
+
+        {tab === 'game' && (
+          <div className="settings-body" data-testid="settings.game">
+            <div className="settings-toggle-row">
+              <div>
+                <div className="section-label">新手引导</div>
+                <p className="muted">前三季在案上逐步指点：奏疏、批答、诏书、政令卡、召对、廷议、兵部。关闭后不再提示，可随时重开（只影响本局）。</p>
+              </div>
+              <button
+                className={cls('toggle', g.view?.tutorial?.enabled && 'is-on')}
+                data-testid="settings.tutorial"
+                role="switch"
+                aria-checked={Boolean(g.view?.tutorial?.enabled)}
+                disabled={!g.view}
+                onClick={() => void g.setTutorial(!g.view?.tutorial?.enabled)}
+              >
+                <span className="toggle-knob" aria-hidden="true" />
+                <span className="toggle-text t-title">{g.view?.tutorial?.enabled ? '已开' : '已关'}</span>
+              </button>
+            </div>
+            {g.view?.agenda && (
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="section-label">朝会日程</div>
+                  <p className="muted">
+                    本季{g.view.agenda.text ?? ''}。召对（面见、书面奏对、遣使问对都算一次）与廷议每季有定数，季末结算后重置；不在京之臣的回奏于下季送达。
+                  </p>
+                </div>
+              </div>
+            )}
+            {g.view?.provider_mode && (
+              <div className="settings-toggle-row">
+                <div>
+                  <div className="section-label">御笔</div>
+                  <p className="muted">
+                    {g.view.provider_mode === 'offline'
+                      ? '未接模型：诏书中的御笔（自由诏文）只记入史册，不生效力；请用奏疏批答或政令卡。'
+                      : '已接模型：御笔由模型解读成条款，未必尽如圣意，颁布前请看有司回执。'}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

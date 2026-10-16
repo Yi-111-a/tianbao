@@ -21,6 +21,7 @@ import type {
   PublicResource,
   PublicState,
   Region,
+  Reply,
   Settings,
   TurnReport,
   UsageRow,
@@ -29,6 +30,8 @@ import type {
 import { CHAT_LINES, DEBATE_STANCE_TEXT } from './data';
 import { db, dbReady } from './db';
 import { evalCond, evalExpr } from './scenario';
+import { agendaLimits, armies as armiesTable, arrivalText, autonomyProb, cardRow, cardsFor, courierDays, expandCard, isPresent, lateThreshold, opRegion, present, riskLevel, transitText } from './round9';
+import { travelTimes } from '../../lib/route';
 
 // ---------------------------------------------------------------- helpers
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
@@ -103,6 +106,12 @@ interface Session {
   updated: string;
   /** test hook: pad every report/memorial/list with lots of content (layout stress) */
   stress?: boolean;
+  /** round 9: 朝会日程 counters of the current turn, 回奏 / 书面议状 in the post, tutorial flag */
+  agenda?: { turn: number; audience: number; debate: number };
+  pendingReplies?: Reply[];
+  replies?: Reply[];
+  pendingWritten?: Advice[];
+  tutorialOff?: boolean;
 }
 
 function initialState(): PublicState {
@@ -269,6 +278,48 @@ function applyOp(s: PublicState, op: Op, facts: Fact[]): string | null {
       facts.push({ kind: 'army', entity: a.id, text: `${a.name}移驻${s.regions[to].name}` });
       return null;
     }
+    case 'march': {
+      const a = s.armies?.[String(op.army)];
+      const to = String(op.to_region ?? '');
+      if (!a || !s.regions[to]) return '军队或地区不存在';
+      if (a.in_transit) return `${a.name}在途，不能再调`;
+      if (to === a.region) return null;
+      const eta = travelTimes(s.regions, a.region)[to];
+      if (eta == null) return `${a.name}无路可达${s.regions[to].name}`;
+      a.in_transit = { from_region: a.region, to_region: to, eta_turn: s.turn + Math.max(1, eta) };
+      if (op.with_commander && a.commander && s.characters[a.commander]?.region === a.region) s.characters[a.commander].in_transit = { ...a.in_transit };
+      facts.push({ kind: 'army', entity: a.id, text: `${a.name}启程赴${s.regions[to].name}，约${Math.max(1, eta)}季后到` });
+      return null;
+    }
+    case 'detach': {
+      const a = s.armies?.[String(op.army)];
+      const n = Math.round(Number(op.strength ?? 0));
+      if (!a) return '军队不存在';
+      if (n <= 0 || n >= a.strength) return `分兵数须少于${a.name}现有兵力（${Math.round(a.strength)}）`;
+      a.strength -= n;
+      const id = `${a.id}_d${uid().slice(0, 4)}`;
+      const to = String(op.to_region ?? a.region);
+      const eta = to === a.region ? 0 : travelTimes(s.regions, a.region)[to] ?? 1;
+      s.armies![id] = {
+        id,
+        name: String(op.new_army_name ?? `${a.name}偏师`),
+        faction: a.faction,
+        region: a.region,
+        strength: n,
+        commander: op.commander ? String(op.commander) : null,
+        quality: a.quality,
+        in_transit: eta ? { from_region: a.region, to_region: to, eta_turn: s.turn + Math.max(1, eta) } : null,
+      };
+      facts.push({ kind: 'army', entity: id, text: `${a.name}分兵${n}，编为「${s.armies![id].name}」${eta ? `赴${s.regions[to]?.name ?? ''}` : '就地分屯'}` });
+      return null;
+    }
+    case 'set_army_posture': {
+      const a = s.armies?.[String(op.army)];
+      if (!a) return '军队不存在';
+      a.posture = String(op.posture ?? 'hold');
+      facts.push({ kind: 'army', entity: a.id, text: `${a.name}改取${({ hold: '坚守', attack: '进击', scorch: '坚壁清野' } as Record<string, string>)[a.posture] ?? a.posture}之势` });
+      return null;
+    }
     case 'set_army_commander': {
       const a = s.armies?.[String(op.army)];
       if (!a) return '军队不存在';
@@ -412,7 +463,7 @@ function visibleMemorials(sess: Session): MemorialItem[] {
   const out = [...list];
   for (let i = 0; out.length < 12 && list.length; i++) {
     const m = clone(list[i % list.length]);
-    out.push({ ...m, id: `${m.id}__${i}`, title: `${m.title}（续${i + 1}）` });
+    out.push({ ...m, id: `${m.id}__${i}`, title: `${m.title}（续${i + 1}）`, ...(i % 3 === 1 && sess.state.turn > 0 ? { arrived_late: true, origin_turn: sess.state.turn - 1 } : {}) });
   }
   return out;
 }
@@ -428,7 +479,17 @@ function baseMemorials(sess: Session): MemorialItem[] {
       void _c;
       void _e;
       if (sess.stress) rest.summary = [rest.summary, rest.summary, rest.summary].join('');
-      return rest;
+      const region = rest.region ?? 'jingji';
+      const days = courierDays(s, region);
+      const late = days > lateThreshold() && s.turn > 0;
+      return {
+        ...rest,
+        region_name: s.regions[region]?.name,
+        courier_days: days,
+        arrival: arrivalText(s, region, late ? -60 : 0),
+        arrived_late: late,
+        origin_turn: late ? s.turn - 1 : null,
+      };
     });
 }
 
@@ -470,6 +531,15 @@ function view(sess: Session): ViewResponse {
     last_report: sess.lastReport,
     can_advance: !sess.state.outcome,
     command_table: commandTable(sess.state),
+    agenda: agendaView(sess),
+    replies: (sess.replies ?? []).filter((r) => r.turn === sess.state.turn),
+    written_opinions: sess.advice.filter((a) => a.source === '书面议状' && a.turn === sess.state.turn),
+    provider_mode: settings.provider === 'mock' ? 'offline' : 'llm',
+    tutorial: {
+      enabled: !sess.tutorialOff && !sess.state.outcome,
+      steps: sess.tutorialOff || sess.state.outcome ? [] : db.tutorial.filter((t) => t.turn === sess.state.turn).sort((a, b) => a.step - b.step),
+      total: db.tutorial.length,
+    },
     final_notice:
       !sess.state.outcome && sess.state.turn + 1 >= (sess.state.flags?.[db.overtimeFlag] ? db.overtimeLastTurn : db.lastTurn)
         ? { next_is_final: true, last_turn: db.lastTurn, overtime_possible: true, text: '下次结算即终局：本季结算后即到时限，此后不能再下诏、处置事件或推进回合；本季是最后的决策窗口。' }
@@ -484,6 +554,24 @@ function view(sess: Session): ViewResponse {
           turns_played: sess.state.turn,
         }
       : null,
+  };
+}
+
+/** 「召对 1/3、廷议 0/1」 (§7.1): counters reset at every settlement. */
+function agendaCount(sess: Session) {
+  if (!sess.agenda || sess.agenda.turn !== sess.state.turn) sess.agenda = { turn: sess.state.turn, audience: 0, debate: 0 };
+  return sess.agenda;
+}
+function agendaView(sess: Session) {
+  const used = agendaCount(sess);
+  const lim = sess.stress ? { audience: null, debate: null } : agendaLimits();
+  const slot = (label: string, u: number, limit: number | null) => ({ used: u, limit, left: limit == null ? null : Math.max(0, limit - u), label });
+  const text = (label: string, u: number, limit: number | null) => `${label} ${limit == null ? '不限' : `${u}/${limit}`}`;
+  return {
+    audience: slot('召对', used.audience, lim.audience),
+    debate: slot('廷议', used.debate, lim.debate),
+    remote_reply: 'next_season',
+    text: `${text('召对', used.audience, lim.audience)}、${text('廷议', used.debate, lim.debate)}`,
   };
 }
 
@@ -581,12 +669,45 @@ const RULES: Rule[] = [
   { re: /东宫|太子/, ops: [r('court_strife', -1, '庇护东宫')] },
 ];
 
+/** Engine-style one-line summary of an op for receipts (the real engine sends `summary`). */
+function opSummary(s: PublicState, op: Op): string {
+  const n = (id: unknown) => s.characters[String(id)]?.name ?? s.armies?.[String(id)]?.name ?? s.regions[String(id)]?.name ?? s.offices?.[String(id)]?.name ?? String(id ?? '');
+  switch (op.op) {
+    case 'march':
+      return `${n(op.army)}（全军 ${Math.round(s.armies?.[String(op.army)]?.strength ?? 0)}） 率军赴 ${n(op.to_region)}`;
+    case 'set_army_posture':
+      return `${n(op.army)} 改取${({ hold: '坚守', attack: '进击', scorch: '坚壁清野' } as Record<string, string>)[String(op.posture)] ?? ''}之势`;
+    case 'detach':
+      return `${n(op.army)} 分兵 ${op.strength}，赴 ${n(op.to_region)}${op.commander ? `，${n(op.commander)}统领` : ''}`;
+    case 'set_army_commander':
+      return `以 ${n(op.character)} 统 ${n(op.army)}`;
+    case 'start_project':
+      return `兴工「${String(op.name ?? '')}」${String(op.turns ?? '?')} 季`;
+    case 'appoint':
+      return `任 ${n(op.character)} 为 ${n(op.office)}`;
+    case 'dismiss':
+      return `罢 ${n(op.character)} ${op.office ? n(op.office) : ''}`;
+    case 'move_character':
+      return `${n(op.character)} 赴 ${n(op.to_region ?? op.region)}`;
+    case 'adjust_region':
+      return `${n(op.region)}${STAT_NAMES[String(op.stat)] ?? ''} ${Number(op.delta) > 0 ? '+' : ''}${op.delta}`;
+    default:
+      return '';
+  }
+}
+
 function interpret(sess: Session, sections: Record<string, string>): Clause[] {
   const clauses: Clause[] = [];
+  const offline = settings.provider === 'mock';
   for (const [category, text] of Object.entries(sections)) {
     if (!text?.trim()) continue;
     const sentences = text.split(/[。；;\n]+/).map((x) => x.trim()).filter(Boolean);
     for (const sentence of sentences) {
+      if (offline) {
+        // §7.4: without a model, the free text is only recorded
+        clauses.push({ category, text: sentence, status: 'narrative_only', ops: [], code: 'OFFLINE_TEXT', reason: '未接模型：御笔只记入史册，不生效力；请用奏疏批答或政令卡', source: 'text' });
+        continue;
+      }
       const rule = RULES.find((rl) => rl.re.test(sentence));
       if (!rule) {
         clauses.push({ category, text: sentence, status: 'narrative_only', ops: [], reason: '此条载于史册，未对应可执行之事。', source: 'text' });
@@ -705,6 +826,23 @@ function resolveTurn(sess: Session): TurnReport {
   }
   s.projects = (s.projects ?? []).filter((p) => p.progress < p.turns);
 
+  // 6b. armies and people on the road arrive
+  for (const a of Object.values(s.armies ?? {})) {
+    const t = a.in_transit as { to_region?: string; eta_turn?: number } | null | undefined;
+    if (t?.to_region && (t.eta_turn ?? next) <= next) {
+      a.region = t.to_region;
+      a.in_transit = null;
+      facts.push({ kind: 'army', entity: a.id, text: `${a.name}抵${s.regions[a.region]?.name ?? ''}` });
+    }
+  }
+  for (const c of Object.values(s.characters)) {
+    const t = c.in_transit as { to_region?: string; eta_turn?: number } | null | undefined;
+    if (t?.to_region && (t.eta_turn ?? next) <= next) {
+      c.region = t.to_region;
+      c.in_transit = null;
+    }
+  }
+
   // 7–8. rebel march and battles
   for (const army of Object.values(s.armies ?? {}).filter((a) => a.faction === 'yan' && a.strength > 0)) {
     const idx = db.rebelRoute.indexOf(army.region);
@@ -781,6 +919,12 @@ function resolveTurn(sess: Session): TurnReport {
 
   // 13. calendar
   s.calendar = { year: 751 + Math.floor(next / 4), season: SEASONS[next % 4], label: calendarLabel(next) };
+
+  // 回奏 and 书面议状 sent last season arrive with the settlement (§7.1–7.2)
+  sess.replies = (sess.pendingReplies ?? []).map((r) => ({ ...r, turn: next }));
+  sess.pendingReplies = [];
+  for (const w of sess.pendingWritten ?? []) sess.advice.push({ ...w, turn: next });
+  sess.pendingWritten = [];
 
   if (sess.stress) stressReport(sess, facts, ledger, battles, eventsFired);
   const reconciliation = db.resources
@@ -954,8 +1098,85 @@ const routes: [string, RegExp, Handler][] = [
         }
         clauses.push({ category: 'memorial', text: `${mem.title}：${opt.label}`, status: 'applied', op: opt.ops?.[0] ?? null, ops: opt.ops ?? [], reason: '', source: 'memorial', memorial_id: mem.id, option_id: opt.id });
       }
+      // 政令卡 (§7.4): one group per card; far regions wait for the courier (§7.3); army orders
+      // carry the commander's autonomy risk (§7.5)
+      const s0 = sess.state;
+      const far = (op: Op) => {
+        const rg = opRegion(s0, op);
+        const days = rg ? courierDays(s0, rg) : 0;
+        return rg && days > lateThreshold() ? `驿程遥远，令达于下季（${s0.regions[rg]?.name ?? ''}去京城驿程约 ${days} 日）` : '';
+      };
+      const ORDER: Record<string, string> = { march: 'march', move_army: 'move', detach: 'detach' };
+      const riskOf = (op: Op) => {
+        if (!op.army) return null;
+        const order = op.op === 'set_army_posture' ? String(op.posture ?? 'hold') : ORDER[String(op.op)];
+        if (!order) return null;
+        const level = riskLevel(autonomyProb(s0, String(op.army), order));
+        if (!level) return null;
+        const a = s0.armies?.[String(op.army)];
+        return { autonomy_risk: level, autonomy_note: `将领自主风险：${level}（${a?.name ?? ''}主将${a?.commander ? s0.characters[a.commander]?.name ?? '' : ''}）` };
+      };
+      const cards = (body.cards ?? []) as { card_id: string; params: Record<string, unknown> }[];
+      const usedCooldown = new Set<string>();
+      let group = clauses.length + 1;
+      for (const c of cards) {
+        const row = cardRow(c.card_id);
+        const info = cardsFor(s0).find((x) => x.id === c.card_id);
+        const base = { category: String(row?.category ?? '政令'), source: 'card', card_id: c.card_id, card_title: info?.title, cost_hint: info?.cost_hint, label: `政令卡「${info?.title ?? c.card_id}」`, group: group++ } as const;
+        if (!row || !info) {
+          clauses.push({ ...base, text: c.card_id, status: 'rejected', code: 'UNKNOWN_CARD', reason: '无此政令卡。' });
+          continue;
+        }
+        const missing = info.params.filter((p) => c.params?.[p.name] === undefined || c.params?.[p.name] === '');
+        const bad = info.params.find((p) => p.options && c.params?.[p.name] !== undefined && !p.options.some((o) => o.id === c.params[p.name]));
+        const textOf = info.params.map((p) => `${p.label ?? p.name}：${p.options?.find((o) => o.id === c.params?.[p.name])?.name ?? c.params?.[p.name] ?? '—'}`).join('，');
+        const text = `${info.title}${textOf ? `：${textOf}` : ''}`;
+        if (!info.available) {
+          clauses.push({ ...base, text, status: 'rejected', code: 'CARD_UNAVAILABLE', reason: info.unavailable_reason || '此卡暂不可用。' });
+          continue;
+        }
+        if (missing.length) {
+          clauses.push({ ...base, text, status: 'rejected', code: 'CARD_PARAM_MISSING', reason: `缺少参数：${missing.map((p) => p.label ?? p.name).join('、')}` });
+          continue;
+        }
+        if (bad) {
+          clauses.push({ ...base, text, status: 'rejected', code: 'INVALID_CARD_PARAM', reason: `「${bad.label ?? bad.name}」可选：${(bad.options ?? []).slice(0, 8).map((o) => o.name).join('、')}` });
+          continue;
+        }
+        if (info.cooldown && usedCooldown.has(info.id)) {
+          clauses.push({ ...base, text, status: 'rejected', code: 'CARD_COOLDOWN', reason: '有冷却的政令卡，一道诏书只能用一次。' });
+          continue;
+        }
+        usedCooldown.add(info.id);
+        const ops = expandCard(s0, row, c.params);
+        const courier = ops.map(far).find(Boolean) ?? '';
+        for (const op of ops) {
+          clauses.push({
+            ...base,
+            text,
+            op,
+            ops: [op],
+            summary: opSummary(s0, op),
+            ...(courier ? { status: 'delayed', delay_kind: 'courier', delay_reason: courier, due_turn: s0.turn + 1 } : { status: 'applied', reason: '' }),
+            ...(riskOf(op) ?? {}),
+          });
+        }
+      }
       clauses.push(...interpret(sess, sections));
-      for (const op of clientOps) clauses.push({ category: 'client', text: String(op.reason ?? op.op ?? '客户端操作'), status: 'applied', op, ops: [op], source: 'client' });
+      for (const op of clientOps) {
+        const courier = far(op);
+        clauses.push({
+          category: 'client',
+          text: String(op.reason ?? opSummary(s0, op) ?? op.op ?? '军令'),
+          op,
+          ops: [op],
+          source: 'client',
+          group: group++,
+          summary: opSummary(s0, op),
+          ...(courier ? { status: 'delayed', delay_kind: 'courier', delay_reason: courier, due_turn: s0.turn + 1 } : { status: 'applied' }),
+          ...(riskOf(op) ?? {}),
+        });
+      }
       if (clauses.length === 0) return fail(422, 'EMPTY_EDICT', '诏书尚无一字，无从颁行。');
       const receipt: EdictReceipt = {
         id: `edict-${uid()}`,
@@ -1008,6 +1229,7 @@ const routes: [string, RegExp, Handler][] = [
           sess.state.pending_clauses!.push({ id: uid(), due_turn: sess.state.turn + 1, source: 'edict', ops });
         }
       }
+      for (const c of draft.receipt.clauses) if (c.source === 'card' && c.card_id && c.status !== 'rejected') sess.state.flags![`card:${c.card_id}`] = sess.state.turn;
       for (const a of draft.adopted) {
         sess.handled[a.memorial_id] = a.option_id;
         sess.state.flags![`memorial:${a.memorial_id}`] = a.option_id;
@@ -1058,7 +1280,7 @@ const routes: [string, RegExp, Handler][] = [
       trackUsage('narrator', sess.state.turn, 1200, 300);
       pushEntry(sess, 'turn', `推演：${calendarLabel(sess.state.turn)}`);
       saveStore();
-      return json({ state: publicView(sess), report, memorial, outcome: sess.state.outcome ?? null });
+      return json({ state: publicView(sess), report, memorial, outcome: sess.state.outcome ?? null, replies: sess.replies ?? [], written_opinions: sess.advice.filter((a) => a.source === '书面议状' && a.turn === sess.state.turn) });
     },
   ],
   [
@@ -1069,14 +1291,24 @@ const routes: [string, RegExp, Handler][] = [
       if (!sess) return notFound();
       const topic = String(body.topic ?? '').trim();
       const participants = (body.participants ?? []) as string[];
+      const written = (body.written ?? []) as string[];
       if (!topic) return fail(422, 'EMPTY_TOPIC', '廷议须有议题。');
-      if (participants.length < 2 || participants.length > 4) return fail(422, 'BAD_PARTICIPANTS', '廷议须召二至四人。');
-      for (const id of participants) {
+      if (participants.length + written.length < 1 || participants.length > 6 || written.length > 6) return fail(422, 'INVALID_REQUEST', '廷议至少一人；当场与议、书面议状各至多六人。');
+      const ag = agendaCount(sess);
+      const dLimit = sess.stress ? null : agendaLimits().debate;
+      if (dLimit != null && ag.debate >= dLimit) return fail(409, 'AGENDA_EXHAUSTED', `本季廷议已满（已用 ${ag.debate}/${dLimit}，剩余 0 次）；下季结算后重置。`);
+      for (const id of [...participants, ...written]) {
         const c = sess.state.characters[id];
         if (!c) return fail(404, 'CHARACTER_NOT_FOUND', '无此人。');
         if (c.status && c.status !== 'alive') return fail(409, 'CHARACTER_UNAVAILABLE', `${c.name}已不在朝。`);
       }
+      for (const id of participants) {
+        const c = sess.state.characters[id];
+        if (!isPresent(sess.state, id)) return fail(409, 'NOT_PRESENT', `${c.name}不在京畿（在${sess.state.regions[c.region]?.name ?? '外'}），不能当场廷议；可列入 written 递书面议状，其议于下季送达`);
+      }
+      for (const id of written) if (isPresent(sess.state, id)) return fail(422, 'INVALID_REQUEST', `${sess.state.characters[id].name}在京，应列入当场与议之人。`);
       await sleep(1100, signal);
+      ag.debate += 1;
       const rule = TOPIC_STANCE.find((t) => t.re.test(topic));
       const speeches: DebateSpeech[] = [];
       const stanceOf = (id: string) => {
@@ -1097,7 +1329,13 @@ const routes: [string, RegExp, Handler][] = [
         });
       }
       const [a, b] = participants;
-      if (stanceOf(a) !== stanceOf(b)) {
+      for (const id of written) {
+        const c = sess.state.characters[id];
+        const st = stanceOf(id);
+        (sess.pendingWritten ??= []).push({ id: uid(), character: id, name: c.name, source: '书面议状', text: `〔书面议状·自${sess.state.regions[c.region]?.name ?? '外'}驿递〕就「${topic}」${st === 'support' ? '赞成' : st === 'oppose' ? '反对' : '持中'}：${(DEBATE_STANCE_TEXT[c.bloc ?? 'neiting'] ?? DEBATE_STANCE_TEXT.neiting)[st as 'support']}` });
+      }
+      saveStore();
+      if (a && b && stanceOf(a) !== stanceOf(b)) {
         speeches.push({ character: a, stance: stanceOf(a), text: `${sess.state.characters[b].name}所言差矣。${DEBATE_STANCE_TEXT[sess.state.characters[a].bloc ?? 'neiting']?.[stanceOf(a) as 'support'] ?? ''}` });
         speeches.push({ character: b, stance: stanceOf(b), text: `臣不敢苟同。${DEBATE_STANCE_TEXT[sess.state.characters[b].bloc ?? 'neiting']?.[stanceOf(b) as 'support'] ?? ''}` });
       }
@@ -1109,7 +1347,10 @@ const routes: [string, RegExp, Handler][] = [
         proposition: topic,
         memorial: null,
         speeches,
-        summary: `${pro.length ? `${pro.join('、')}以为可行` : '无人力主其事'}；${con.length ? `${con.join('、')}以为不可` : '无人力阻'}。议定与否，伏候圣裁。`,
+        written: written.map((id) => ({ character: id, name: sess.state.characters[id].name, whereabouts: sess.state.regions[sess.state.characters[id].region]?.name ?? '', note: '书面议状已发，其议于下季送达（入谏言库）' })),
+        summary: participants.length
+          ? `${pro.length ? `${pro.join('、')}以为可行` : '无人力主其事'}；${con.length ? `${con.join('、')}以为不可` : '无人力阻'}。议定与否，伏候圣裁。`
+          : '在京无人与议；书面议状已发，下季送达。',
       });
     },
   ],
@@ -1183,13 +1424,50 @@ const routes: [string, RegExp, Handler][] = [
       const userText = String(body.text ?? '');
       let status = 'ok';
       let content: string;
-      if (c.status && c.status !== 'alive') {
+      const ag = agendaCount(sess);
+      const aLimit = sess.stress ? null : agendaLimits().audience;
+      const alive = !c.status || c.status === 'alive';
+      if (alive && aLimit != null && ag.audience >= aLimit) return fail(409, 'AGENDA_EXHAUSTED', `本季召对已满（已用 ${ag.audience}/${aLimit}，剩余 0 次）；下季结算后重置。`);
+      const transit = transitText(sess.state, c.region, c.in_transit as Record<string, unknown> | null);
+      const where = sess.state.regions[c.region]?.name ?? '外镇';
+      if (!alive) {
         status = 'refused';
         content = `${c.name}已不在人世，无从召对。`;
-      } else if (c.region !== 'jingji') {
-        status = 'remote';
-        content = `${c.name}远在${sess.state.regions[c.region]?.name ?? '外镇'}，以表章代对：${(CHAT_LINES[c.id] ?? ['臣谨奏。'])[0]}`;
+      } else if (!isPresent(sess.state, c.id)) {
+        // §7.1: away from the capital → the envoy leaves now, the answer comes with the next settlement
+        ag.audience += 1;
+        const mode = transit ? { mode: 'envoy', mode_label: '遣使问对', mode_note: `${c.name}${transit}：遣使于途中问对。` } : { mode: 'written', mode_label: '书面奏对', mode_note: `${c.name}人在${where}，不在御前：以书面奏对，驿递往还。` };
+        (sess.pendingReplies ??= []).push({
+          character: c.id,
+          name: c.name,
+          mode: mode.mode,
+          mode_label: mode.mode_label,
+          question: userText,
+          asked_turn: sess.state.turn,
+          turn: sess.state.turn + 1,
+          text: `〔${mode.mode_label}·自${where}驿递〕${(CHAT_LINES[c.id] ?? ['臣谨奏：边事如常，伏惟圣鉴。'])[hash(userText) % (CHAT_LINES[c.id]?.length ?? 1)]}`,
+          roleplay: false,
+          via: 'rest',
+        });
+        saveStore();
+        const text = `使者已发，回奏于下季送达（${mode.mode_label}：${mode.mode_note}）`;
+        const agenda = agendaView(sess);
+        const enc = new TextEncoder();
+        const stream = new ReadableStream<Uint8Array>({
+          start(controller) {
+            const send = (event: string, data: unknown) => controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+            send('status', { status: 'ok', ...mode });
+            send('deferred', { text, agenda });
+            send('message', { text });
+            send('done', {});
+            controller.close();
+          },
+        });
+        await sleep(250, signal);
+        return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream; charset=utf-8' } });
       } else {
+        ag.audience += 1;
+        saveStore();
         const lines = CHAT_LINES[c.id] ?? ['臣谨遵圣谕。'];
         const pickLine = lines[hash(userText + sess.state.turn) % lines.length];
         content = userText.includes('禄山') && c.id !== 'an_lushan' && lines.length > 1 ? lines[0] : pickLine;
@@ -1201,7 +1479,7 @@ const routes: [string, RegExp, Handler][] = [
         async start(controller) {
           const send = (event: string, data: unknown) =>
             controller.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
-          const mode = status === 'remote' ? { mode: 'written', mode_label: '书面奏对', mode_note: '远镇之臣，以表章代对。' } : { mode: 'in_person', mode_label: '面见', mode_note: '' };
+          const mode = { mode: 'in_person', mode_label: '面见', mode_note: '' };
           send('status', status === 'refused' ? { status } : { status: 'ok', ...mode });
           for (let i = 0; i < content.length; i += 4) {
             if (signal?.aborted) break;
@@ -1213,6 +1491,45 @@ const routes: [string, RegExp, Handler][] = [
         },
       });
       return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream; charset=utf-8' } });
+    },
+  ],
+  [
+    'GET',
+    /^\/api\/sessions\/([^/]+)\/present$/,
+    async (m) => {
+      const sess = getSession(m[1]);
+      return sess ? json(present(sess.state)) : notFound();
+    },
+  ],
+  [
+    'GET',
+    /^\/api\/sessions\/([^/]+)\/policy_cards$/,
+    async (m, _b, signal) => {
+      const sess = getSession(m[1]);
+      if (!sess) return notFound();
+      await sleep(80, signal);
+      return json(cardsFor(sess.state));
+    },
+  ],
+  [
+    'GET',
+    /^\/api\/sessions\/([^/]+)\/armies$/,
+    async (m, _b, signal) => {
+      const sess = getSession(m[1]);
+      if (!sess) return notFound();
+      await sleep(80, signal);
+      return json(armiesTable(sess.state));
+    },
+  ],
+  [
+    'PUT',
+    /^\/api\/sessions\/([^/]+)\/flags$/,
+    async (m, body) => {
+      const sess = getSession(m[1]);
+      if (!sess) return notFound();
+      if (typeof body.tutorial === 'boolean') sess.tutorialOff = !body.tutorial;
+      saveStore();
+      return json({ session_flags: { tutorial: !sess.tutorialOff }, tutorial: !sess.tutorialOff });
     },
   ],
   [

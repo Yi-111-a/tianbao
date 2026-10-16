@@ -16,6 +16,8 @@ import { ResultPanel } from './screens/ResultPanel';
 import { SettingsPanel } from './screens/SettingsPanel';
 import { TimelinePanel } from './screens/TimelinePanel';
 import { CommandPanel } from './screens/CommandPanel';
+import { RepliesPanel } from './screens/RepliesPanel';
+import { Tutorial } from './screens/Tutorial';
 import { TitleScreen } from './screens/TitleScreen';
 
 function Shell() {
@@ -60,8 +62,14 @@ function Shell() {
         {g.panel === 'settings' && <SettingsPanel key="settings" />}
         {g.panel === 'advice' && <AdvicePanel key="advice" />}
         {g.panel === 'command' && <CommandPanel key="command" />}
-        {showChoice && <ChoiceModal key="choice" />}
+        {g.panel === 'replies' && <RepliesPanel key="replies" />}
+        {showChoice && g.view?.pending_choices[0] && (
+          // one instance per choice: when two choices come back to back, the leaving one must not
+          // stay clickable (it would re-send the already resolved choice id)
+          <ChoiceModal key={`choice-${g.view.pending_choices[0].id}`} choice={g.view.pending_choices[0]} />
+        )}
       </AnimatePresence>
+      {g.screen === 'desk' && g.view && !showChoice && <Tutorial />}
     </div>
   );
 }

@@ -42,6 +42,7 @@ def mcp_env(home: Path) -> dict[str, str]:
         "SIM_SCENARIOS_DIR": str(ROOT / "scenarios"),
         "LLM_SIM_HOME": str(home),
         "SIM_MCP_MODE": "client",
+        "SIM_MCP_NAME": "tianbao",
     }
 
 

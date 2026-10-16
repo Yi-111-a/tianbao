@@ -89,6 +89,7 @@ function scenarioAssets(): Plugin {
             factions: read('factions.yaml'),
             memorials: read('memorials.yaml'),
             events: read('events.yaml'),
+            policy_cards: read('policy_cards.yaml'),
           };
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
           res.setHeader('Cache-Control', 'no-store');

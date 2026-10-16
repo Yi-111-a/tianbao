@@ -10,6 +10,7 @@ import { Portrait } from '../components/Portrait';
 import { useToast } from '../components/Toast';
 import { useGame } from '../store/game';
 import { cls } from '../lib/util';
+import { agendaCount, agendaExhausted, agendaTitle } from '../lib/court';
 import { STANCE } from './MemorialPanel';
 
 const DEFAULT_PICK = ['li_linfu', 'yang_guozhong', 'yan_zhenqing', 'geshu_han'];
@@ -20,9 +21,22 @@ export function DebatePanel() {
   const view = g.view!;
   const chars = view.state.characters;
   const roster = useMemo(() => Object.values(chars).filter((c) => c.id !== 'xuanzong' && (c.status ?? 'alive') === 'alive'), [chars]);
-  const [topic, setTopic] = useState('');
+  const present = g.aux.present;
+  useEffect(() => {
+    void g.loadPresent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g.seasonKey, g.aux.key]);
+  const here = useMemo(() => new Set(present?.present.map((p) => p.character) ?? []), [present]);
+  const away = useMemo(() => new Map((present?.absent ?? []).map((p) => [p.character, p])), [present]);
+  const kept = g.lastDebate && g.lastDebate.key === g.seasonKey ? g.lastDebate : null;
+  const [topic, setTopic] = useState(kept?.topic ?? '');
   const [picked, setPicked] = useState<string[]>(() => DEFAULT_PICK.filter((id) => chars[id] && (chars[id].status ?? 'alive') === 'alive').slice(0, 3));
-  const [result, setResult] = useState<DebateResponse | null>(null);
+  const [written, setWritten] = useState<string[]>([]);
+  // only ministers in the capital may stand in the debate (§7.2)
+  useEffect(() => {
+    if (present) setPicked((p) => p.filter((id) => here.has(id)));
+  }, [present, here]);
+  const [result, setResult] = useState<DebateResponse | null>(kept?.result ?? null);
   const [shown, setShown] = useState(0);
   const [busy, setBusy] = useState(false);
   const [ruling, setRuling] = useState('');
@@ -36,6 +50,11 @@ export function DebatePanel() {
 
   const toggle = (id: string) =>
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 4 ? p : [...p, id]));
+  const toggleWritten = (id: string) => setWritten((w) => (w.includes(id) ? w.filter((x) => x !== id) : w.length >= 6 ? w : [...w, id]));
+
+  const agenda = view.agenda?.debate;
+  const exhausted = agendaExhausted(agenda);
+  const closedWhy = exhausted ? agendaTitle(agenda, 'debate') : '';
 
   const start = async () => {
     if (!g.sessionId) return;
@@ -43,14 +62,27 @@ export function DebatePanel() {
     setResult(null);
     setShown(0);
     try {
-      const r = await api.debate(g.sessionId, topic.trim(), picked);
+      const r = await api.debate(g.sessionId, topic.trim(), picked, written);
       setResult(r);
+      g.setLastDebate(topic.trim(), r);
+      setWritten([]);
+      void g.refresh();
     } catch (err) {
       toast.error(err, '廷议未成');
     } finally {
       setBusy(false);
     }
   };
+  const canStart = !busy && !exhausted && topic.trim() !== '' && (picked.length >= 2 || (picked.length === 0 && written.length > 0) || (picked.length === 1 && written.length > 0));
+  const startWhy = exhausted
+    ? closedWhy
+    : !topic.trim()
+      ? '先定议题'
+      : picked.length < 2 && written.length === 0
+        ? '在京与议之臣至少二人（或只索书面议状）'
+        : undefined;
+  const awayRoster = roster.filter((c) => away.has(c.id));
+  const hereRoster = present ? roster.filter((c) => here.has(c.id)) : roster;
 
   const rule = async () => {
     if (!ruling.trim()) return;
@@ -88,20 +120,59 @@ export function DebatePanel() {
               </div>
             )}
             <div className="section-label">
-              与议之臣<small className="muted">　择二至四人（已择 {picked.length}）</small>
+              与议之臣<small className="muted">　在{present?.capital?.name ?? '京'}者择二至四人（已择 {picked.length}）</small>
             </div>
             <div className="debate-roster">
-              {roster.map((c) => (
-                <button key={c.id} className={cls('debate-pick', picked.includes(c.id) && 'is-on')} data-testid={`debate.pick.${c.id}`} disabled={!picked.includes(c.id) && picked.length >= 4} title={!picked.includes(c.id) && picked.length >= 4 ? '廷议至多四人' : undefined} onClick={() => toggle(c.id)} aria-pressed={picked.includes(c.id)}>
+              {hereRoster.map((c) => (
+                <button key={c.id} className={cls('debate-pick', picked.includes(c.id) && 'is-on')} data-testid={`debate.pick.${c.id}`} disabled={!picked.includes(c.id) && picked.length >= 4} title={!picked.includes(c.id) && picked.length >= 4 ? '廷议至多四人' : `${c.name}在京，可当廷与议`} onClick={() => toggle(c.id)} aria-pressed={picked.includes(c.id)}>
                   <Portrait id={c.id} className="portrait--chip" />
                   <span className="t-title">{c.name}</span>
                   <small>{c.title}</small>
                 </button>
               ))}
             </div>
+            {awayRoster.length > 0 && (
+              <>
+                <div className="section-label">
+                  不在京之臣<small className="muted">　不能当廷与议；可索书面议状，其议于下季送达，入谏言库（已索 {written.length}）</small>
+                </div>
+                <div className="debate-roster debate-roster--away">
+                  {awayRoster.map((c) => {
+                    const a = away.get(c.id)!;
+                    const where = typeof a.in_transit === 'string' && a.in_transit ? a.in_transit : `在${a.region_name ?? ''}`;
+                    const on = written.includes(c.id);
+                    return (
+                      <div key={c.id} className={cls('debate-away', on && 'is-on')}>
+                        <button className="debate-pick is-absent" data-testid={`debate.pick.${c.id}`} disabled title={`${c.name}不在京（${where}），不能当场廷议`}>
+                          <Portrait id={c.id} className="portrait--chip" />
+                          <span className="debate-away-text">
+                            <span className="t-title">{c.name}</span>
+                            <small>不在京（{where}）</small>
+                          </span>
+                        </button>
+                        <button
+                          className={cls('btn btn-small debate-written', on ? 'btn-ink' : 'btn-outline')}
+                          data-testid={`debate.written.${c.id}`}
+                          aria-pressed={on}
+                          disabled={!on && written.length >= 6}
+                          title={on ? '撤回：不索其书面议状' : `遣使索${c.name}书面议状，其议于下季送达`}
+                          onClick={() => toggleWritten(c.id)}
+                        >
+                          {on ? '已索书面议状' : '索书面议状'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
             </div>
             <div className="debate-setup-actions">
-              <button className="btn btn-ink btn-ink--red" data-testid="debate.start" disabled={busy || !topic.trim() || picked.length < 2} onClick={start}>
+              <span className={cls('agenda-chip t-title', exhausted && 'is-exhausted')} data-testid="debate.agenda" title={agendaTitle(agenda, 'debate')}>
+                廷议 {agendaCount(agenda) || '—'}
+                {view.agenda?.audience && <small>　召对 {agendaCount(view.agenda.audience)}</small>}
+              </span>
+              <button className="btn btn-ink btn-ink--red" data-testid="debate.start" disabled={!canStart} title={startWhy} onClick={start}>
                 {busy ? '群臣议论中…' : '开议'}
               </button>
               {busy && (
@@ -120,6 +191,13 @@ export function DebatePanel() {
             <div className="debate-topic-line t-title" data-testid="debate.topicLine">
               议：{result.proposition || topic}
             </div>
+            {(result.written?.length ?? 0) > 0 && (
+              <div className="debate-written-line" data-testid="debate.writtenLine">
+                书面议状已发：
+                {result.written!.map((w) => `${w.name ?? chars[w.character]?.name ?? ''}（${w.whereabouts ?? ''}）`).join('、')}
+                ——其议于下季送达，入谏言库。
+              </div>
+            )}
             <div className="debate-cards" style={{ gridTemplateColumns: `repeat(${speakers.length}, minmax(0, 1fr))` }}>
               {speakers.map((id) => {
                 const own = result.speeches.map((s, i) => ({ ...s, i })).filter((s) => s.character === id && s.i < shown);
@@ -166,7 +244,7 @@ export function DebatePanel() {
                     <button className="btn btn-ink" data-testid="debate.rule" disabled={!ruling.trim()} onClick={rule}>
                       裁决
                     </button>
-                    <button className="btn btn-outline" data-testid="debate.again" onClick={() => setResult(null)}>
+                    <button className="btn btn-outline" data-testid="debate.again" disabled={exhausted} title={closedWhy || undefined} onClick={() => setResult(null)}>
                       另议
                     </button>
                   </div>

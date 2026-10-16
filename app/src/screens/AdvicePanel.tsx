@@ -5,7 +5,9 @@ import { PanelShell } from '../components/PanelShell';
 import { Portrait } from '../components/Portrait';
 import { useGame } from '../store/game';
 
-const SOURCE: Record<string, string> = { audience: '召对', debate: '廷议' };
+const SOURCE: Record<string, string> = { audience: '召对', debate: '廷议', reply: '回奏', '书面议状': '书面议状' };
+/** 「〔书面议状·自陇右驿递〕…」 → 「自陇右驿递」 */
+const via = (text: string) => text.match(/^〔[^·〕]*·([^〕]+)〕/)?.[1] ?? null;
 
 export function AdvicePanel() {
   const g = useGame();
@@ -38,9 +40,13 @@ export function AdvicePanel() {
               {a.character && a.character !== 'xuanzong' ? <Portrait id={a.character} className="portrait--chip" /> : <span className="advice-imperial t-title">御</span>}
               <div className="advice-item-body">
                 <div className="advice-item-meta">
-                  <b className="t-title">{chars[a.character]?.name ?? (a.character === 'xuanzong' ? '御批' : a.character)}</b>
-                  <span>{SOURCE[a.source] ?? (a.source.startsWith('memorial') ? '奏疏' : a.source)}</span>
+                  <b className="t-title">{chars[a.character]?.name ?? a.name ?? (a.character === 'xuanzong' ? '御批' : a.character)}</b>
+                  <span className={a.source === '书面议状' ? 'advice-source advice-source--written' : 'advice-source'} data-testid={`advice.source.${i}`}>
+                    {SOURCE[a.source] ?? (a.source.startsWith('memorial') ? '奏疏' : a.source)}
+                    {via(a.text) ? `·${via(a.text)}` : ''}
+                  </span>
                   {a.turn != null && <span className="t-num">第 {a.turn + 1} 季</span>}
+                  {a.source === '书面议状' && a.turn === g.view?.state.turn && <span className="advice-new">本季送到</span>}
                 </div>
                 <p className="selectable">「{a.text}」</p>
               </div>

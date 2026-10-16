@@ -2,7 +2,7 @@
 // one and assert an observable effect (DOM change, API request, or form value change).
 // Any console error or unhandled rejection fails the test.
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { openScreen, REAL, settle, watchErrors, type ScreenName } from './helpers';
+import { openBrush, openScreen, REAL, settle, watchErrors, type ScreenName } from './helpers';
 
 const INVENTORY_SCREENS: ScreenName[] = [
   'title',
@@ -20,6 +20,8 @@ const INVENTORY_SCREENS: ScreenName[] = [
   'timeline',
   'settings',
   'advice',
+  'army',
+  'replies',
 ];
 
 interface Item {
@@ -80,6 +82,13 @@ async function snapshot(page: Page) {
 }
 
 async function operate(page: Page, loc: Locator, item: Item): Promise<string | null> {
+  if (item.tag === 'input' && item.type === 'range') {
+    const before = await loc.inputValue();
+    await loc.focus();
+    await page.keyboard.press('ArrowRight');
+    if ((await loc.inputValue()) === before) await page.keyboard.press('ArrowLeft');
+    return (await loc.inputValue()) !== before ? null : 'slider did not move';
+  }
   if (item.tag === 'input' || item.tag === 'textarea') {
     const before = await loc.inputValue();
     const next = item.type === 'number' ? String((Number(before) || 0) + 7) : `${before}测试谏言`;
@@ -177,6 +186,7 @@ test('flows: adopt → edict chip → remove; preview → promulgate → advance
   await expect(remove).toBeVisible();
   await remove.click();
   await expect(page.locator('[data-testid^="edict.removeAdopted."]')).toHaveCount(0);
+  await openBrush(page);
   await page.getByTestId('edict.section.interior').fill('遣御史分道巡察河北诸郡。关中和籴以实太仓。');
   await page.getByTestId('edict.preview').click();
   await expect(page.getByTestId('edict.receipt')).toBeVisible({ timeout: 20_000 });
@@ -190,6 +200,7 @@ test('flows: adopt → edict chip → remove; preview → promulgate → advance
   await expect(page.getByTestId('result.root')).toHaveCount(0);
   // unconfirmed draft → advance asks first
   await page.getByTestId('desk.edictScroll').click();
+  await openBrush(page);
   await page.getByTestId('edict.section.other').fill('赐百官宴于曲江。');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('edict.root')).toHaveCount(0);

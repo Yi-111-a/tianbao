@@ -11,6 +11,7 @@ export interface ScenarioBundle {
   factions?: Record<string, unknown>[];
   memorials?: Record<string, unknown>[];
   events?: Record<string, unknown>[];
+  policy_cards?: Record<string, unknown>[];
 }
 
 let bundlePromise: Promise<ScenarioBundle | null> | null = null;

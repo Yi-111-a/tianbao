@@ -3,7 +3,9 @@
 // `fetchImpl` is swapped for the mock router, which answers with real Response objects.
 import type {
   Advice,
+  AgendaView,
   ApiErrorBody,
+  ArmiesResponse,
   ChatEvent,
   CreateSessionResponse,
   DebateResponse,
@@ -11,6 +13,8 @@ import type {
   EdictReceipt,
   Health,
   HistoryEntry,
+  PolicyCard,
+  PresentResponse,
   PublicState,
   ScenarioInfo,
   SessionSummary,
@@ -152,8 +156,14 @@ export const api = {
   choose: (id: string, choiceId: string, optionId: string) =>
     request<unknown>('POST', `/sessions/${enc(id)}/choices/${enc(choiceId)}`, { option_id: optionId }),
   advanceTurn: (id: string) => request<TurnResponse>('POST', `/sessions/${enc(id)}/turn`),
-  debate: (id: string, topic: string, participants: string[]) =>
-    request<DebateResponse>('POST', `/sessions/${enc(id)}/debate`, { topic, participants }),
+  debate: (id: string, topic: string, participants: string[], written: string[] = []) =>
+    request<DebateResponse>('POST', `/sessions/${enc(id)}/debate`, written.length ? { topic, participants, written } : { topic, participants }),
+  /** who is in the capital (may debate in person) and where the others are (§7.2) */
+  present: (id: string) => request<PresentResponse>('GET', `/sessions/${enc(id)}/present`),
+  policyCards: (id: string) => request<PolicyCard[]>('GET', `/sessions/${enc(id)}/policy_cards`),
+  armies: (id: string) => request<ArmiesResponse>('GET', `/sessions/${enc(id)}/armies`),
+  setFlags: (id: string, flags: { tutorial: boolean }) =>
+    request<{ session_flags?: Record<string, unknown>; tutorial?: unknown }>('PUT', `/sessions/${enc(id)}/flags`, flags),
   advice: (id: string) => request<Advice[]>('GET', `/sessions/${enc(id)}/advice`),
   saveAdvice: (id: string, advice: Omit<Advice, 'id'>) =>
     request<Advice>('POST', `/sessions/${enc(id)}/advice`, advice),
@@ -236,6 +246,8 @@ export const api = {
             mode_note: payload.mode_note == null ? undefined : String(payload.mode_note),
           };
         else if (event === 'message') yield { type: 'message', text: String(payload.text ?? '') };
+        else if (event === 'deferred')
+          yield { type: 'deferred', text: String(payload.text ?? ''), agenda: (payload.agenda as AgendaView | undefined) ?? undefined };
         else if (event === 'error')
           yield { type: 'error', code: String(payload.code ?? ''), message: String(payload.message ?? '召对中断') };
         else if (event === 'done') {

@@ -33,6 +33,7 @@ export interface Region {
   stats?: Record<string, number>;
   controller?: ID | null;
   seat?: string;
+  courier_days?: number;
 }
 
 export type CharacterStatus = 'alive' | 'dead' | 'imprisoned' | 'exiled' | 'retired';
@@ -78,6 +79,7 @@ export interface Army {
   loyal_to?: ID | null;
   quality?: number;
   in_transit?: Record<string, unknown> | null;
+  posture?: string | null;
 }
 
 export interface LedgerEntry {
@@ -205,9 +207,15 @@ export interface MemorialItem {
   title: string;
   summary: string;
   region?: ID;
+  region_name?: string;
   advisors: MemorialAdvisor[];
   options: MemorialOption[];
   illustration?: string;
+  /** round 9 (§7.3): courier days from the region, 「正月初五日自河东奏到」, late arrivals */
+  courier_days?: number;
+  arrival?: string | null;
+  arrived_late?: boolean;
+  origin_turn?: number | null;
 }
 
 export interface Fact {
@@ -297,6 +305,127 @@ export interface ViewResponse {
   command_table?: CommandTable | null;
   /** present when the next settlement reaches the time limit */
   final_notice?: { next_is_final: boolean; last_turn?: number; overtime_possible?: boolean; text: string } | null;
+  /** round 9 (§7.1–7.6) */
+  agenda?: AgendaView | null;
+  replies?: Reply[];
+  written_opinions?: Advice[];
+  provider_mode?: 'offline' | 'llm' | string;
+  tutorial?: TutorialView | null;
+}
+
+export interface AgendaSlot {
+  used: number;
+  limit: number | null;
+  left: number | null;
+  label: string;
+}
+
+export interface AgendaView {
+  audience: AgendaSlot;
+  debate: AgendaSlot;
+  remote_reply?: 'next_season' | 'immediate' | string;
+  text?: string;
+}
+
+/** 回奏: the answer to last season's 遣使问对 / 书面奏对, delivered at settlement. */
+export interface Reply {
+  character: ID;
+  name?: string;
+  mode?: string;
+  mode_label?: string;
+  question?: string;
+  asked_turn?: number;
+  turn?: number;
+  text: string | null;
+  roleplay?: boolean;
+  via?: string;
+}
+
+export interface TutorialStep {
+  turn: number;
+  step: number;
+  title: string;
+  text: string;
+  target: string;
+}
+
+export interface TutorialView {
+  enabled: boolean;
+  steps: TutorialStep[];
+  total?: number;
+}
+
+export interface PresentPerson {
+  character: ID;
+  name: string;
+  present?: boolean;
+  region: ID;
+  region_name?: string;
+  in_transit?: string | Record<string, unknown> | null;
+  whereabouts?: string;
+  offices?: string[];
+}
+
+export interface PresentResponse {
+  capital: { id: ID; name: string } | null;
+  present: PresentPerson[];
+  absent: PresentPerson[];
+}
+
+export interface CardParamOption {
+  id: ID;
+  name: string;
+  note?: string;
+}
+
+export interface CardParam {
+  name: string;
+  kind: 'character' | 'office' | 'army' | 'region' | 'amount' | 'choice' | string;
+  label?: string;
+  options?: CardParamOption[];
+  min?: number;
+  max?: number;
+  default?: number | string | null;
+}
+
+export interface PolicyCard {
+  id: ID;
+  category: string;
+  title: string;
+  summary: string;
+  cost_hint?: string;
+  cooldown?: number;
+  cooldown_left?: number;
+  available: boolean;
+  unavailable_reason?: string;
+  params: CardParam[];
+  illustration?: string | null;
+}
+
+export interface ArmyInfo {
+  id: ID;
+  name: string;
+  strength: number;
+  quality?: number;
+  commander: { id: ID; name: string; present: boolean; note?: string } | null;
+  region: ID;
+  region_name?: string;
+  in_transit?: string | null;
+  destination?: ID | null;
+  eta_turn?: number | null;
+  whereabouts?: string;
+  posture?: 'hold' | 'attack' | 'scorch' | string | null;
+  posture_label?: string;
+  orders: string[];
+  cards: ID[];
+  autonomy_risk?: '低' | '中' | '高' | string | null;
+  etas: Record<ID, number | null>;
+}
+
+export interface ArmiesResponse {
+  armies: ArmyInfo[];
+  regions: { id: ID; name: string; controller?: ID | null }[];
+  turn_unit?: string;
 }
 
 export interface CommandTable {
@@ -384,10 +513,16 @@ export interface AdoptedOption {
   option_id: ID;
 }
 
+export interface DraftCardRequest {
+  card_id: ID;
+  params: Record<string, string | number>;
+}
+
 export interface DraftEdictRequest {
   sections: Record<string, string>;
   adopted: AdoptedOption[];
   ops?: Op[];
+  cards?: DraftCardRequest[];
 }
 
 export type ClauseStatus = 'applied' | 'rejected' | 'delayed' | 'narrative_only' | 'needs_clarification';
@@ -400,7 +535,14 @@ export interface Clause {
   ops?: Op[];
   reason?: string;
   code?: string | null;
-  source?: 'memorial' | 'text' | 'client';
+  source?: 'memorial' | 'text' | 'client' | 'card' | 'autonomy' | string;
+  card_id?: ID;
+  card_title?: string;
+  cost_hint?: string;
+  /** delayed clauses: 有司稽迟 / 驿程 / 将领自主 (§7.3, §7.5) */
+  delay_kind?: 'bureaucratic' | 'courier' | 'autonomy' | string;
+  autonomy_risk?: '低' | '中' | '高' | string | null;
+  autonomy_note?: string;
   memorial_id?: ID;
   option_id?: ID;
   /** engine-rendered human summary of the op */
@@ -425,6 +567,8 @@ export interface TurnResponse {
   report: TurnReport;
   memorial: string;
   outcome: Outcome | null;
+  replies?: Reply[];
+  written_opinions?: Advice[];
 }
 
 export interface DebateSpeech {
@@ -447,6 +591,8 @@ export interface DebateResponse {
   memorial?: { id: ID; title: string; options: { id: ID; label: string }[] } | null;
   speeches: DebateSpeech[];
   summary: string;
+  /** absent ministers asked for a 书面议状 (delivered next season) */
+  written?: { character: ID; name?: string; whereabouts?: string; note?: string }[];
 }
 
 export interface Advice {
@@ -455,6 +601,7 @@ export interface Advice {
   text: string;
   source: string;
   turn?: number;
+  name?: string;
 }
 
 export interface HistoryEntry {
@@ -524,5 +671,6 @@ export interface ApiErrorBody {
 export type ChatEvent =
   | { type: 'status'; status: string; mode?: string; mode_label?: string; mode_note?: string }
   | { type: 'message'; text: string }
+  | { type: 'deferred'; text: string; agenda?: AgendaView }
   | { type: 'done' }
   | { type: 'error'; code?: string; message: string };

@@ -7,6 +7,7 @@ import { PanelShell } from '../components/PanelShell';
 import { Portrait } from '../components/Portrait';
 import { useGame } from '../store/game';
 import { cls } from '../lib/util';
+import { lateLabel } from '../lib/court';
 
 export const STANCE: Record<string, { glyph: string; name: string; cls: string }> = {
   support: { glyph: '可', name: '附议', cls: 'stance--support' },
@@ -57,6 +58,11 @@ export function MemorialPanel() {
                           <span className="memorial-tab-text">
                             <span className="memorial-tab-num t-title">其{['一', '二', '三', '四', '五', '六', '七', '八'][i] ?? i + 1}</span>
                             <span className="memorial-tab-title t-title">{m.title}</span>
+                            {m.arrival && (
+                              <span className={cls('memorial-tab-arrival', m.arrived_late && 'is-late')} data-testid={`memorial.arrival.${m.id}`}>
+                                {m.arrived_late ? lateLabel(m.origin_turn, view.state.turn) : m.arrival}
+                              </span>
+                            )}
                             {adopted && <span className="memorial-tab-adopted">已采：{adopted.label}</span>}
                           </span>
                         </button>
@@ -68,7 +74,17 @@ export function MemorialPanel() {
                   {item && (
                     <motion.article key={item.id} className="memorial-detail" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.25 }}>
                       <h3 className="memorial-detail-title t-title">{item.title}</h3>
-                      {item.region && view.state.regions[item.region] && <div className="memorial-region">事涉　{view.state.regions[item.region].name}</div>}
+                      {(item.arrival || (item.region && view.state.regions[item.region])) && (
+                        <div className="memorial-region" data-testid="memorial.dateline">
+                          {item.region && view.state.regions[item.region] && <span>事涉　{view.state.regions[item.region].name}</span>}
+                          {item.arrival && <span className="memorial-dateline">{item.arrival}</span>}
+                          {item.arrived_late && (
+                            <span className="memorial-late" title={`${item.region_name ?? ''}驿程约 ${item.courier_days ?? '?'} 日，远地之报晚一季方到`}>
+                              {lateLabel(item.origin_turn, view.state.turn)}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <p className="memorial-summary selectable">{item.summary}</p>
                       <div className="section-label">廷臣之议</div>
                       <ul className="advisor-list">

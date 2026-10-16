@@ -372,14 +372,58 @@ export function CrisisTermRow({ term, max, paper }: { term: CrisisTerm; max: num
 }
 
 // ---------------------------------------------------------------- medallions
-export function Medallion({ glyph, label, testid, onClick, badge }: { glyph: string; label: string; testid: string; onClick: () => void; badge?: number }) {
+export function Medallion({
+  glyph,
+  label,
+  testid,
+  onClick,
+  badge,
+  count,
+  exhausted,
+  title,
+}: {
+  glyph: string;
+  label: string;
+  testid: string;
+  onClick: () => void;
+  badge?: number;
+  /** 朝会日程: 「已用/上限」 shown under the label */
+  count?: string;
+  /** the season's quota is used up (the panel still opens, read-only) */
+  exhausted?: boolean;
+  title?: string;
+}) {
   return (
-    <button className="medallion" data-testid={testid} onClick={onClick} aria-label={label}>
+    <button className={cls('medallion', exhausted && 'is-exhausted')} data-testid={testid} onClick={onClick} aria-label={title ?? label} title={title}>
       <span className="medallion-disc">
         <span className="medallion-glyph t-title">{glyph}</span>
       </span>
-      <span className="medallion-label t-title">{label}</span>
+      <span className="medallion-label t-title">
+        {label}
+        {count && (
+          <span className="medallion-count t-num" data-testid={`${testid}.count`}>
+            {count}
+          </span>
+        )}
+      </span>
       {badge ? <span className="medallion-badge t-num">{badge}</span> : null}
+    </button>
+  );
+}
+
+/** 回奏: lacquered courier box on the desk; the badge counts replies not yet read this season. */
+export function RepliesBox({ count, unread, onOpen }: { count: number; unread: number; onOpen: () => void }) {
+  const tip = count ? `回奏 ${count} 件${unread ? `（未读 ${unread}）` : ''}：上季遣使所问，本季驿递送到` : '本季无回奏。遣使问对不在京之臣，其回奏于下季送达';
+  return (
+    <button className={cls('replies-box', count > 0 && 'has-mail')} data-testid="desk.replies" data-hud="replies" onClick={onOpen} aria-label={tip} title={tip}>
+      <span className="replies-lid" />
+      <span className="replies-body">
+        <span className="replies-seal t-title" aria-hidden="true">
+          驿
+        </span>
+        <span className="replies-label t-title">回奏</span>
+      </span>
+      {unread > 0 && <span className="object-badge t-num">{unread}</span>}
     </button>
   );
 }

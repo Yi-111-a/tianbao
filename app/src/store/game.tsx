@@ -4,8 +4,13 @@ import { api, SCENARIO_ID } from '../api/client';
 import type {
   AdoptedOption,
   Advice,
+  ArmiesResponse,
+  DebateResponse,
   EdictReceipt,
   MemorialItem,
+  Op,
+  PolicyCard,
+  PresentResponse,
   PublicState,
   ScenarioInfo,
   TurnResponse,
@@ -14,7 +19,7 @@ import type {
 import { useToast } from '../components/Toast';
 
 export type Screen = 'title' | 'newgame' | 'desk' | 'ending';
-export type PanelName = 'memorial' | 'audience' | 'debate' | 'edict' | 'result' | 'timeline' | 'settings' | 'advice' | 'region' | 'command';
+export type PanelName = 'memorial' | 'audience' | 'debate' | 'edict' | 'result' | 'timeline' | 'settings' | 'advice' | 'region' | 'command' | 'army' | 'replies';
 export type MapLayer = 'jurisdiction' | 'morale' | 'troops' | 'canal' | 'beacon';
 
 export interface AdoptedEntry extends AdoptedOption {
@@ -30,10 +35,36 @@ export const DEFAULT_CATEGORIES = [
   { id: 'other', name: '其他', hint: '宫廷、礼仪、东宫、密旨' },
 ];
 
+/** A policy card in the edict draft (§7.4): parameters filled from /policy_cards options. */
+export interface DraftCard {
+  uid: string;
+  card_id: string;
+  params: Record<string, string | number>;
+  /** added from the 兵部 panel (shown with the army it concerns) */
+  origin?: 'army';
+}
+
+/** A player-level op in the draft (army posture orders from the 兵部 panel, §7.5). */
+export interface DraftOp {
+  uid: string;
+  op: Op;
+  label: string;
+}
+
 interface DraftStore {
   turn: number;
   sections: Record<string, string>;
   adopted: AdoptedEntry[];
+  cards: DraftCard[];
+  ops: DraftOp[];
+}
+
+/** Per-season lookups that panels fetch on demand (present ministers, policy cards, armies). */
+interface AuxStore {
+  key: string;
+  present?: PresentResponse;
+  cards?: PolicyCard[];
+  armies?: ArmiesResponse;
 }
 
 interface GameState {
@@ -53,6 +84,11 @@ interface GameState {
   choiceDeferred: boolean;
   mapLayer: MapLayer;
   selectedRegion: string | null;
+  aux: AuxStore;
+  /** this season's court debate (kept so the 廷议 panel can show it again after closing) */
+  lastDebate: { key: string; topic: string; result: DebateResponse } | null;
+  /** 兵部: the army whose routes are drawn on the map, and the chosen destination */
+  armyFocus: { army: string | null; target: string | null };
 }
 
 interface GameApi extends GameState {
@@ -65,6 +101,19 @@ interface GameApi extends GameState {
   adopt: (memorial: MemorialItem, optionId: string) => void;
   unadopt: (memorialId: string) => void;
   setSection: (category: string, text: string) => void;
+  addCard: (cardId: string, params?: Record<string, string | number>, origin?: 'army') => void;
+  setCardParam: (uid: string, name: string, value: string | number | null) => void;
+  removeCard: (uid: string) => void;
+  addOp: (op: Op, label: string) => void;
+  removeOp: (uid: string) => void;
+  loadPresent: (force?: boolean) => Promise<PresentResponse | null>;
+  loadCards: (force?: boolean) => Promise<PolicyCard[] | null>;
+  loadArmies: (force?: boolean) => Promise<ArmiesResponse | null>;
+  setTutorial: (enabled: boolean) => Promise<void>;
+  setLastDebate: (topic: string, result: DebateResponse | null) => void;
+  setArmyFocus: (f: Partial<{ army: string | null; target: string | null }>) => void;
+  /** the season's key (session + turn) used for per-season local state */
+  seasonKey: string;
   draftEdict: () => Promise<void>;
   cancelDraft: () => void;
   confirmEdict: () => Promise<void>;
@@ -116,7 +165,10 @@ function resourceAmounts(state: PublicState | undefined): Record<string, number>
   return out;
 }
 
-const emptyDraft = (turn: number): DraftStore => ({ turn, sections: {}, adopted: [] });
+const emptyDraft = (turn: number): DraftStore => ({ turn, sections: {}, adopted: [], cards: [], ops: [] });
+const normDraft = (d: Partial<DraftStore>, turn: number): DraftStore => ({ ...emptyDraft(turn), ...d, cards: d.cards ?? [], ops: d.ops ?? [] });
+let uidSeq = 0;
+const newUid = () => `${Date.now().toString(36)}${(uidSeq++).toString(36)}`;
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
@@ -137,6 +189,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     choiceDeferred: false,
     mapLayer: 'jurisdiction',
     selectedRegion: null,
+    aux: { key: '' },
+    lastDebate: null,
+    armyFocus: { army: null, target: null },
   });
   const ref = useRef(s);
   ref.current = s;
@@ -164,7 +219,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const applyView = useCallback(
     (id: string, view: ViewResponse) => {
       const saved = readLS<DraftStore>(draftKey(id), emptyDraft(view.state.turn));
-      const draft = saved.turn === view.state.turn ? saved : emptyDraft(view.state.turn);
+      const draft = saved.turn === view.state.turn ? normDraft(saved, view.state.turn) : emptyDraft(view.state.turn);
       patch({
         sessionId: id,
         view,
@@ -238,7 +293,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const openPanel = useCallback((p: PanelName, arg: string | null = null) => patch({ panel: p, panelArg: arg }), [patch]);
   const closePanel = useCallback(() => {
     abortRef.current?.abort();
-    patch({ panel: null, panelArg: null });
+    patch({ panel: null, panelArg: null, armyFocus: { army: null, target: null } });
   }, [patch]);
 
   const updateDraft = useCallback(
@@ -274,6 +329,77 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (category: string, text: string) => updateDraft((d) => ({ ...d, sections: { ...d.sections, [category]: text } })),
     [updateDraft],
   );
+  const addCard = useCallback(
+    (cardId: string, params: Record<string, string | number> = {}, origin?: 'army') =>
+      updateDraft((d) => ({ ...d, cards: [...d.cards, { uid: newUid(), card_id: cardId, params, ...(origin ? { origin } : {}) }] })),
+    [updateDraft],
+  );
+  const setCardParam = useCallback(
+    (uid: string, name: string, value: string | number | null) =>
+      updateDraft((d) => ({
+        ...d,
+        cards: d.cards.map((c) => {
+          if (c.uid !== uid) return c;
+          const params = { ...c.params };
+          if (value === null || value === '') delete params[name];
+          else params[name] = value;
+          return { ...c, params };
+        }),
+      })),
+    [updateDraft],
+  );
+  const removeCard = useCallback((uid: string) => updateDraft((d) => ({ ...d, cards: d.cards.filter((c) => c.uid !== uid) })), [updateDraft]);
+  const addOp = useCallback((op: Op, label: string) => updateDraft((d) => ({ ...d, ops: [...d.ops, { uid: newUid(), op, label }] })), [updateDraft]);
+  const removeOp = useCallback((uid: string) => updateDraft((d) => ({ ...d, ops: d.ops.filter((o) => o.uid !== uid) })), [updateDraft]);
+
+  // ---- per-season lookups (re-fetched after every settlement / promulgation)
+  const auxKey = () => `${ref.current.sessionId}:${ref.current.view?.state.turn ?? 0}:${ref.current.view?.state.flags ? Object.keys(ref.current.view.state.flags).length : 0}`;
+  const inflight = useRef<Record<string, Promise<unknown> | undefined>>({});
+  const loadAux = useCallback(
+    async <K extends 'present' | 'cards' | 'armies'>(kind: K, fetcher: (id: string) => Promise<NonNullable<AuxStore[K]>>, force = false): Promise<NonNullable<AuxStore[K]> | null> => {
+      const id = ref.current.sessionId;
+      if (!id) return null;
+      const key = auxKey();
+      const cur = ref.current.aux;
+      if (!force && cur.key === key && cur[kind]) return cur[kind] as NonNullable<AuxStore[K]>;
+      const flight = `${kind}:${key}`;
+      if (!force && inflight.current[flight]) return (await inflight.current[flight]) as NonNullable<AuxStore[K]> | null;
+      const p = fetcher(id)
+        .then((data) => {
+          setS((prev) => ({ ...prev, aux: prev.aux.key === key ? { ...prev.aux, [kind]: data } : { key, [kind]: data } }));
+          return data;
+        })
+        .catch((err) => {
+          toast.error(err, kind === 'present' ? '朝班名录未至' : kind === 'cards' ? '政令卡未至' : '兵部图籍未至');
+          return null;
+        })
+        .finally(() => {
+          inflight.current[flight] = undefined;
+        });
+      inflight.current[flight] = p;
+      return p;
+    },
+    [toast],
+  );
+  const loadPresent = useCallback((force = false) => loadAux('present', api.present, force), [loadAux]);
+  const loadCards = useCallback((force = false) => loadAux('cards', api.policyCards, force), [loadAux]);
+  const loadArmies = useCallback((force = false) => loadAux('armies', api.armies, force), [loadAux]);
+
+  const setTutorial = useCallback(
+    async (enabled: boolean) => {
+      const id = ref.current.sessionId;
+      if (!id) return;
+      try {
+        await api.setFlags(id, { tutorial: enabled });
+        const view = await api.view(id);
+        patch({ view });
+        toast.success(enabled ? '新手引导已开启。' : '新手引导已关闭，可在「设置 · 对局」中重新开启。', '引导');
+      } catch (err) {
+        toast.error(err, '引导设置未成');
+      }
+    },
+    [patch, toast],
+  );
 
   const draftEdict = useCallback(async () => {
     const { sessionId, draft } = ref.current;
@@ -286,7 +412,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const sections = Object.fromEntries(Object.entries(draft.sections).filter(([, v]) => v.trim()));
       const receipt = await api.draftEdict(
         sessionId,
-        { sections, adopted: draft.adopted.map(({ memorial_id, option_id }) => ({ memorial_id, option_id })) },
+        {
+          sections,
+          adopted: draft.adopted.map(({ memorial_id, option_id }) => ({ memorial_id, option_id })),
+          ...(draft.cards.length ? { cards: draft.cards.map((c) => ({ card_id: c.card_id, params: c.params })) } : {}),
+          ...(draft.ops.length ? { ops: draft.ops.map((o) => o.op) } : {}),
+        },
         ctl.signal,
       );
       patch({ receipt });
@@ -314,7 +445,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const view = await api.view(sessionId);
       const draft = emptyDraft(view.state.turn);
       persistDraft(sessionId, draft);
-      patch({ view, draft });
+      patch({ view, draft, aux: { key: '' } });
       toast.success('诏书已用宝颁行，有司奉诏。', '颁布');
     } catch (err) {
       toast.error(err, '颁布未成');
@@ -340,7 +471,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const nextView = await api.view(sessionId);
       const draft = emptyDraft(nextView.state.turn);
       persistDraft(sessionId, draft);
-      patch({ lastTurn: result, lastEdict, deltas, view: nextView, draft, receipt: null, panel: 'result', panelArg: null, choiceDeferred: false });
+      patch({ lastTurn: result, lastEdict, deltas, view: nextView, draft, receipt: null, panel: 'result', panelArg: null, choiceDeferred: false, aux: { key: '' }, armyFocus: { army: null, target: null } });
+      // 书面议状 delivered with the settlement land in the 谏言库
+      api
+        .advice(sessionId)
+        .then((advice) => patch({ advice }))
+        .catch(() => {});
     } catch (err) {
       toast.error(err, '推演受阻');
     } finally {
@@ -437,11 +573,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveAdvice,
       loadAdvice,
       rewind,
+      addCard,
+      setCardParam,
+      removeCard,
+      addOp,
+      removeOp,
+      loadPresent,
+      loadCards,
+      loadArmies,
+      setTutorial,
+      setLastDebate: (topic, result) => patch({ lastDebate: result ? { key: `${s.sessionId}:${s.view?.state.turn ?? 0}`, topic, result } : null }),
+      setArmyFocus: (f) => patch((prev) => ({ armyFocus: { ...prev.armyFocus, ...f } })),
+      seasonKey: `${s.sessionId}:${s.view?.state.turn ?? 0}`,
       setMapLayer: (mapLayer) => patch({ mapLayer }),
       selectRegion: (selectedRegion) => patch({ selectedRegion }),
       exitToTitle: () => patch({ screen: 'title', panel: null, selectedRegion: null }),
     }),
-    [s, patch, openPanel, closePanel, startGame, loadSession, refresh, adopt, unadopt, setSection, draftEdict, cancelDraft, confirmEdict, clearReceipt, advanceTurn, choose, saveAdvice, loadAdvice, rewind],
+    [s, patch, openPanel, closePanel, startGame, loadSession, refresh, adopt, unadopt, setSection, addCard, setCardParam, removeCard, addOp, removeOp, loadPresent, loadCards, loadArmies, setTutorial, draftEdict, cancelDraft, confirmEdict, clearReceipt, advanceTurn, choose, saveAdvice, loadAdvice, rewind],
   );
 
   // the ending screen takes over whenever the engine reports an outcome

@@ -23,6 +23,7 @@ const HUD = [
   '.crisis-title',
   '.medallions',
   '[data-testid="desk.memorialBook"]',
+  '[data-testid="desk.replies"]',
   '.layers',
   '[data-testid="desk.edictScroll"]',
   '[data-testid="desk.advance"]',

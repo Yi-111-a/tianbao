@@ -13,6 +13,7 @@ import { useGame } from '../store/game';
 import { cls, deltaClass, fmtDelta, fmtNum, fmtRange, fmtValueOrRange } from '../lib/util';
 import { CrisisTermRow, termMid } from './desk/Hud';
 import { groupClauses } from './EdictPanel';
+import { SOURCE_NAMES } from '../lib/court';
 
 const LEDGER_ORDER = ['treasury', 'grain', 'authority', 'morale', 'corruption', 'frontier_pressure', 'fanzhen_power', 'court_strife', 'an_ambition', 'rebellion_risk'];
 
@@ -261,8 +262,9 @@ export function ResultPanel() {
                         <li key={i} data-testid={`result.clause.${i}`} data-status={c.status}>
                           <Mark status={c.status} />
                           <span>
+                            {c.source && SOURCE_NAMES[c.source] && <small className="result-clause-source">{SOURCE_NAMES[c.source]}　</small>}
                             {c.text}
-                            {c.reason && <small>　{c.reason}</small>}
+                            {(c.delay_reason || c.reason) && <small>　{c.delay_reason || c.reason}</small>}
                           </span>
                         </li>
                       ))}

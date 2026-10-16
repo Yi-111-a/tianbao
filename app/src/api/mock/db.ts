@@ -76,7 +76,21 @@ export interface Db {
   overtimeLastTurn: number;
   fallbackEnding: string;
   rebelRoute: string[];
+  /** round 9: policy_cards.yaml rows, tutorial steps, scenario settings (agenda, courier, autonomy) */
+  policyCards: Record<string, unknown>[];
+  tutorial: { turn: number; step: number; title: string; text: string; target: string }[];
+  settings: Record<string, unknown>;
 }
+
+/** Built-in fallback cards (fixture mode only; the dev server serves the real policy_cards.yaml). */
+const FALLBACK_CARDS: Record<string, unknown>[] = [
+  { id: 'mil_march', category: '军务', title: '出征', summary: '命某军开赴某地，以进攻之态接战。', cost_hint: '不另费钱粮。行程按路线计季。', params: [{ name: 'army', kind: 'army', filter: { idle: true } }, { name: 'to', kind: 'region' }], ops: [{ op: 'march', army: '{army}', to_region: '{to}', with_commander: true }, { op: 'set_army_posture', army: '{army}', posture: 'attack' }] },
+  { id: 'mil_hold', category: '军务', title: '坚守本地', summary: '命某军就地固守，不得浪战。', cost_hint: '不费钱粮。守方战力 +20%。', params: [{ name: 'army', kind: 'army' }], ops: [{ op: 'set_army_posture', army: '{army}', posture: 'hold' }] },
+  { id: 'int_relief', category: '内政', title: '赈济', summary: '开某道仓廪，赈给贫乏。', cost_hint: '太仓 −50 万石、国库 −10，一季。冷却 2 季。', cooldown: 2, params: [{ name: 'region', kind: 'region', filter: { controller: 'own' } }], ops: [{ op: 'start_project', name: '赈济饥乏', region: '{region}', turns: 1, cost_per_turn: { grain: 50, treasury: 10 }, on_complete: [{ op: 'adjust_region', region: '{region}', stat: 'order', delta: 4 }] }] },
+  { id: 'per_recall', category: '人事', title: '召还京师', summary: '诏某人还京。', cost_hint: '不费钱粮。行程按路线计季。', params: [{ name: 'character', kind: 'character', filter: { present: false } }], ops: [{ op: 'move_character', character: '{character}', to_region: 'jingji' }] },
+  { id: 'dip_hushi', category: '外交', title: '开边市互市', summary: '于某边道开互市。', cost_hint: '国库每季 −25，两季。冷却 4 季。', cooldown: 4, params: [{ name: 'region', kind: 'region', filter: { ids: ['longyou', 'hexi', 'shuofang'] } }], ops: [{ op: 'start_project', name: '互市', region: '{region}', turns: 2, cost_per_turn: { treasury: 25 } }] },
+  { id: 'fin_hedi', category: '财计', title: '和籴实边', summary: '出钱于某边道和籴，充实军储。', cost_hint: '国库 −40，一季。冷却 3 季。', cooldown: 3, params: [{ name: 'region', kind: 'region', filter: { ids: ['hedong', 'longyou', 'hexi', 'shuofang'] } }], ops: [{ op: 'start_project', name: '和籴', region: '{region}', turns: 1, cost_per_turn: { treasury: 40 } }] },
+];
 
 const fl = (key: string) => ({ kind: 'flag', key, value: true });
 const not = (c: unknown) => ({ not: c });
@@ -163,6 +177,9 @@ function fixture(): Db {
     overtimeLastTurn: 23,
     fallbackEnding: 'open_storm',
     rebelRoute: ['fanyang', 'hebei', 'duji', 'tongguan', 'jingji'],
+    policyCards: FALLBACK_CARDS,
+    tutorial: [],
+    settings: { agenda: { audience_per_season: 3, debate_per_season: 1 }, capital_region: 'jingji', courier: { late_threshold_days: 45 } },
   };
 }
 
@@ -221,6 +238,7 @@ function overlay(base: Db, b: NonNullable<Awaited<ReturnType<typeof loadScenario
         controller: str(r.controller, 'tang'),
         stats: (r.stats as Record<string, number>) ?? {},
         adjacency: adj,
+        courier_days: r.courier_days == null ? undefined : Number(r.courier_days),
       };
     });
   }
@@ -321,6 +339,9 @@ function overlay(base: Db, b: NonNullable<Awaited<ReturnType<typeof loadScenario
   if (gl.overtime_flag) out.overtimeFlag = str(gl.overtime_flag);
   if (gl.overtime_last_turn != null) out.overtimeLastTurn = Number(gl.overtime_last_turn);
   if (gl.fallback_ending) out.fallbackEnding = str(gl.fallback_ending);
+  if (arr(b.policy_cards).length) out.policyCards = arr(b.policy_cards);
+  out.tutorial = arr(sc.tutorial).map((t) => ({ turn: Number(t.turn ?? 0), step: Number(t.step ?? 0), title: str(t.title), text: str(t.text), target: str(t.target) }));
+  if (sc.settings && typeof sc.settings === 'object') out.settings = sc.settings as Obj;
   const route = arr(sc.ai_routes).find((r) => r.faction === 'yan');
   if (route && Array.isArray(route.route)) out.rebelRoute = route.route as string[];
   return out;

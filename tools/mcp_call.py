@@ -31,6 +31,7 @@ def server_params() -> StdioServerParameters:
         "SIM_SCENARIOS_DIR": str(ROOT / "scenarios"),
         "LLM_SIM_HOME": os.environ.get("LLM_SIM_HOME", str(ROOT / "playtests" / "home")),
         "SIM_MCP_MODE": os.environ.get("SIM_MCP_MODE", "client"),
+        "SIM_MCP_NAME": "tianbao",
     }
     return StdioServerParameters(
         command=str(PYTHON),

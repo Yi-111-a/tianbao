@@ -2,7 +2,7 @@
 // clickable when its body holds far more content than any real season (the body scrolls inside
 // the panel instead). Regression for "result.root intercepts pointer events" on long seasons.
 import { expect, test, type Page } from '@playwright/test';
-import { REAL, settle, startGame, watchErrors } from './helpers';
+import { openBrush, REAL, settle, startGame, watchErrors } from './helpers';
 
 test.skip(REAL, 'stress content comes from the mock backend');
 
@@ -111,6 +111,7 @@ for (const size of SIZES) {
       await page.getByTestId('desk.edictScroll').click();
       await expect(page.getByTestId('edict.root')).toBeVisible();
       await panelSettled(page);
+      await openBrush(page);
       for (const c of ['military', 'interior', 'diplomacy', 'other']) await page.getByTestId(`edict.section.${c}`).fill(LONG_EDICT);
       await assertClickable(page, 'edict.preview');
       await page.getByTestId('edict.preview').click();
@@ -161,6 +162,7 @@ for (const size of SIZES) {
         ['desk.medallion.audience', 'audience.root', ['audience.close', 'audience.input', 'audience.adviceLibrary'], '.audience-roster'],
         ['desk.medallion.debate', 'debate.root', ['debate.close', 'debate.topic'], undefined],
         ['desk.memorialBook', 'command.root', ['command.close'], undefined],
+        ['desk.replies', 'replies.root', ['replies.close', 'replies.toAdvice', 'replies.toAudience'], undefined],
       ] as const) {
         await page.getByTestId(medallion).click();
         if (root === 'command.root') {

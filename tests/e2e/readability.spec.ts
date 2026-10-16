@@ -11,7 +11,7 @@ const SIZES = [
   { width: 1920, height: 1080, prose: 16, floor: 14 },
   { width: 1366, height: 768, prose: 14, floor: 13 },
 ];
-const SCREENS: ScreenName[] = ['newgame', 'memorial', 'edict', 'result', 'choice', 'audience', 'debate', 'timeline', 'settings', 'advice', 'command', 'ending'];
+const SCREENS: ScreenName[] = ['newgame', 'memorial', 'edict', 'result', 'choice', 'audience', 'debate', 'timeline', 'settings', 'advice', 'command', 'ending', 'army', 'replies'];
 
 interface TextProbe {
   text: string;

@@ -20,7 +20,7 @@ export const SCREENS = [
   'timeline',
   'settings',
 ] as const;
-export type ScreenName = (typeof SCREENS)[number] | 'advice' | 'command';
+export type ScreenName = (typeof SCREENS)[number] | 'advice' | 'command' | 'army' | 'replies';
 
 /** Collects console errors / page errors; tests assert it stays empty. */
 export function watchErrors(page: Page): string[] {
@@ -48,13 +48,36 @@ export async function freshTitle(page: Page) {
   await settle(page);
 }
 
-export async function startGame(page: Page) {
+/** Starts a new game. The first seasons open with the 新手引导; suites that are not about it skip it
+ *  (through its own 「跳过引导」 button) so its note does not sit over the controls they click. */
+export async function startGame(page: Page, opts: { keepTutorial?: boolean } = {}) {
   await freshTitle(page);
   await page.getByTestId('title.newGame').click();
   await expect(page.getByTestId('newgame.root')).toBeVisible();
   await page.getByTestId('newgame.start').click();
   await expect(page.getByTestId('desk.root')).toBeVisible({ timeout: 20_000 });
   await settle(page, 600);
+  if (!opts.keepTutorial) await skipTutorial(page);
+}
+
+export async function skipTutorial(page: Page) {
+  const skip = page.getByTestId('tutorial.skip');
+  await skip.waitFor({ state: 'visible', timeout: 4000 }).catch(() => undefined);
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click();
+    await expect(page.getByTestId('tutorial.root')).toHaveCount(0, { timeout: 15_000 });
+    // the confirmation toast fades on its own; close it so it covers nothing
+    await page.getByTestId('toast.close').first().click({ timeout: 2000 }).catch(() => undefined);
+    await settle(page, 300);
+  }
+}
+
+/** The edict's 御笔 (free text) layer is folded away by default: unfold it. */
+export async function openBrush(page: Page) {
+  if (!(await page.getByTestId('edict.section.military').isVisible().catch(() => false))) {
+    await page.getByTestId('edict.brushToggle').click();
+    await expect(page.getByTestId('edict.section.military')).toBeVisible();
+  }
 }
 
 async function sessionId(page: Page): Promise<string> {
@@ -67,12 +90,12 @@ async function refresh(page: Page) {
 
 async function onDesk(page: Page) {
   if (!(await page.getByTestId('desk.root').isVisible().catch(() => false))) await startGame(page);
-  // close whatever overlay is open
+  // close whatever overlay (or the 兵部 drawer) is open
   for (let i = 0; i < 3; i++) {
-    const overlay = page.locator('.overlay');
+    const overlay = page.locator('.overlay, [data-testid="army.root"]');
     if ((await overlay.count()) === 0) break;
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(350);
   }
 }
 
@@ -137,6 +160,7 @@ export async function openScreen(page: Page, name: ScreenName, fresh = true): Pr
       if (await back.isVisible().catch(() => false)) await back.click();
       const newDraft = page.getByTestId('edict.newDraft');
       if (await newDraft.isVisible().catch(() => false)) await newDraft.click();
+      await openBrush(page);
       await page.getByTestId('edict.section.military').fill('命潼关增修关防，选京畿彍骑整训。');
       await settle(page, 900);
       return true;
@@ -192,6 +216,19 @@ export async function openScreen(page: Page, name: ScreenName, fresh = true): Pr
       await onDesk(page);
       await page.getByTestId('desk.medallion.advice').click();
       await expect(page.getByTestId('advice.root')).toBeVisible();
+      await settle(page, 600);
+      return true;
+    case 'army':
+      await onDesk(page);
+      await page.getByTestId('desk.medallion.army').click();
+      await expect(page.getByTestId('army.root')).toBeVisible();
+      await expect(page.locator('[data-testid^="army.item."]').first()).toBeVisible({ timeout: 20_000 });
+      await settle(page, 900);
+      return true;
+    case 'replies':
+      await onDesk(page);
+      await page.getByTestId('desk.replies').click();
+      await expect(page.getByTestId('replies.root')).toBeVisible();
       await settle(page, 600);
       return true;
   }

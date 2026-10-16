@@ -1,19 +1,32 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Paper } from '../../components/Paper';
 import { Portrait } from '../../components/Portrait';
 import { useGame } from '../../store/game';
 import { cls, statName } from '../../lib/util';
-import { CalendarSlip, CrisisDrum, EdictScroll, FactionRibbons, LayerSwitcher, Medallion, MemorialBook, Objectives, ResourceBar } from './Hud';
+import { CalendarSlip, CrisisDrum, EdictScroll, FactionRibbons, LayerSwitcher, Medallion, MemorialBook, Objectives, RepliesBox, ResourceBar } from './Hud';
 import { MapView } from './MapView';
 import { SEAT_NAMES } from './geo';
+import { ArmyPanel } from '../ArmyPanel';
+import { agendaCount, agendaExhausted, agendaTitle, repliesRead } from '../../lib/court';
 
 export function DeskScreen() {
   const g = useGame();
   const view = g.view;
   const [confirming, setConfirming] = useState(false);
+  const [readTick, setReadTick] = useState(0);
+  useEffect(() => {
+    const on = () => setReadTick((n) => n + 1);
+    window.addEventListener('tianbao:replies-read', on);
+    return () => window.removeEventListener('tianbao:replies-read', on);
+  }, []);
   if (!view) return null;
-  const pendingDraft = g.draft.adopted.length > 0 || Object.values(g.draft.sections).some((t) => t.trim());
+  void readTick;
+  const pendingDraft = g.draft.adopted.length > 0 || g.draft.cards.length > 0 || g.draft.ops.length > 0 || Object.values(g.draft.sections).some((t) => t.trim());
+  const agenda = view.agenda;
+  const replies = view.replies ?? [];
+  const unread = Math.max(0, replies.length - repliesRead(g.seasonKey));
+  const armyOpen = g.panel === 'army';
   const choices = view.pending_choices ?? [];
 
   const onAdvance = () => {
@@ -26,10 +39,18 @@ export function DeskScreen() {
   };
 
   return (
-    <div className="desk" data-screen="desk" data-testid="desk.root">
+    <div className={cls('desk', armyOpen && 'is-army-open')} data-screen="desk" data-testid="desk.root">
       <div className="desk-wood" aria-hidden="true" />
       <div className="desk-map-frame">
-        <MapView view={view} layer={g.mapLayer} selected={g.selectedRegion} onSelect={g.selectRegion} />
+        <MapView
+          view={view}
+          layer={g.mapLayer}
+          selected={g.selectedRegion}
+          onSelect={g.selectRegion}
+          army={armyOpen ? g.armyFocus : null}
+          etas={armyOpen ? g.aux.armies?.armies.find((a) => a.id === g.armyFocus.army)?.etas ?? null : null}
+          onPickTarget={(id) => g.setArmyFocus({ target: id })}
+        />
         <div className="map-vignette" aria-hidden="true" />
       </div>
 
@@ -47,8 +68,25 @@ export function DeskScreen() {
       <div className="hud-right">
         <CrisisDrum view={view} />
         <nav className="medallions" aria-label="御案" data-hud="medallions">
-          <Medallion glyph="召" label="召对" testid="desk.medallion.audience" onClick={() => g.openPanel('audience')} />
-          <Medallion glyph="议" label="廷议" testid="desk.medallion.debate" onClick={() => g.openPanel('debate')} />
+          <Medallion
+            glyph="召"
+            label="召对"
+            testid="desk.medallion.audience"
+            onClick={() => g.openPanel('audience')}
+            count={agendaCount(agenda?.audience)}
+            exhausted={agendaExhausted(agenda?.audience)}
+            title={agenda ? agendaTitle(agenda.audience, 'audience') : undefined}
+          />
+          <Medallion
+            glyph="议"
+            label="廷议"
+            testid="desk.medallion.debate"
+            onClick={() => g.openPanel('debate')}
+            count={agendaCount(agenda?.debate)}
+            exhausted={agendaExhausted(agenda?.debate)}
+            title={agenda ? agendaTitle(agenda.debate, 'debate') : undefined}
+          />
+          <Medallion glyph="兵" label="兵部" testid="desk.medallion.army" onClick={() => (armyOpen ? g.closePanel() : g.openPanel('army'))} title="兵部 · 军务：诸军兵力、统帅、行程与军令" />
           <Medallion glyph="谏" label="谏言库" testid="desk.medallion.advice" onClick={() => g.openPanel('advice')} badge={g.advice.length || undefined} />
           <Medallion glyph="史" label="史册" testid="desk.medallion.timeline" onClick={() => g.openPanel('timeline')} />
           <Medallion glyph="设" label="设置" testid="desk.medallion.settings" onClick={() => g.openPanel('settings')} />
@@ -57,8 +95,11 @@ export function DeskScreen() {
       </div>
 
       <div className="hud-bottom-left">
+        <RepliesBox count={replies.length} unread={unread} onOpen={() => g.openPanel('replies')} />
         <MemorialBook count={view.memorials.length} onOpen={() => g.openPanel('memorial')} />
       </div>
+
+      <AnimatePresence>{armyOpen && <ArmyPanel key="army" />}</AnimatePresence>
 
       <div className="hud-bottom-center">
         {view.final_notice?.next_is_final && (
@@ -77,7 +118,7 @@ export function DeskScreen() {
             <b className="t-num">{choices.length}</b>
           </button>
         )}
-        <EdictScroll count={g.draft.adopted.length} onOpen={() => g.openPanel('edict')} />
+        <EdictScroll count={g.draft.adopted.length + g.draft.cards.length + g.draft.ops.length} onOpen={() => g.openPanel('edict')} />
         <div className="advance-wrap">
           <AnimatePresence>
             {confirming && (
@@ -101,7 +142,7 @@ export function DeskScreen() {
         </div>
       </div>
 
-      <AnimatePresence>{g.selectedRegion && view.state.regions[g.selectedRegion] && <RegionCard key={g.selectedRegion} id={g.selectedRegion} />}</AnimatePresence>
+      <AnimatePresence>{!armyOpen && g.selectedRegion && view.state.regions[g.selectedRegion] && <RegionCard key={g.selectedRegion} id={g.selectedRegion} />}</AnimatePresence>
 
       <AnimatePresence>
         {g.busy.turn && (

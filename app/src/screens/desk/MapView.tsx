@@ -22,6 +22,7 @@ import {
   type Pt,
 } from './geo';
 import { grow, hits, HUD_ATTR, height, inside, shift, largestFreeRect, measureHud, nudge, placeCard, rect, width, type Rect } from './safeArea';
+import { travelPath } from '../../lib/route';
 
 /** gap kept between the map content and any HUD piece, and from the screen edge (px) */
 const HUD_PAD = 8;
@@ -247,11 +248,19 @@ export function MapView({
   layer,
   selected,
   onSelect,
+  army = null,
+  etas = null,
+  onPickTarget,
 }: {
   view: ViewResponse;
   layer: MapLayer;
   selected: string | null;
   onSelect: (id: string | null) => void;
+  /** 兵部 open: the selected army (its routes are drawn) and the chosen destination */
+  army?: { army: string | null; target: string | null } | null;
+  /** seasons of travel from that army to every region (GET /armies), null = unreachable */
+  etas?: Record<string, number | null> | null;
+  onPickTarget?: (regionId: string) => void;
 }) {
   const [mapData, mapSettled] = useMapData();
   const [baseUrl, baseSettled] = useAsset(['map.base', 'ui.map.base', 'map.base.default']);
@@ -609,6 +618,13 @@ export function MapView({
   };
 
   const hovered = hover ? state.regions[hover] : null;
+  // ---- 兵部 overlay: where the selected army is, how long to each region, the road to the target
+  const focusArmy = army?.army ? state.armies?.[army.army] : null;
+  const home = focusArmy ? focusArmy.region : null;
+  const routeTo = army && home ? (army.target && army.target !== home ? army.target : hover && hover !== home && etas?.[hover] != null ? hover : null) : null;
+  const routeIds = routeTo && home ? travelPath(state.regions, home, routeTo) : null;
+  const routePts: Pt[] = (routeIds ?? []).map((id) => seatOf[id]).filter(Boolean);
+  const armyMode = Boolean(army?.army && etas);
   const canalBlocked = CANAL_REGIONS.some((id) => state.regions[id]?.controller === 'yan');
   const canalPts: Pt[] = geo.mode === 'schematic' && !mapData ? CANAL : CANAL_REGIONS.slice().map((id) => seatOf[id]).filter(Boolean);
   const rebelPts: Pt[] = REBEL_PATH.map((id) => seatOf[id]).filter(Boolean);
@@ -617,7 +633,7 @@ export function MapView({
   return (
     <div
       ref={rootRef}
-      className={cls('map-root', `map-layer--${layer}`, drag.current?.moved && 'is-dragging')}
+      className={cls('map-root', `map-layer--${layer}`, drag.current?.moved && 'is-dragging', armyMode && 'is-army-mode')}
       data-testid="map.root"
       data-map-mode={geo.mode}
       data-layer={layer}
@@ -708,6 +724,9 @@ export function MapView({
             <marker id="mo-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
               <path d="M0 0 L10 5 L0 10 z" fill="#b2321f" />
             </marker>
+            <marker id="mo-route-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#f2d27a" />
+            </marker>
           </defs>
           <g clipPath="url(#mo-land)">
             {geo.shapes
@@ -773,7 +792,13 @@ export function MapView({
               },
               onMouseLeave: () => setHover((h) => (h === s.id ? null : h)),
               onMouseMove: moveTip,
-              onClick: () => onSelect(selected === s.id ? null : s.id),
+              onClick: () => {
+                if (armyMode) {
+                  if (etas?.[s.id] != null && s.id !== home) onPickTarget?.(s.id);
+                  return;
+                }
+                onSelect(selected === s.id ? null : s.id);
+              },
               role: 'button',
               'aria-label': region.name,
             };
@@ -824,6 +849,40 @@ export function MapView({
               </g>
             );
           })}
+
+          {/* 兵部: travel times from the selected army, and the road to the chosen destination */}
+          {armyMode && home && seatOf[home] && (
+            <g className="army-plan" data-testid="map.armyPlan" pointerEvents="none">
+              {geo.shapes.map((sh) => {
+                const eta = etas?.[sh.id];
+                if (eta == null || sh.id === home || !state.regions[sh.id]) return null;
+                const p = sh.seat;
+                const on = routeTo === sh.id;
+                return (
+                  <g key={`eta${sh.id}`} className={cls('eta-tag', on && 'is-on', eta >= 3 && 'is-far')} transform={`translate(${p[0] - (eta >= 10 ? 60 : 52) * G} ${p[1] + 1 * G}) scale(${G})`} data-testid={`map.eta.${sh.id}`}>
+                    <rect x="-2" y="-12" width={eta >= 10 ? 46 : 38} height="19" rx="9.5" />
+                    <text x={eta >= 10 ? 21 : 17} y="2.5" textAnchor="middle" className="t-num">{`${eta}季`}</text>
+                  </g>
+                );
+              })}
+              {routePts.length > 1 && (
+                <g className={cls('army-route', army?.target === routeTo && 'is-chosen')} data-testid="map.armyRoute" data-to={routeTo ?? ''}>
+                  <path d={smoothPath(routePts)} className="army-route-under" />
+                  <path d={smoothPath(routePts)} className="army-route-line" markerEnd="url(#mo-route-arrow)" />
+                </g>
+              )}
+              <g transform={`translate(${seatOf[home][0]} ${seatOf[home][1]}) scale(${G})`} className="army-home">
+                <circle r="26" className="army-home-ring" />
+                <circle r="16" className="army-home-ring army-home-ring--inner" />
+              </g>
+              {routeTo && seatOf[routeTo] && etas?.[routeTo] != null && (
+                <g transform={`translate(${seatOf[routeTo][0]} ${seatOf[routeTo][1] - 44 * G}) scale(${G})`} className="route-eta">
+                  <rect x="-58" y="-16" width="116" height="26" rx="4" />
+                  <text y="3" textAnchor="middle">{`${state.regions[routeTo]?.name ?? ''} · 约${etas[routeTo]}季`}</text>
+                </g>
+              )}
+            </g>
+          )}
 
           {/* army tokens */}
           {Object.entries(armiesBy).map(([rid, list]) => {
