@@ -5772,6 +5772,504 @@
         - {op: set_flag, key: war_levies, value: true}
       hint: 国库 +120，民心 −4
 
+# ============================== 战时常备奏疏（三题、各三班轮值） ==============================
+# 引擎的奏疏处理标记本身不支持 cooldown；这里以既有条件 / StateOp 实现轮值，不改引擎。
+# 每题以 slot 计数器选当前班（缺省 0），last 旗标保证本季批过便不再出下一班。
+# 各班另记独立冷却时钟：处理后至少隔三季；所有选项都推进轮值，次季案牍勘会后清空下一班处理标记。
+# 勘会用一季、不另计钱粮；竣工效果只清下一班标记，不清冷却时钟，也不伪造一次奏疏采纳记录。
+# 重复列出、同季连批或延后处理均不能绕过间隔；三题每季各有一案。
+# repeatable / cooldown 为 content_lint 校验用元数据；仅这三题豁免战局专题的「至多两见」。
+
+- id: wp_standing_pay_1
+  war_pool: standing_pay
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_pay:slot', operator: eq, value: 0}
+      - {any: [{kind: flag, key: 'war_pool:standing_pay:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_pay:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_pay_1', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_pay_1', operator: gte, value: 3}]}
+  title: 诸军请饷·核军籍
+  summary: 军兴未息，诸军衣粮须按籍支给。度支请出钱补其不给；或量减缣帛之数，留钱以备转输。
+  region: jingji
+  illustration: event.tax_treasury
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 士卒冒锋镝，不可使衣粮失所。请按籍给饷，以固其心。, option: pay}
+    - {character: gao_lishi, stance: oppose, line: 军需无穷，帑藏有限。量减缣帛，尚可留钱济急。, option: reduce}
+  proposal: pay
+  options:
+    - id: pay
+      label: 按籍给饷
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -30, reason: 按籍补给军饷}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 衣粮有给}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 1}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_2', value: null}
+      hint: 国库 −30，民心 +2；本题下季再议，本条隔三季轮值
+    - id: reduce
+      label: 量减缣帛，留钱济急
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 15, reason: 裁减军中缣帛}
+        - {op: adjust_resource, resource: authority, delta: -1, reason: 军中怨饷薄}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 1}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_2', value: null}
+      hint: 国库 +15，君威 −1；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_pay_2
+  war_pool: standing_pay
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_pay:slot', operator: eq, value: 1}
+      - {any: [{kind: flag, key: 'war_pool:standing_pay:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_pay:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_pay_2', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_pay_2', operator: gte, value: 3}]}
+  title: 诸军请饷·给缣帛
+  summary: 军兴未息，诸军衣粮须按籍支给。度支请出钱补其不给；或量减缣帛之数，留钱以备转输。
+  region: jingji
+  illustration: event.tax_treasury
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 士卒冒锋镝，不可使衣粮失所。请按籍给饷，以固其心。, option: pay}
+    - {character: gao_lishi, stance: oppose, line: 军需无穷，帑藏有限。量减缣帛，尚可留钱济急。, option: reduce}
+  proposal: pay
+  options:
+    - id: pay
+      label: 按籍给饷
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -30, reason: 按籍补给军饷}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 衣粮有给}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 2}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_3', value: null}
+      hint: 国库 −30，民心 +2；本题下季再议，本条隔三季轮值
+    - id: reduce
+      label: 量减缣帛，留钱济急
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 15, reason: 裁减军中缣帛}
+        - {op: adjust_resource, resource: authority, delta: -1, reason: 军中怨饷薄}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 2}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_3', value: null}
+      hint: 国库 +15，君威 −1；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_pay_3
+  war_pool: standing_pay
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_pay:slot', operator: eq, value: 2}
+      - {any: [{kind: flag, key: 'war_pool:standing_pay:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_pay:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_pay_3', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_pay_3', operator: gte, value: 3}]}
+  title: 诸军请饷·勘支销
+  summary: 军兴未息，诸军衣粮须按籍支给。度支请出钱补其不给；或量减缣帛之数，留钱以备转输。
+  region: jingji
+  illustration: event.tax_treasury
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 士卒冒锋镝，不可使衣粮失所。请按籍给饷，以固其心。, option: pay}
+    - {character: gao_lishi, stance: oppose, line: 军需无穷，帑藏有限。量减缣帛，尚可留钱济急。, option: reduce}
+  proposal: pay
+  options:
+    - id: pay
+      label: 按籍给饷
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -30, reason: 按籍补给军饷}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 衣粮有给}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 0}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_1', value: null}
+      hint: 国库 −30，民心 +2；本题下季再议，本条隔三季轮值
+    - id: reduce
+      label: 量减缣帛，留钱济急
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 15, reason: 裁减军中缣帛}
+        - {op: adjust_resource, resource: authority, delta: -1, reason: 军中怨饷薄}
+        - {op: set_flag, key: 'war_pool:standing_pay:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_pay_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_pay:slot', value: 0}
+        - op: start_project
+          name: 军饷簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_pay_1', value: null}
+      hint: 国库 +15，君威 −1；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_reward_1
+  war_pool: standing_reward
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_reward:slot', operator: eq, value: 0}
+      - {any: [{kind: flag, key: 'war_pool:standing_reward:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_reward:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_reward_1', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_reward_1', operator: gte, value: 3}]}
+  title: 劳军犒赏·赐酒食
+  summary: 诸军久戍，征人劳苦。或请给酒食、恤其家属，以慰军心；或请但颁慰劳之诏，省犒赐以全仓储。
+  region: jingji
+  illustration: event.winter_clothing
+  advisors:
+    - {character: guo_ziyi, stance: support, line: 征人负戈经岁，妻子亦困。薄给酒食，兼恤其家，足以劝勤。, option: reward}
+    - {character: gao_lishi, stance: oppose, line: 诏书亦足示恩。仓储所存，当留以继军食。, option: edict}
+  proposal: reward
+  options:
+    - id: reward
+      label: 给酒食，恤征人之家
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -15, reason: 抚恤征人家属}
+        - {op: adjust_resource, resource: grain, delta: -25, reason: 给军酒食}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 慰劳征人}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 1}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_2', value: null}
+      hint: 国库 −15，太仓 −25，民心 +2；本题下季再议，本条隔三季轮值
+    - id: edict
+      label: 但颁慰劳诏，省犒赐
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 诏谕诸军}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 有诏无赐}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 1}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_2', value: null}
+      hint: 君威 +1，民心 −1；不耗钱粮；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_reward_2
+  war_pool: standing_reward
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_reward:slot', operator: eq, value: 1}
+      - {any: [{kind: flag, key: 'war_pool:standing_reward:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_reward:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_reward_2', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_reward_2', operator: gte, value: 3}]}
+  title: 劳军犒赏·恤征人
+  summary: 诸军久戍，征人劳苦。或请给酒食、恤其家属，以慰军心；或请但颁慰劳之诏，省犒赐以全仓储。
+  region: jingji
+  illustration: event.winter_clothing
+  advisors:
+    - {character: guo_ziyi, stance: support, line: 征人负戈经岁，妻子亦困。薄给酒食，兼恤其家，足以劝勤。, option: reward}
+    - {character: gao_lishi, stance: oppose, line: 诏书亦足示恩。仓储所存，当留以继军食。, option: edict}
+  proposal: reward
+  options:
+    - id: reward
+      label: 给酒食，恤征人之家
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -15, reason: 抚恤征人家属}
+        - {op: adjust_resource, resource: grain, delta: -25, reason: 给军酒食}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 慰劳征人}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 2}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_3', value: null}
+      hint: 国库 −15，太仓 −25，民心 +2；本题下季再议，本条隔三季轮值
+    - id: edict
+      label: 但颁慰劳诏，省犒赐
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 诏谕诸军}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 有诏无赐}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 2}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_3', value: null}
+      hint: 君威 +1，民心 −1；不耗钱粮；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_reward_3
+  war_pool: standing_reward
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_reward:slot', operator: eq, value: 2}
+      - {any: [{kind: flag, key: 'war_pool:standing_reward:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_reward:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_reward_3', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_reward_3', operator: gte, value: 3}]}
+  title: 劳军犒赏·录勤劳
+  summary: 诸军久戍，征人劳苦。或请给酒食、恤其家属，以慰军心；或请但颁慰劳之诏，省犒赐以全仓储。
+  region: jingji
+  illustration: event.winter_clothing
+  advisors:
+    - {character: guo_ziyi, stance: support, line: 征人负戈经岁，妻子亦困。薄给酒食，兼恤其家，足以劝勤。, option: reward}
+    - {character: gao_lishi, stance: oppose, line: 诏书亦足示恩。仓储所存，当留以继军食。, option: edict}
+  proposal: reward
+  options:
+    - id: reward
+      label: 给酒食，恤征人之家
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -15, reason: 抚恤征人家属}
+        - {op: adjust_resource, resource: grain, delta: -25, reason: 给军酒食}
+        - {op: adjust_resource, resource: morale, delta: 2, reason: 慰劳征人}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 0}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_1', value: null}
+      hint: 国库 −15，太仓 −25，民心 +2；本题下季再议，本条隔三季轮值
+    - id: edict
+      label: 但颁慰劳诏，省犒赐
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 诏谕诸军}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 有诏无赐}
+        - {op: set_flag, key: 'war_pool:standing_reward:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_reward_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_reward:slot', value: 0}
+        - op: start_project
+          name: 犒军簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_reward_1', value: null}
+      hint: 君威 +1，民心 −1；不耗钱粮；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_post_1
+  war_pool: standing_post
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_post:slot', operator: eq, value: 0}
+      - {any: [{kind: flag, key: 'war_pool:standing_post:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_post:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_post_1', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_post_1', operator: gte, value: 3}]}
+  title: 整顿驿传·计驿费
+  summary: 军书往来，驿传所费日繁。兵部请出钱补驿马，禁诸使滥乘；或仍令沿途州县供顿，以省度支之费。
+  region: jingji
+  illustration: event.loyalist_courier
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 军书贵速，供顿不可尽责于民。请给驿费，禁滥乘之弊。, option: fund}
+    - {character: yang_guozhong, stance: oppose, line: 军兴之际，州县自当供顿，何必事事仰给度支？, option: local}
+  proposal: fund
+  options:
+    - id: fund
+      label: 给驿费，禁使者滥乘
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -20, reason: 补给驿马}
+        - {op: adjust_resource, resource: corruption, delta: -1, reason: 稽核滥乘}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 1}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_2', value: null}
+      hint: 国库 −20，积弊 −1；本题下季再议，本条隔三季轮值
+    - id: local
+      label: 仍责州县供顿
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 10, reason: 驿费移由州县供给}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 供顿扰民}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_1', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 1}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_2', value: null}
+      hint: 国库 +10，民心 −1；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_post_2
+  war_pool: standing_post
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_post:slot', operator: eq, value: 1}
+      - {any: [{kind: flag, key: 'war_pool:standing_post:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_post:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_post_2', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_post_2', operator: gte, value: 3}]}
+  title: 整顿驿传·给驿马
+  summary: 军书往来，驿传所费日繁。兵部请出钱补驿马，禁诸使滥乘；或仍令沿途州县供顿，以省度支之费。
+  region: jingji
+  illustration: event.loyalist_courier
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 军书贵速，供顿不可尽责于民。请给驿费，禁滥乘之弊。, option: fund}
+    - {character: yang_guozhong, stance: oppose, line: 军兴之际，州县自当供顿，何必事事仰给度支？, option: local}
+  proposal: fund
+  options:
+    - id: fund
+      label: 给驿费，禁使者滥乘
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -20, reason: 补给驿马}
+        - {op: adjust_resource, resource: corruption, delta: -1, reason: 稽核滥乘}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 2}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_3', value: null}
+      hint: 国库 −20，积弊 −1；本题下季再议，本条隔三季轮值
+    - id: local
+      label: 仍责州县供顿
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 10, reason: 驿费移由州县供给}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 供顿扰民}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_2', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 2}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_3', value: null}
+      hint: 国库 +10，民心 −1；本题下季再议，本条隔三季轮值
+
+- id: wp_standing_post_3
+  war_pool: standing_post
+  repeatable: true
+  cooldown: 3
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: rebellion_started, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_quelled, value: true}}
+      - {not: {kind: flag, operator: eq, key: hebei_ceded, value: true}}
+      - {kind: counter, key: 'war_pool:standing_post:slot', operator: eq, value: 2}
+      - {any: [{kind: flag, key: 'war_pool:standing_post:last', operator: absent}, {kind: flag_age, key: 'war_pool:standing_post:last', operator: gte, value: 1}]}
+      - {any: [{kind: flag, key: 'cooldown:wp_standing_post_3', operator: absent}, {kind: flag_age, key: 'cooldown:wp_standing_post_3', operator: gte, value: 3}]}
+  title: 整顿驿传·稽滥乘
+  summary: 军书往来，驿传所费日繁。兵部请出钱补驿马，禁诸使滥乘；或仍令沿途州县供顿，以省度支之费。
+  region: jingji
+  illustration: event.loyalist_courier
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 军书贵速，供顿不可尽责于民。请给驿费，禁滥乘之弊。, option: fund}
+    - {character: yang_guozhong, stance: oppose, line: 军兴之际，州县自当供顿，何必事事仰给度支？, option: local}
+  proposal: fund
+  options:
+    - id: fund
+      label: 给驿费，禁使者滥乘
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: -20, reason: 补给驿马}
+        - {op: adjust_resource, resource: corruption, delta: -1, reason: 稽核滥乘}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 0}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_1', value: null}
+      hint: 国库 −20，积弊 −1；本题下季再议，本条隔三季轮值
+    - id: local
+      label: 仍责州县供顿
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 10, reason: 驿费移由州县供给}
+        - {op: adjust_resource, resource: morale, delta: -1, reason: 供顿扰民}
+        - {op: set_flag, key: 'war_pool:standing_post:last', value: true}
+        - {op: set_flag, key: 'cooldown:wp_standing_post_3', value: true}
+        - {op: set_counter, key: 'war_pool:standing_post:slot', value: 0}
+        - op: start_project
+          name: 驿传簿勘会
+          region: jingji
+          cost_per_turn: {}
+          turns: 1
+          on_complete:
+            - {op: set_flag, key: 'memorial:wp_standing_post_1', value: null}
+      hint: 国库 +10，民心 −1；本题下季再议，本条隔三季轮值
+
+
 # ============================== 善后（乱平后出现：叛军覆灭或首逆就擒） ==============================
 - id: s_demobilize
   conditions:

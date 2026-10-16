@@ -43,6 +43,8 @@
     称「旧部受代 / 渔阳之兵既归朝廷」须有 an_command 上限条件。
 18. 乱局奏疏池（round 8）：带 `war_pool` 的奏疏按战局出现——同一题目至多两条、标题互异，不得按固定回合，
     须正向要求 rebellion_started 并排除 rebellion_quelled / hebei_ceded；第二条须要求第一条已处理且隔两季以上（flag_age ≥ 2）。
+    常备三题 standing_pay / standing_reward / standing_post 例外：各三班轮值，每题每季最多一案、同条隔三季，
+    须在条件与所有选项中落实冷却及轮值操作，不能仅声明 repeatable / cooldown。
 19. 兵变宽限（round 8）：设 mutiny_rebellion 的事件须有留京 / 不许还帅之后的季数条件，an_detained、fanyang_restive 下限 ≥ 2，
     early_detain_alarm 下限 ≥ 1（夺镇当季与下一季不发，留一整季可行安抚之策）。
 20. 再造唐室须有战功（round 8）：e3_* 结局须正向要求乱平、官军战功（counter war_merit）或范阳已不在叛军之手之一。
@@ -61,6 +63,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 PACK = ROOT / "scenarios" / "tianbao_751"
+STANDING_WAR_POOLS = frozenset({"standing_pay", "standing_reward", "standing_post"})
 
 # ---- 规则表 ----
 APPOINT_WORDS = re.compile(r"任|另择|另简|授|代镇|久镇")
@@ -571,13 +574,57 @@ def lint(pack: Path) -> list[str]:
         if item.get("war_pool") is not None:
             pool.setdefault(str(item["war_pool"]), []).append(item)
     for template, rows in pool.items():
-        if len(rows) > 2:
+        standing = template in STANDING_WAR_POOLS
+        if standing and [r.get("id") for r in rows] != [f"wp_{template}_{i}" for i in range(1, 4)]:
+            problems.append(f"[奏疏池] 常备题目 {template} 须按次序列出三班 wp_{template}_1 / _2 / _3")
+        if not standing and len(rows) > 2:
             problems.append(f"[奏疏池] 题目 {template} 有 {len(rows)} 条（{'、'.join(str(r['id']) for r in rows)}），每场战事同题至多两见")
         if len({str(r.get("title")) for r in rows}) < len(rows):
             problems.append(f"[奏疏池] 题目 {template} 的各条标题须互不相同（第二见另写标题）")
         for index, row in enumerate(rows):
             where = f"奏疏 {row.get('id')}（题目 {template}）"
             cond = row.get("conditions")
+            if standing:
+                mid = str(row.get("id"))
+                last = f"war_pool:{template}:last"
+                clock = f"cooldown:{mid}"
+                counter = f"war_pool:{template}:slot"
+                if row.get("repeatable") is not True or row.get("cooldown") != 3:
+                    problems.append(f"[奏疏池] {where} 须声明 repeatable: true、cooldown: 3")
+                # 检查顶层 all 中的完整守卫，不能把冷却藏在可绕过的 any 分支中。
+                required = [
+                    {"kind": "counter", "key": counter, "operator": "eq", "value": index},
+                    {"any": [{"kind": "flag", "key": last, "operator": "absent"},
+                             {"kind": "flag_age", "key": last, "operator": "gte", "value": 1}]},
+                    {"any": [{"kind": "flag", "key": clock, "operator": "absent"},
+                             {"kind": "flag_age", "key": clock, "operator": "gte", "value": 3}]},
+                ]
+                guards = cond.get("all", []) if isinstance(cond, dict) else []
+                if any(guard not in guards for guard in required):
+                    problems.append(f"[奏疏池] {where} 须有当前轮班、本题隔季、本条隔三季的完整守卫")
+                transition = [
+                    {"op": "set_flag", "key": last, "value": True},
+                    {"op": "set_flag", "key": clock, "value": True},
+                    {"op": "set_counter", "key": counter, "value": (index + 1) % 3},
+                    {"op": "start_project", "name": {"standing_pay": "军饷簿勘会", "standing_reward": "犒军簿勘会",
+                                                    "standing_post": "驿传簿勘会"}[template],
+                     "region": "jingji", "cost_per_turn": {}, "turns": 1,
+                     "on_complete": [{"op": "set_flag", "key": f"memorial:wp_{template}_{(index + 1) % 3 + 1}", "value": None}]},
+                ]
+                for opt in options_of(row):
+                    controls = [op for op in opt.get("ops") or [] if op.get("op") in
+                                {"set_flag", "set_counter", "adjust_counter", "start_project"}]
+                    if controls != transition:
+                        problems.append(f"[奏疏池] {where}.{opt.get('id')} 须记下两道冷却时钟、推进轮班并经一季无耗勘会只清下一班处理标记")
+                option_ids = {opt.get("id") for opt in options_of(row)}
+                if row.get("proposal") not in option_ids or any(
+                        adv.get("option") not in option_ids for adv in row.get("advisors") or []):
+                    problems.append(f"[奏疏池] {where} 须写明 proposal 与各谏言的 option")
+                if len(str(row.get("summary", ""))) > 120 or any(
+                        len(str(adv.get("line", ""))) > 60 for adv in row.get("advisors") or []):
+                    problems.append(f"[奏疏池] {where} 正文须 ≤120 字、谏言须 ≤60 字")
+            elif row.get("repeatable"):
+                problems.append(f"[奏疏池] {where} 非常备题目，不得重复")
             if row.get("turn") is not None:
                 problems.append(f"[奏疏池] {where} 不得按固定回合出现，须按战局条件出现")
             if "rebellion_started" not in positive_evidence(cond):
@@ -585,7 +632,7 @@ def lint(pack: Path) -> list[str]:
             negated = {key for key in ("rebellion_quelled", "hebei_ceded") if key in flag_negations(cond)}
             for key in sorted({"rebellion_quelled", "hebei_ceded"} - negated):
                 problems.append(f"[奏疏池] {where} 条件里缺少「{key} 未成」")
-            if index > 0:
+            if index > 0 and not standing:
                 first_id = str(rows[0]["id"])
                 if not any(c.get("kind") == "flag_age" and c.get("key") == f"memorial:{first_id}"
                            and c.get("operator") in ("gte", "gt") and float(c.get("value", 0)) >= 2 for c in leaf_conditions(cond)):
