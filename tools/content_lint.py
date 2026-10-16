@@ -20,6 +20,17 @@
    须有相符的守卫：条件里正向的 office_holder / character_region（谏言可用 requires.office / requires.region），
    或该事件自身的 appoint / move_character，或固定于 T0（开局状态确定）。
    军队统帅无条件可验，故不得断言「禁军久无宿将」「军务无人主持」之类的统帅有无。
+7. 分兵（round 6）：文字说「一部 / 分兵 / 偏师 / 半数」而选项（或事件）只有整军 move_army / march、没有 detach，
+   即文字与操作不符（整军移动写「移屯 / 入屯」即可；兵员先有折损的「一部从乱、余众溃散」不算）。
+8. 同题分支（round 6）：同一议题按局势写的几条奏疏（同标题，或以 `variant_of: <主条目>` 声明）须彼此互斥：
+   每条的 conditions 写明「其余分支未处理」（`{not: {kind: flag, operator: exists, key: "memorial:<分支 id>"}}`），
+   以免同季局势一变（如留京解镇）又冒出一条同类奏疏、重复领取收益。同标题者须以 variant_of 声明。
+9. 自称在京（round 6）：谏言以第一人称说自己在京（「京师有臣」「臣在京」）须以 requires.region 或条件保证其人在京畿。
+10. 末季部署（round 6）：最后一个决策季（game_length.last_turn − 1）的奏疏若选项都调动军队，须另有不调兵的「维持现状」选项；
+    其调兵选项的提示须提到行程。
+11. 养兵（round 6）：剧本启用 formulas.upkeep 时，凡给本方军队增兵（adjust_army delta > 0）的选项，提示须写明此后的「养兵」负担。
+12. 首季账目（round 6）：T1 才设立的经常账目（add_ledger recurring）须同时补扣首季（同一资源、reason 含「首季」的 adjust_resource），
+    否则 T0 的第一次结算会漏记这些固定支出。
 """
 from __future__ import annotations
 
@@ -78,6 +89,10 @@ COMMANDER_CLAIMS = re.compile(r"久无宿将|无宿将统领|军务无人主持|
 INTEL_CAP = re.compile(r"只减半一次|不叠加|不再收窄")
 # 可能中途亡故的人物：{人物: 最早亡故回合}（李林甫病卒事件自 T7 起掷骰）
 MORTAL_FROM = {"li_linfu": 7}
+# ---- round 6 ----
+PARTIAL_WORDS = re.compile(r"一部|分兵|偏师|半数|分其兵|分[^。；，]{0,4}兵[一二三四五六七八九十百千万\d]")
+SELF_IN_CAPITAL = re.compile(r"京师有臣|臣在京|臣在朝中")
+MOVE_OPS = {"move_army", "march", "detach"}
 
 
 # ---- 读取 ----
@@ -180,6 +195,45 @@ def ops_of(rows: Any) -> Iterator[dict[str, Any]]:
             yield from ops_of(op.get("on_complete"))
 
 
+def flag_exists_guards(cond: Any, negated: bool = False) -> set[str]:
+    """条件里「旗标未设」的守卫：not + flag exists，或 flag absent。返回旗标 key。"""
+    found: set[str] = set()
+    if isinstance(cond, list):
+        for row in cond:
+            found |= flag_exists_guards(row, negated)
+        return found
+    if not isinstance(cond, dict):
+        return found
+    if "all" in cond:
+        return flag_exists_guards(cond["all"], negated)
+    if "any" in cond:
+        return found
+    if "not" in cond:
+        return flag_exists_guards(cond["not"], not negated)
+    if cond.get("kind") == "flag":
+        op = cond.get("operator")
+        if (negated and op == "exists") or (not negated and op == "absent"):
+            found.add(str(cond.get("key")))
+    return found
+
+
+def visible_turns(item: dict[str, Any]) -> set[int] | None:
+    """奏疏的固定可见回合（turn 字段或条件里 turn eq）；无法确定时为 None。"""
+    if item.get("turn") is not None:
+        start = int(item["turn"])
+        return set(range(start, start + int(item.get("expires_after", 0) or 0) + 1))
+    cond = item.get("conditions")
+    rows = cond.get("all") if isinstance(cond, dict) and isinstance(cond.get("all"), list) else [cond]
+    for row in rows:
+        if isinstance(row, dict) and row.get("kind") == "turn" and row.get("operator", "eq") == "eq":
+            return {int(row["value"])}
+    return None
+
+
+def options_of(item: dict[str, Any]) -> list[dict[str, Any]]:
+    return [row for row in item.get("options") or [] if isinstance(row, dict)]
+
+
 def memories(value: Any) -> list[dict[str, Any]]:
     if isinstance(value, dict):
         return [value]
@@ -275,7 +329,95 @@ def lint(pack: Path) -> list[str]:
                 continue
             problems.append(f"[所在] {where} 称「{hit.group(0)}」，但条件里没有 character_region {cid}={region}")
 
+    # ---- round 6：分兵 / 同题分支 / 自称在京 / 末季部署 / 养兵 / 首季账目 ----
+    scenario = data["scenario"] or {}
+    upkeep = (scenario.get("formulas") or {}).get("upkeep")
+    player = (scenario.get("settings") or {}).get("player_faction", "tang")
+    armies_file = pack / "armies.yaml"
+    army_faction = {a["id"]: a.get("faction") for a in (yaml.safe_load(armies_file.read_text(encoding="utf-8")) if armies_file.is_file() else []) or []}
+    last_turn = int(((scenario.get("game_length") or {}).get("last_turn") or 0))
+
+    def check_partial(text: str, rows: Any, where: str) -> None:
+        hit = PARTIAL_WORDS.search(text or "")
+        if not hit:
+            return
+        ops = list(ops_of(rows))
+        moves = [op for op in ops if op.get("op") in ("move_army", "march")]
+        if not moves or any(op.get("op") == "detach" for op in ops):
+            return
+        moved = {op.get("army") for op in moves}
+        if any(op.get("op") == "adjust_army" and op.get("army") in moved and float(op.get("delta", 0)) < 0 for op in ops):
+            return  # 先折损、余部整军移动（「一部从乱，余众溃散」）
+        problems.append(f"[分兵] {where} 称「{hit.group(0)}」，但只有整军 {moves[0].get('op')}（{moves[0].get('army')}），没有 detach")
+
+    by_id = {str(m.get("id")): m for m in memos}
+    families: dict[str, list[str]] = {}
+    for item in memos:
+        base = item.get("variant_of")
+        if base is not None:
+            if str(base) not in by_id:
+                problems.append(f"[分支] 奏疏 {item.get('id')} variant_of 指向不存在的奏疏：{base}")
+                continue
+            families.setdefault(str(base), [str(base)]).append(str(item["id"]))
+    family_of = {mid: base for base, rows in families.items() for mid in rows}
+    titles: dict[str, list[str]] = {}
+    for item in memos:
+        titles.setdefault(str(item.get("title", "")), []).append(str(item.get("id")))
+    for title, ids in titles.items():
+        if len(ids) > 1 and len({family_of.get(i, i) for i in ids}) > 1:
+            problems.append(f"[分支] 同标题奏疏「{title}」{'、'.join(ids)} 未以 variant_of 声明为同题分支")
+    for base, ids in families.items():
+        for mid in ids:
+            guards = flag_exists_guards(by_id[mid].get("conditions"))
+            missing = [s for s in ids if s != mid and f"memorial:{s}" not in guards]
+            if missing:
+                problems.append(f"[分支] 奏疏 {mid}（同题 {base}）条件里缺少「其余分支未处理」：{'、'.join('memorial:' + s for s in missing)}")
+
     # 奏疏
+    for item in memos:
+        mid = item.get("id")
+        for adv in item.get("advisors") or []:
+            hit = SELF_IN_CAPITAL.search(str(adv.get("line", "")))
+            if hit:
+                req = adv.get("requires") if isinstance(adv.get("requires"), dict) else {}
+                regions = req.get("region")
+                regions = set(regions if isinstance(regions, list) else [regions]) if regions else set()
+                if "jingji" not in regions and (adv.get("character"), "jingji") not in positive_kinds(item.get("conditions"), "character_region"):
+                    problems.append(f"[所在] 奏疏 {mid} 谏言（{adv.get('character')}）自称「{hit.group(0)}」，但没有 requires.region: jingji")
+        for opt in item.get("options") or []:
+            check_partial(f"{opt.get('label', '')}｜{opt.get('hint', '')}", opt.get("ops"), f"奏疏 {mid}.{opt.get('id')}")
+        # 正文说「一部」而全条奏疏没有一个 detach 选项：正文许诺的分兵无从兑现（有分兵选项时，其余整军选项另以标题 / 提示自明）
+        if PARTIAL_WORDS.search(str(item.get("summary", ""))) and not any(
+                op.get("op") == "detach" for opt in options_of(item) for op in ops_of(opt.get("ops"))):
+            for opt in item.get("options") or []:
+                check_partial(str(item.get("summary", "")), opt.get("ops"), f"奏疏 {mid}（正文）.{opt.get('id')}")
+        turns = visible_turns(item)
+        options = item.get("options") or []
+        if last_turn and turns and (last_turn - 1) in turns and options:
+            moving = [opt for opt in options if any(op.get("op") in MOVE_OPS for op in ops_of(opt.get("ops")))]
+            if moving and len(moving) == len(options):
+                problems.append(f"[末季] 奏疏 {mid} 在最后决策季 T{last_turn - 1} 可见，选项都调兵，缺少「维持现状」的不调兵选项")
+            for opt in moving:
+                if "行程" not in str(opt.get("hint", "")):
+                    problems.append(f"[末季] 奏疏 {mid}.{opt.get('id')} 在最后决策季调兵，提示未写行程（终局前能否抵达）")
+        if upkeep:
+            for opt in options:
+                grow = sum(float(op.get("delta", 0)) for op in ops_of(opt.get("ops"))
+                           if op.get("op") == "adjust_army" and float(op.get("delta", 0)) > 0 and army_faction.get(op.get("army")) == player)
+                if grow > 0 and "养兵" not in str(opt.get("hint", "")):
+                    problems.append(f"[养兵] 奏疏 {mid}.{opt.get('id')} 增兵 {grow:g}，提示未写此后的养兵负担")
+    for eid, ev in events.items():
+        effects = list(ops_of(ev.get("effects")))
+        check_partial(str(ev.get("title", "")) + "｜" + str(ev.get("text", "")), effects, f"事件 {eid}")
+        for choice in ev.get("choices") or []:
+            check_partial(str(choice.get("text", "")), choice.get("effects"), f"事件 {eid}.{choice.get('id')}")
+        if (ev.get("when") or {}).get("turn") == 1:
+            recurring = {str(op.get("category")) for op in effects if op.get("op") == "add_ledger" and op.get("kind", "recurring") == "recurring"}
+            caught_up = {str(op.get("resource")) for op in effects if op.get("op") == "adjust_resource" and "首季" in str(op.get("reason", ""))}
+            for resource in sorted(recurring - caught_up):
+                problems.append(f"[账目] 事件 {eid} 在 T1 才设经常账目（{resource}），却没有补扣首季（reason 含「首季」的 adjust_resource）")
+
+    # 奏疏（原有检查）
     for item in memos:
         mid = item.get("id")
         cond = item.get("conditions")

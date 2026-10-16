@@ -9,11 +9,15 @@
   kind: system
   when: {turn: 1}
   gravity: 1.0
-  text: 度支定本年岁计：边镇军费、宫廷用度、京师禄米按季支出。
+  text: >-
+    度支定本年岁计：诸军衣赐、粮料按现有兵额逐季支给（自首季起已入经常收支）；另有不随兵额的边镇杂支、宫廷用度、京师禄米，自本季起按季支出，
+    首季（天宝十载春）之数随岁计一并补扣，此后见于经常收支。
   effects:
-    - {op: add_ledger, name: 边镇军费, category: treasury, amount: -165, kind: recurring, reason: 十节度镇兵衣赐（游戏折算）, cancellable: false}
+    - {op: adjust_resource, resource: treasury, delta: -76, reason: 首季固定岁支补扣（边镇杂支 31、宫廷用度 45）}
+    - {op: adjust_resource, resource: grain, delta: -66, reason: 首季京师禄米补扣}
+    - {op: add_ledger, name: 边镇杂支, category: treasury, amount: -31, kind: recurring, reason: 器械、马料、驿传，不随兵额（游戏折算）, cancellable: false}
     - {op: add_ledger, name: 宫廷用度, category: treasury, amount: -45, kind: recurring, reason: 内廷与宴赏（游戏折算）, cancellable: false}
-    - {op: add_ledger, name: 京师禄米军粮, category: grain, amount: -125, kind: recurring, reason: 百官禄米与禁军口粮（游戏折算）, cancellable: false}
+    - {op: add_ledger, name: 京师禄米, category: grain, amount: -66, kind: recurring, reason: 百官禄米（诸军口粮另按兵额计入「诸军粮料」）（游戏折算）, cancellable: false}
 
 # ======================== 第一幕 751：三镇之始 ========================
 - id: hedong_grant
@@ -51,16 +55,14 @@
       conditions: {kind: character_status, operator: eq, character: li_guangbi, value: alive}
       memory: {character: li_guangbi, text: 禄山求兼河东不遂，陛下以臣为河东节度使}
       effects:
-        - {op: appoint, character: li_guangbi, office: hedong_jds}
-        - {op: set_army_commander, army: hedong_army, character: li_guangbi, dispatch: true}
+        - {op: appoint, character: li_guangbi, office: hedong_jds, dispatch: true}   # 实授并启程赴任（兼统hedong_army）
         - {op: adjust_resource, resource: fanzhen_power, delta: -1, reason: 河东得人}
     - id: an_sishun
       text: 以河西节度使安思顺兼领河东
       conditions: {kind: character_status, operator: eq, character: an_sishun, value: alive}
       memory: {character: an_sishun, text: 禄山求兼河东不遂，陛下令臣以河西兼领河东}
       effects:
-        - {op: appoint, character: an_sishun, office: hedong_jds}
-        - {op: set_army_commander, army: hedong_army, character: an_sishun, dispatch: true}
+        - {op: appoint, character: an_sishun, office: hedong_jds, dispatch: true}   # 实授并启程赴任（兼统hedong_army）
         - {op: adjust_resource, resource: fanzhen_power, delta: 1, reason: 两镇并于一人}
     - id: vacant
       text: 暂不除节度，河东兵马由太原尹权知留后（不任命）
@@ -205,7 +207,7 @@
         - {op: adjust_resource, resource: an_ambition, delta: -2, reason: 感恩}
         - {op: adjust_resource, resource: authority, delta: -2, reason: 败而不罚}
     - id: split_pinglu
-      text: 乘机解禄山平卢节度（平卢军暂由副将统摄，不任命）
+      text: 乘机解禄山平卢节度（平卢军暂由副将统摄，不任命；外重内轻 −8。禄山兵柄不变：范阳本军旧部仍奉其为主，须其离镇方降）
       memory: {character: an_lushan, text: 土护真水兵败后，朝廷乘机夺我平卢一镇}
       effects:
         - {op: dismiss, character: an_lushan, office: pinglu_jds}
@@ -398,9 +400,10 @@
       - {kind: flag_age, key: guozhong_in_shu, operator: gte, value: 3}
       - {kind: character_region, operator: eq, character: yang_guozhong, region: jingji}
   gravity: 1.0
-  text: 杨国忠自蜀召还，复预朝政。
+  text: 杨国忠自蜀召还，复预朝政，仍判度支。
   effects:
     - {op: set_flag, key: guozhong_in_shu, value: false}
+    - {op: appoint, character: yang_guozhong, office: duzhi}
   illustration: event.guozhong_chancellor
 
 - id: chen_promoted
@@ -696,8 +699,7 @@
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与高仙芝}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
-        - {op: appoint, character: gao_xianzhi, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: gao_xianzhi, dispatch: true}
+        - {op: appoint, character: gao_xianzhi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 羁留京师}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
@@ -710,8 +712,7 @@
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与郭子仪}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
-        - {op: appoint, character: guo_ziyi, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: guo_ziyi, dispatch: true}
+        - {op: appoint, character: guo_ziyi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 羁留京师}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
@@ -724,8 +725,7 @@
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与封常清}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
-        - {op: appoint, character: feng_changqing, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: feng_changqing, dispatch: true}
+        - {op: appoint, character: feng_changqing, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 羁留京师}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
@@ -817,26 +817,22 @@
       text: 以高仙芝为范阳节度使
       conditions: {kind: character_status, operator: eq, character: gao_xianzhi, value: alive}
       effects:
-        - {op: appoint, character: gao_xianzhi, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: gao_xianzhi, dispatch: true}
+        - {op: appoint, character: gao_xianzhi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
     - id: guo
       text: 以郭子仪为范阳节度使
       conditions: {kind: character_status, operator: eq, character: guo_ziyi, value: alive}
       effects:
-        - {op: appoint, character: guo_ziyi, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: guo_ziyi, dispatch: true}
+        - {op: appoint, character: guo_ziyi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
     - id: li
       text: 以李光弼为范阳节度使
       conditions: {kind: character_status, operator: eq, character: li_guangbi, value: alive}
       effects:
-        - {op: appoint, character: li_guangbi, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: li_guangbi, dispatch: true}
+        - {op: appoint, character: li_guangbi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
     - id: feng
       text: 以封常清为范阳节度使
       conditions: {kind: character_status, operator: eq, character: feng_changqing, value: alive}
       effects:
-        - {op: appoint, character: feng_changqing, office: fanyang_jds}
-        - {op: set_army_commander, army: fanyang_army, character: feng_changqing, dispatch: true}
+        - {op: appoint, character: feng_changqing, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
     - id: deputy
       text: 暂不除节度，由范阳副将知留后（不任命；兵变之险不减）
       effects:
@@ -1418,9 +1414,9 @@
   kind: system
   when: {turn: 8}
   gravity: 1.0
-  text: 诸镇屡奏增兵，衣赐、军粮岁增，度支另立边费一项。
+  text: 诸镇屡奏衣赐不足、赏格岁增，度支另立加给一项（按镇计，不随兵额；诸军按兵额的衣赐粮料另见「诸军衣赐」「诸军粮料」）。
   effects:
-    - {op: add_ledger, name: 边费岁增, category: treasury, amount: -35, kind: recurring, reason: 诸镇增兵（游戏折算）, cancellable: false}
+    - {op: add_ledger, name: 边镇加给, category: treasury, amount: -35, kind: recurring, reason: 诸镇衣赐、赏格岁增（游戏折算）, cancellable: false}
 
 - id: fanyang_rumor
   title: 范阳流言

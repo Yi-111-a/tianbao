@@ -73,6 +73,12 @@ formulas:
   income:
     tax: {resource: treasury, formula: "tax * 1.5", per_region: true, controlled_only: true, label: 诸道税入}
     grain: {resource: grain, formula: "grain * 1.0", per_region: true, controlled_only: true, label: 诸道租米}
+  # 养兵（CONTRACT formulas.upkeep）：本朝诸军按现有兵额逐季计费，自首季（T0 结算）起入经常收支，募兵、裁兵、失军随之增减；
+  # 分兵（detach）总兵额不变，养兵不变。开局本朝兵约 53.7 万：衣赐约 134 万贯、粮料约 59 万石。
+  # 另有不随兵额的固定账目（events.yaml opening_ledger：边镇杂支、宫廷用度、京师禄米），合计与旧版「边镇军费 165 / 禄米军粮 125」相当。
+  upkeep:
+    - {resource: treasury, per: 10000, amount: 2.5, label: 诸军衣赐}
+    - {resource: grain, per: 10000, amount: 1.1, label: 诸军粮料}
   drift:
     rebellion_risk: "(0.3 + 0.07*max(0, turn-8))*(0.2 + 0.008*an_command) + 0.06*min(15, max(0, an_ambition-40))*0.01*an_command + 0.04*min(15, max(0, fanzhen_power-60))*(0.2 + 0.008*an_command) + 0.04*max(0, court_strife-49)*(0.5 + 0.005*an_command) - 0.03*(authority-60) - 0.06*max(0, 25-an_command) - 0.2*max(0, rebellion_risk-72)"
     an_ambition: "0.5 + 0.02*(fanzhen_power-65) + 0.03*(court_strife-55) - 0.03*(authority-60)"
@@ -162,6 +168,8 @@ objectives:
     detail: >-
       未乱：至天宝十四载冬（T19）范阳未起兵，且渔阳鼙鼓 < 60，或禄山兵柄已解（禄山兵柄 ≤ 10：留京解镇、新帅到镇、旧部安抚三策完备）。
       T18 结算之后即至 T19 终局，T19 不再有决策（乱已起者延至 T23）。
+      「禄山兵柄」只计范阳旧部是否仍奉禄山为主，不随兼镇多少而变：罢其平卢、河东兼领、分割诸镇兵权只降外重内轻，兵柄仍为 100；
+      唯禄山离镇方降——召其入朝后留京解镇（兵柄降至约 30；平卢、河东若仍兼领，随后解去再各降 10），新帅到镇且安抚旧部满三策后归零。
       若乱已起，底线是潼关、京畿不失，且可提前终局：①叛军覆灭，或范阳收复、首逆（安禄山；兵变时为史思明）就擒或死且叛军余众 ≤ 2 万，即「乱平」，乱平后再善后两季以「再造唐室·乱平」终局；
       ②自天宝十五载春（T20）起，东都光复或叛军总兵力 ≤ 6 万，以「再造唐室」终局；③否则守至 T23，以「潼关相持」终局。
     conditions:

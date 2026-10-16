@@ -277,6 +277,21 @@ class Model:
             raise Rejected("不相邻")
         a["transit"] = {"to": op["to_region"], "eta": self.turn + adj[op["to_region"]]}
 
+    def _op_detach(self, op):
+        """分兵：自 army 扣出 strength 编为新军（id「原 id_d序号」），赴 to_region（相邻；同地则就地分屯）。"""
+        a = self.armies[op["army"]]
+        if a["transit"] or a["strength"] <= float(op["strength"]) or float(op["strength"]) <= 0:
+            raise Rejected("不能分兵")
+        self._seq = getattr(self, "_seq", 0) + 1
+        new = {**a, "strength": float(op["strength"]), "commander": op.get("commander"), "transit": None}
+        a["strength"] -= float(op["strength"])
+        if op["to_region"] != a["region"]:
+            turns = self._travel_turns(a["region"], op["to_region"])
+            if turns is None:
+                raise Rejected("无路可达")
+            new["transit"] = {"to": op["to_region"], "eta": self.turn + turns}
+        self.armies[f"{op['army']}_d{self._seq}"] = new
+
     def _op_start_project(self, op):
         for rid, cost in op["cost_per_turn"].items():
             committed = sum(p["cost_per_turn"].get(rid, 0) for p in self.projects)
@@ -383,6 +398,14 @@ class Model:
             r["amount"] = self._clamp(e["category"], r["amount"] + e["amount"])
             if e["kind"] == "one_off":
                 self.ledger.remove(e)
+        # 4b 养兵（formulas.upkeep：本方诸军按现有兵额计费）
+        for row in self.sc["formulas"].get("upkeep", []) or []:
+            wanted = set(row.get("armies") or [])
+            factions = set(row.get("factions") or [self.main])
+            strength = sum(a["strength"] for k, a in self.armies.items() if a["strength"] > 0
+                           and (k in wanted if wanted else a["faction"] in factions))
+            rid = row.get("resource", "treasury")
+            self.res[rid]["amount"] = self._clamp(rid, self.res[rid]["amount"] - strength / float(row["per"]) * float(row["amount"]))
         # 5 收入
         for key, inc in self.sc["formulas"].get("income", {}).items():
             regions = list(self.regions.values()) if inc.get("per_region", True) else [{"stats": {}, "controller": self.main}]
@@ -554,7 +577,7 @@ VARIANT_BASE = {
     "t15_luoyang_war": "t15_luoyang", "t16_court_war": "t16_court", "t16_famine_plain": "t16_famine",
     "t18_hebei_watch_far": "t18_hebei_watch", "t18_tongguan_safe": "t18_tongguan", "r_tongguan_jinjun": "r_tongguan",
     "t7_anxi_away": "t7_anxi", "t10_geshu_title": "t10_geshu", "p_gaoqing_away": "p_gaoqing",
-    "t16_court_detained": "t16_court",
+    "t16_court_detained": "t16_court", "t15_jiwen_court": "t15_jiwen",
 }
 
 

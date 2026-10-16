@@ -31,9 +31,10 @@
 | `Character` / `Army` | `in_transit: {to_region, eta_turn, from_region, route: [起点…终点]}`（route 为整段路径，见 1.3） |
 | `PendingClause` | `label: str = ""`：来源说明（奏疏标题、「诏令」），延期执行时作为事实原因 |
 | `LedgerEntry` | `cancellable: bool = True`：false 时玩家不能 `cancel_ledger`（剧本 / 事件设的既定开支）；`add_ledger` 同名字段 |
+| 剧本 `scenario.yaml` 的 `ledger` | 可选，开局即有的经常账目：`[{id?, name, category, amount, kind: recurring\|one_off = recurring, turns?, reason?, cancellable = false}]`。`build_initial_state` 写入 `WorldState.ledger`（T0 起可见于 op_reference / 前端账目，T0→T1 结算第 4 步即计入经常收支）；id 缺省按引擎序号 `ledger-xxxxxxxx`；剧本定额缺省不可撤销。`validate_scenario` 检查键、资源、数值、kind、turns、id 重复 |
 | `Fact` | `cause: str \| None`：原因（op 的 `reason`，否则为来源：奏疏标题 / 事件标题 / 抉择标题 / 「X竣工」/ 「常设令：X」/ 延期包 label） |
 | 剧本 `offices[]` | 可选 `army`（此职所统军队 id：任命即兼统该军，免职即罢其统帅）、`seat`（任所地区 id；未写时取所统军队的驻地）。二者都未写的为京官 / 虚衔，任命不涉行程。开局写入 `rules.office_postings`（`Office` 模型本身不变，旧存档状态哈希不变）；`validate_scenario` 检查军队与地区存在 |
-| `LedgerLine` | `group: str = ""`：经常收支明细的归类名（收入公式的 label、账目名、「X施工」、「X漂移」） |
+| `LedgerLine` | `group: str = ""`：经常收支明细的归类名（收入公式的 label、账目名、「X施工」、「X漂移」、养兵「X（兵 N，每 P 兵 A）」） |
 
 ### 1.3 新 StateOp
 
@@ -48,6 +49,7 @@
 | `set_region_controller` | `region, faction` | — |
 | `choose_event_option` | `choice_id, option_id` | 选项须存在且其 conditions 满足；执行 effects 后移除该 pending choice |
 | `march` | `army, to_region, with_commander = true` | 同 `move_army`；军队与同驻一地的统帅作为同一行程出发（事实「X自A出征，赴B（…），统帅某某随军」） |
+| `detach` | `army, strength, to_region, new_army_name?, commander?` | 分兵：0 < strength < 原军现有兵力（全军调动用 `move_army`，否则 `INVALID_TARGET`）；原军不在途；有路可达（`OUT_OF_RANGE`）；commander 须在世。新军 id `原军id_d序号`、名缺省「原军名偏师」（重名加序号），同势力 / 素质 / loyal_to；去向与原驻地不同则整段出发（同 move_army 寻路），相同则就地分屯。commander 与原军同驻者随新军同行（其原统之军按下文任命规则处置），否则启程赴任；不写则暂无主帅。事实「禁军分兵 5000（留 15000），编为禁军前锋，自京畿开拔，赴雄关（约1季），由高内侍统领随行」 |
 
 已有 op 的行为调整：
 - `appoint`：当 `len(offices) >= rules.max_concurrent_offices` 时返回 `OFFICE_HELD`；任命追加到 `offices`；`office` 为空时设为主职。
@@ -59,9 +61,11 @@
 - **任命只有一条规则**（`set_army_commander` 与 `appoint` 有任所的官职）：op 带 `dispatch: bool = false`。玩家层提议（客户端 ops、诏令文本解释）未写 `dispatch` 时按 `true` 处理；剧本层（奏疏选项、事件效果、抉择）按其写明的值，缺省 `false`。判定由 `rules.posting_plan` 给出，回执摘要（`summarize_op`）、事实文本与 op_reference 的说明用同一套措辞：
   - 已在任所 / 军中：「人在军中，即日视事」（官职为「人在任所，即日视事」）；
   - 已在赴任途中：「已在赴任途中（自A赴B，约n季后到），由副将暂摄」；
-  - `dispatch: true` 且有路：启程赴任，事实「X军易帅，由某某统领；已启程赴任（自A经B、C，约n季抵D），到任前由副将暂摄」；此人原统的同驻军队附「；其原统Y军改由副将暂摄」；
+  - `dispatch: true` 且有路：启程赴任，事实「X军易帅，由某某统领；已启程赴任（自A经B、C，约n季抵D），到任前由副将暂摄」；
+  - **人离军而去，原统之军随之解除**（`rules.left_behind_armies`）：此人原统、与其同驻且不在途的军队，`army.commander` 真正置空，事实 / 回执附「；其原统Y军不再由其统领（暂无主帅，副将摄事）」；唯该军是他仍担任的官职所统（offices 的 `army`），官在军在，仍由其兼统，附「；仍兼统Y军（人不在军中，副将暂摄）」。此人另统而不在身边的军队（遥领）照旧兼统，回执同样写出「；仍兼领Z军（不在军中，副将暂摄）」（遥领、不赴任时亦然），回执所列即状态中此人所统的全部军队。剧本写 `appoint` + `dispatch: true`（带 army 的官职）即一条完整回执：「某某任X，兼统X军；已启程赴任（…），到任前由副将暂摄；其原统…」。回执、状态、command_table、StateDigest 一致（digest 中离军他往者写「统帅某某离军他往（自A赴B…），副将暂摄」，赴本军者才写「未到任」）；
   - 否则遥领：「遥领，不赴任（今在A），由副将暂摄」（在途他往写「正在途中：…」，无路写「无路可达D」）。
   - `appoint` 带 `army` 的官职：同时 `army.commander = 此人`（事实「某某任X节度使，兼统X军；…」）；`dismiss` 时若此人正统该军则罢其统帅（「，罢统X军」）。
+  - **同组合并**（`rules.coalesce_postings`）：同一奏疏选项（`adopted_ops`、选项 `ops_summary`）、事件抉择效果、事件效果里，`appoint` 带 army 的官职（dispatch 缺省 / false）之后又有 `set_army_commander` 令同一人统该军且 `dispatch: true` → 合并为一条 `appoint` + `dispatch: true`（「某某任X，兼统X军；已启程赴任（…）」），删去多余的易帅条，不再先说「遥领，不赴任」又说「已启程赴任」。`set_army_commander` 的新统帅与原统帅为同一人且已在军中 / 赴任途中时，事实为 internal（不重复）。
 - 统帅在军判定（`rules.commander_presence`）：统帅与军队同驻一地，或二者同一行程。不在军中时战斗照常结算（战力公式不变），战报 `battles[].commanders: {army: {name, present, note}}`，并追加事实 `kind: "command"`：「X军：主帅某某赴任中（自A赴B，约n季后到），由副将暂摄」。
 - 在途者（人物、军队）不能再调动：`move_character` 目的地与当前行程相同 → `INVALID_TARGET`「已在途中…，无须再下令」；否则 `CHARACTER_UNAVAILABLE`，说明带行程。
 - 行程显示（`rules.travel_note`）：「自A赴B，约n季后到」（到期当季写「即将抵达」）。简报「在途」段、可召对名单、StateDigest 的【本人】【军队】【在途】、op_reference 均用此格式：「高仙芝（自河西赴范阳，约2季后到）」。
@@ -71,11 +75,11 @@
 | 层 | 来源 | 可用操作 |
 |---|---|---|
 | 剧本层 | 奏疏选项（adopted）、事件效果、事件抉择（choose）、工程竣工、常设令执行、存档重放 | 全部 StateOp |
-| 玩家层 | `draft_edict` 的 `ops`（MCP / REST / 前端客户端模型模式）与诏令文本经 LLM 解释得到的 ops | 默认白名单：`appoint`、`dismiss`、`move_character`、`move_army`、`march`、`set_army_commander`、`start_project`、`add_standing_order`、`cancel_standing_order`、`cancel_ledger`、`remember`、`set_character_status` |
+| 玩家层 | `draft_edict` 的 `ops`（MCP / REST / 前端客户端模型模式）与诏令文本经 LLM 解释得到的 ops | 默认白名单：`appoint`、`dismiss`、`move_character`、`move_army`、`march`、`detach`、`set_army_commander`、`start_project`、`add_standing_order`、`cancel_standing_order`、`cancel_ledger`、`remember`、`set_character_status` |
 
 - 不在白名单的操作（`adjust_resource`、`adjust_region`、`adjust_relation`、`adjust_army`、`adjust_trait`、`set_flag`、`adjust_counter`、`set_counter`、`set_region_controller`、`set_army_faction`、`add_ledger`、`choose_event_option`）在回执中为 `rejected`，`code: "OP_NOT_PERMITTED"`，`reason` 为中文说明（含操作名与正确途径）。
 - 白名单内另有限制（同样 `OP_NOT_PERMITTED`）：
-  - 人物、军队须属玩家势力（`rules.player_faction`）；不能调遣、任帅他方军队，不能以他方人物为帅。
+  - 人物、军队须属玩家势力（`rules.player_faction`）；不能调遣、分兵、任帅他方军队，不能以他方人物为帅（`detach` 的 commander 同）。
   - `set_character_status` 只能用 `imprisoned` / `exiled` / `retired`（赐死、赦免须经奏疏或事件），对象不能是君主本人，须为本朝臣属或身在本朝控制之地。
   - `start_project`：地区须为本方控制；每季花费须为正；`on_complete` 只能是本地区的 `adjust_region`（每项 0 < delta ≤ `player_project_max_gain`，且 增益合计 × `player_project_cost_per_point` ≤ 总花费）或其他玩家层操作。
   - `add_standing_order` 所含 ops 同样按玩家层检查；`cancel_ledger` 不能撤销 `cancellable: false` 的账目。
@@ -143,7 +147,7 @@
 1. 到期的 PendingChoice 执行默认项。
 2. 延期条款。
 3. 常设命令。
-4. 账目。
+4. 账目。随后养兵：`formulas.upkeep: [{resource, per, amount, label, factions?, armies?}]`（剧本选用；缺省无），每项按**当前**兵力计——所列势力（缺省玩家势力；无玩家势力时为全部）或所列军队的兵力合计 N，本季开支 N / per × amount（amount 为正即支出），记 `LedgerLine(kind: "upkeep", group: "label（兵 N，每 per 兵 amount）")`，入经常收支明细（「军饷（兵 30000，每 10000 兵 5） −15」）。增兵即增此项。briefing 另列「## 养兵经常开支」逐项预计。`validate_scenario` 检查键、资源 / 势力 / 军队存在、per > 0、amount 为数。
 5. 收入：`formulas.income` 的每个键都是 `{resource, formula, per_region: true}`。
 6. 工程。
 7. 移动抵达。
@@ -161,7 +165,7 @@
 - `outcome: Outcome | None`
 - `crisis: dict`：由场景 `crisis` 定义，含各分项贡献（最终状态，见第 14 步）
 - `reconciliation: {resource: {opening, edicts, delayed, regular, events, closing}}`：分段对账。期初 = 上次结算后的值；诏令 = 两次结算之间的操作条目（`choose_event_option` 除外）；延期执行 = 第 2 步；经常收支 = 第 3–9 步（常设令、账目、收入、工程、漂移）；事件/选择 = 第 1、10、11 步与季前的 choose。各段之差逐段相加恰为期末 − 期初。公开版（`public_report`）为列表 `[{resource, name, unit, opening, edicts, delayed, regular, events, closing, shown, display, regular_detail?, regular_display?}]`，隐藏资源不列；`shown` 为各段真值各自取一位小数，**取整余差不并入任何一段**，而是单列 `shown.rounding`（display 中「取整差 +0.1」，位于期末之前），显示值之和恰等于期末（不再出现「宣告 −2、对账 −1.9」）
-- `regular_detail: {resource: [{kind, label, amount}]}`：经常收支明细，kind 为 `income`（按收入公式 label 合并各地）、`ledger`（逐项账目）、`project`（「X施工」）、`standing`（常设令与竣工效果）、`drift`（「X漂移」，含难度系数）、`other`（「其他（上下限截断）」余差）；各项之和恰为 `regular`。公开版并入 `reconciliation[].regular_detail`（每项 `{kind, label, amount, shown, display}`，明细显示值与该段显示值的差另列 `{kind: "rounding", label: "取整差"}`）与 `regular_display`（「经常收支明细：诸道税入 +120；边军月饷 −12.4；…」）；顶层 `regular_detail` 不出现在公开报告中
+- `regular_detail: {resource: [{kind, label, amount}]}`：经常收支明细，kind 为 `income`（按收入公式 label 合并各地）、`upkeep`（养兵，逐项）、`ledger`（逐项账目）、`project`（「X施工」）、`standing`（常设令与竣工效果）、`drift`（「X漂移」，含难度系数）、`other`（「其他（上下限截断）」余差）；各项之和恰为 `regular`。公开版并入 `reconciliation[].regular_detail`（每项 `{kind, label, amount, shown, display}`，明细显示值与该段显示值的差另列 `{kind: "rounding", label: "取整差"}`）与 `regular_display`（「经常收支明细：诸道税入 +120；边军月饷 −12.4；…」）；顶层 `regular_detail` 不出现在公开报告中
 - `crisis.change`（内部真值）与公开快照 `crisis.public_change`：本季危机值变化拆分，见 1.11；公开报告字段为 `crisis_change`
 
 ### 1.7 最小战斗与 AI 行军
@@ -191,7 +195,7 @@ game_length: {last_turn: 19, overtime_flag: rebellion_started, overtime_last_tur
 - `outcome.satisfied`：命中结局的条件逐条渲染为中文并带回合前缀，如「T20 时京畿不归大燕」「T20 时大燕兵力 ≤ 60000」；时限兜底写「T23 时已至终局时限 T23，其他结局条件均未满足」（加时另注「…，时限由 T19 延至 T23」）。
 - **终局季提示**（`turn.final_season_notice`）：当下一次结算就会到达时限（`state.turn + 1 ≥ last_turn`；加时旗标已成立时按 `overtime_last_turn`）时，`/view.final_notice` 与 end_turn 返回的 `final_notice` 为 `{next_is_final: true, last_turn, overtime_possible, text}`，text 如「下次结算即终局：本季（T18）结算后即到 T19 时限，此后不能再下诏、处置事件或推进回合；本季是最后的决策窗口。（唯若结算之中「范阳已起兵」成立，时限延至 T23。）」；MCP briefing 在开头加粗显示，end_turn 文本附「## 注意：…」。其他结局条件可能更早终局，不在此列。剧本不必再写同义的提示事件。
 - **延长模式**：结局可写 `extension_hint`，`game_length` 可写 `extension_mode`；只有 `extension_mode` 属于引擎已实现的模式（`turn.SUPPORTED_EXTENSION_MODES`，目前为空）时才把 extension_hint 接在结局正文后。现阶段一律不显示，结局正文本身不要写「可进入延长模式」。
-- 终局后 `/view` 的 `memorials`、`pending_choices` 为空，另给 `review: {outcome, satisfied, objectives, stats: [{id, display}], highlights: [str], turns_played}`（stats 含公开资源、隐藏资源区间、本方兵力与控制地区数；highlights 为时间线要事「T19 天宝十四载冬：范阳起兵」，按重要度取至多 16 条）。MCP briefing 不再列奏疏与待决事件，改为「## 终局复盘」段；end_turn 的终局段附「判定条件」。
+- 终局后 `/view` 的 `memorials`、`pending_choices` 为空，另给 `review: {outcome, satisfied, objectives, stats: [{id, display}], highlights: [str], omitted, turns_played}`（stats 含公开资源、隐藏资源区间、本方兵力与控制地区数；highlights 为时间线要事「T19 天宝十四载冬：范阳起兵」，按时间排列，至多 24 条，`omitted` 为略去条数，briefing 注「另有 n 条从略」）。取舍优先级：3 = 使结局条件成立之事（条件中的旗标由某事件设下；阈值条件如「禄山兵柄 ≤ 10」由不成立变为成立的最后一步，写「事件——条件（结局条件由此成立）」）、终局之季的全部可见事件、终局本身（全部保留）；2 = 剧本 `importance ≥ 2` 的事件、战事、事件抉择（含逾期默认处置）、带兵官职的任命与易帅（含延期执行）、统帅抵达所统之军驻地（「X抵达Y，到军统Z」）；其余按 importance。MCP briefing 不再列奏疏与待决事件，改为「## 终局复盘」段；end_turn 的终局段附「判定条件」。
 
 ### 1.9 隐藏数值与公开视图
 
@@ -213,7 +217,8 @@ game_length: {last_turn: 19, overtime_flag: rebellion_started, overtime_last_tur
   title: 河东节度出缺
   summary: ...
   region: hedong
-  advisors: [{character: li_linfu, stance: support|oppose|neutral, line: "..."}]
+  advisors: [{character: li_linfu, stance: support|oppose|neutral, line: "...", option: deny}]   # option 可选：此人所主张的选项
+  proposal: approve    # 可选：「所议之案」（谏言的赞成 / 反对针对它）；不写时由引擎推定，见 2 的廷议
   options:
     - {id: deny, label: 驳回，另择留后, ops: [...], hint: "外重内轻 −3"}
 ```
@@ -221,10 +226,12 @@ game_length: {last_turn: 19, overtime_flag: rebellion_started, overtime_last_tur
 - 当回合可见条件：`turn` 匹配，或 `conditions` 满足，且未被处理。
 - 谏言人校验：列出奏疏时剔除已故、系狱、流放的谏言人（致仕者仍可进言），绝不显示不在场者的台词。谏言人可带 `requires: {office: id|[id], region: id|[id], alive: bool}`：office 须任其一；region 须身在其一且不在途；`alive: false` 允许引用已不在者的旧议，显示名后缀「（旧议）」并带 `old: true`。`validate_scenario` 检查未知键与地区 id。
 - 采纳某个选项，就把它的 ops 加入诏书草案；确认诏书后写入 flag `memorial:<id>` = option_id。
+- `advisors[].option` / `proposal` 须为本条选项 id（`validate_scenario` 检查）。多个并列方案（非一准一驳）的奏疏建议写明，否则廷议只能「诸案并陈」。
 - 选项可带 `memory: {character, text}`（或其列表），采纳时作为 `remember` op 随选项一同执行（同组延期）。条目可带 `keywords`，供廷议议题匹配。
 - 条款事实的原因为奏疏标题（op 自带 reason 时用 reason）。
 - 选项摘要（`ops_summary`、回执 `summary`）不出现 None：隐藏资源只写方向「禄山异志 ↓（风闻）」，隐藏心态写「心态有变（不明）」。对称的关系变化（A→B 与 B→A 同幅）只写一次「A↔B 关系 −10」；季报事实同样只留一条（同幅、同因）。
-- `move_army` / `march` 摘要带「，某某随军」（统帅同驻且不在途时）。
+- `move_army` / `march` 摘要写明整军兵力并带「，某某随军」：「京师禁军（全军 66000） 移驻 潼关，高仙芝随军」；只调一部用 `detach`，摘要「禁军 分兵 5000，留 15000，编为「禁军前锋」赴 雄关，高内侍统领」。
+- 调动（move_army / march / move_character / detach）预计抵达回合晚于终局时限（`game_length.last_turn`，加时旗标成立时按 overtime）时，回执摘要与 briefing 选项附「（预计第 n 回合抵达，晚于终局时限 T19，本局内到不了）」。
 
 ### 1.11 危机计
 
@@ -276,10 +283,10 @@ default_difficulty: normal
 | GET | `/sessions/{id}/view` | 前端主数据：`{state: public_view, calendar_label, objectives: [{id,title,status,detail}], crisis: {value_or_estimate, band, terms: [{label, value}]}, memorials: [...], pending_choices: [...], outcome, review, last_report, can_advance, difficulty: {id,label,description} \| null, scenario_changed: {...} \| null, warnings: [{code, message, ...}], command_table, final_notice}`（见 1.13）。`command_table`（`domain/command.py`）：玩家势力的「官职—所在—所统—指挥状态」总表 `{columns, rows: [{character, name, offices: [{id, name, station?, station_name?, status?}], location: {region, name, in_transit, display}, commands: [{army, name, strength, station, station_name, status: present\|en_route\|remote, label}]}], vacancies: {offices: [{id, name, army?}], armies: [{army, name, strength, station, station_name, status: "acting", label: "无统帅（副将暂摄）"}]}, alerts: [中文]}`（玩家本人不列；alerts 列遥领、兼统数军、出缺、无统帅）。`final_notice` 见 1.8。终局后 `memorials` / `pending_choices` 为空、`review` 为终局复盘（见 1.8），否则 `review: null`。`last_report.reconciliation` 为分段对账（见 1.6），`last_report.crisis` 与 `crisis` 在结算后未再下诏时完全相同 |
 | GET | `/sessions/{id}/op_reference` | query `op?`、`entity_kind?`、`ids?`（逗号分隔），同 MCP `op_reference`（见 3） |
 | POST | `/sessions/{id}/edicts/draft` | body `{sections: {category: text}, adopted: [{memorial_id, option_id}], ops: [...]}`。ops 用于客户端模型模式。回执中每一条 clause 都带 `source: memorial\|text\|client`；client / text 条款按玩家层校验（1.3.1），越权为 `rejected` + `code: OP_NOT_PERMITTED`。`delayed` 条款另带 `delay_reason`（由 `formulas.execution` 各项推出，如「吏治积弊高（55），有司稽迟；君威（68）尚能督责（本季延期概率约 2%）」）与 `due_turn`（执行回合） |
-| POST | `/sessions/{id}/edicts/{edict_id}/confirm` | 已有，补写 memorial flag |
-| POST | `/sessions/{id}/choices/{choice_id}` | body `{option_id}` → 执行 `choose_event_option` |
-| POST | `/sessions/{id}/turn` | 已有。返回 `{state: public_view, report, memorial(纪事), outcome}`；已终局时返回 409 `GAME_OVER` |
-| POST | `/sessions/{id}/debate` | body `{topic, participants: [id], memorial_id?}` → `{topic, memorial: {id,title,options: [{id,label}]} \| null, proposition, topic_entities: [{kind, id, name}], speeches: [{character, stance, reason, text, target_option_id, target_option_label, against_option_id?, against_option_label?, proposition, position}], summary}`。立场见下；台词由 LLM 写（Mock 用模板）。给了 memorial_id 时 topic 可空（取奏疏标题）；memorial_id 不存在 → `UNKNOWN_MEMORIAL` |
+| POST | `/sessions/{id}/edicts/{edict_id}/confirm` | 已有，补写 memorial flag。回执另带 `new_memorials: [{id, title}]`（因本次确认而新出现的本季奏疏）。草案不存在 → 404 `EDICT_NOT_FOUND`，message 列出本季可确认的草案编号（「本季待确认的草案：edict-…」）；已在结算时放弃的草案 → 409 `EDICT_STALE` |
+| POST | `/sessions/{id}/choices/{choice_id}` | body `{option_id}` → 执行 `choose_event_option`；返回另带 `new_memorials` |
+| POST | `/sessions/{id}/turn` | 已有。返回 `{state: public_view, report, memorial(纪事), outcome, final_notice, discarded_drafts}`；已终局时返回 409 `GAME_OVER`。**本季有拟而未确认的草案时返回 409 `DRAFT_UNCONFIRMED`**（message 列出编号与摘要）——草案：本季（`base_turn` = 当前回合）拟下、未确认、未放弃、仍有 applied / delayed 条款；全被拒 / 仅记录的、只含已另行处理之奏疏的、以及其后又有本季草案被确认（「已被取代」）的不算。body `{discard_drafts: true}`（或 query `?discard_drafts=true`）则把这些草案标为已放弃（`discarded`，不能再确认）后结算，`discarded_drafts` 列出编号 |
+| POST | `/sessions/{id}/debate` | body `{topic, participants: [id], memorial_id?, option_id?}` → `{topic, memorial: {id,title,options: [{id,label}]} \| null, proposition, proposal: {id, label, basis} \| null, topic_entities: [{kind, id, name}], speeches: [{character, stance, reason, text, target_option_id, target_option_label, against_option_id?, against_option_label?, proposition, position}], summary}`。立场见下；台词由 LLM 写（Mock 用模板）。给了 memorial_id 时 topic 可空（取奏疏标题）；memorial_id 不存在 → `UNKNOWN_MEMORIAL`；`option_id` 指定所议之案（须同时给 memorial_id，否则 `INVALID_REQUEST`；不是该奏疏的选项 → `UNKNOWN_OPTION`，message 列出可选 id） |
 | GET / POST | `/sessions/{id}/advice` | 谏言库，记入日志的 `advice` 事件，不进入状态哈希。POST body `{character, text, source}` |
 | POST | `/sessions/{id}/chat/{character}` | 已有 SSE。新增的提示词装配：人设 + 事实摘要（StateDigest）+ 该人物记忆 + 召对方式。`status` 事件带 `{status, mode: in_person\|written\|envoy, mode_label: 面见\|书面奏对\|遣使问对, mode_note}`；召对消息的 metadata 记 `mode` |
 | GET | `/sessions/{id}/history` | 时间线：`[{id, type, turn, label, parentId}]`。`type` 新增 `edict`（确认诏书的回执摘要，label「确认诏书 edict-…」，不改状态） |
@@ -329,15 +336,17 @@ default_difficulty: normal
 4. 忠诚 ≥ 8 赞成、≤ 3 反对。
 5. 其余以种子决断（同局、同季、同议题稳定；多半持中）。
 
-**立场指向的选项**（`debate.assign_option_targets`）：议题对应奏疏时，每个立场带 `target_option_id` / `target_option_label`（所主张的选项）、`target_reason`、`position`（「主张「驳回」（deny），反对「准减赋」（approve）」）与 `proposition`（「就「X」诸选项择一」）：
-- 每人对每个选项打分：本人利害（被任命 / 统兵 / 被选中 / 恩宠升 +，免职 / 处置 / 夺兵 / 记忆写着「不用」「驳」 −，选项标题点名本人或本人官职按标题褒贬）、对选项点名人物的亲疏、派系利益 `bloc_interests`、谏言措辞与选项标题 / 提示的二字组重合；
-- 「所议之案」= 奏疏中在世赞成者合计最中意的选项（无赞成者取标题有褒义的第一个选项）；赞成者主张所议之案；反对者主张所议之案以外得分最高者，并记 `against_option_*` = 所议之案；持中者与其余人取得分最高者，全无利害时以种子择一（「无所偏倚，姑从此议」）。
+**立场指向的选项**（`debate.assign_option_targets`）：议题对应奏疏时，每个立场带 `target_option_id` / `target_option_label`（所主张的选项，可为 null）、`target_reason`、`position`（「主张「驳回」（deny），反对「准减赋」（approve）」或「未主一议，候圣裁」）、`proposition`（「就「X」诸选项择一」）与 `proposal_id` / `proposal_label` / `proposal_basis`（所议之案）：
+- **所议之案**（`debate.infer_proposal`，谏言的赞成 / 反对针对它）：① 调用方 `option_id`；② 奏疏 `proposal`；③ 在世赞成者写明的 `option`（唯一时）；④ 奏疏 `summary` 与在世赞成者谏言中、各选项**独有**的二字组（按标点分句；去掉别的选项也有的、奏疏标题里的）命中 ≥ 2 且唯一最多者（「请加黜陟」→「严加黜陟」）；⑤ 准驳二议（恰有一个选项标题首句不带驳斥 / 罢免之意）取那一个；否则**无定案**——不以首个选项为案，`proposition` 写「诸案并陈，未有定案（可用 option_id 指定所议之案）」。
+- 每人对每个选项打分：本人利害（被任命 / 统兵 / 被选中 / 恩宠升 +，免职 / 处置 / 夺兵 / 记忆写着「不用」「驳」 −，选项标题点名本人或本人官职按标题褒贬）、对选项点名人物的亲疏、派系利益 `bloc_interests`、谏言与该选项独有措辞的相合（赞成者计入全部选项；反对者只计入所议之案以外的选项——其话或复述所驳之案「恐骤加黜陟」、或道出所主之案「减其半亦足」；持中者不计）。
+- 谏言人写明 `option` 即主张该选项（「所上之言即主此案」）；否则赞成者主张所议之案（或同一方中得分更高者）；反对者主张另一方得分最高者，`against_option_*` = 所议之案；持中者与其余人取得分最高者，全无利害时以种子择一（「无所偏倚，姑从此议」）。
+- 无定案时：各人取得分最高者，全无利害者 `target_option_id: null`（「未主一议，候圣裁」）；非谏言人的泛泛立场（忠诚「唯上意是从」、种子决断）改为持中「议无定案，候上裁决」。
 - 自由议题（无对应奏疏）：`target_option_id: null`，`proposition` 即议题原文，`position` 为「赞成 / 反对 / 持中「议题」」。`summary` 附「主张：「X」n 人（…）」。
 
 `StateDigest(character_id | None)`：引擎渲染的事实摘要，固定格式的中文文本。内容是这个人能知道的资源（隐藏资源给区间）、官职、在任者、地区要点、进行中的工程和常设令、本季已发生的事实。它供 LLM 提示词和 MCP 使用。
 - 非玩家势力控制的地区列在【外域】，只给控制者与驻军，不给经济指标。
 - 给定人物时按相关性筛地区：所在 → 统兵所在 → `knowledge` 中写到的地区 → 行程目的地 → 相邻，这些给全部指标；其余地区压成一行【他处】名单（按控制者分组）；另附【记忆】（最近 12 条）。
-- 在途人物列于【在途】「某某（自A赴B，约n季后到）」；【军队】行写「在途（…）」，统帅不在军中时写「统帅某某未到任（…），副将暂摄」。离线召对（mock）把军队、地区、外域行改写成口语（「河东之兵五万余，皆在禄山麾下」「河东防务颇佳」），同一句不说两遍。
+- 在途人物列于【在途】「某某（自A赴B，约n季后到）」；【军队】行写「在途（…）」，统帅不在军中时写「统帅某某未到任（…），副将暂摄」（赴本军）/「统帅某某离军他往（…），副将暂摄」（赴他处）/「统帅某某不在军中，副将暂摄」。【本人】名后的头衔：官职与开局不同时写「（旧衔：X）」。离线召对（mock）把军队、地区、外域行改写成口语（「河东之兵五万余，皆在禄山麾下」「河东防务颇佳」），同一句不说两遍。
 
 ## 3. MCP 服务（engine/backend/simcore/mcp/，命令 `sim mcp`，stdio）
 
@@ -354,15 +363,15 @@ default_difficulty: normal
 | `list_saves` / `load_game` | `session_id` | — |
 | `briefing` | `session_id` | 历法、难度、`scenario_changed` 提示（若有）、**终局季提示**（见 1.8，加粗）、三目标、公开资源（隐藏资源附情报精度，见 1.9）、危机计及分项（注明为下次结算的预计漂移）、「## 上季危机变化」（见 1.11）、「## 官职与兵权」Markdown 表（官职 | 人物 | 所在 | 所统 | 指挥状态，遥领 / 出缺 / 无统帅加粗，末附「提醒：」，终局后不列）、在途人物与军队、待执行的延期条款、奏疏条目（含选项与 ops 摘要）、待决事件、上季事实；可召对名单中的在途者附行程。终局后以「终局复盘」段代替奏疏与待决事件。末尾附**扮演规则**：数字只能引用简报里的值 |
 | `op_reference` | `session_id, op?, entity_kind?, ids?` | 缺省紧凑：`permitted_ops`（玩家可用操作，每个一行字段说明 `fields` + 用本局实体写成的 `example`）、`scenario_only_ops`（只能经奏疏 / 事件产生的操作及显示名）、`usage`（奏疏、抉择的用法）、`entities`（每类 `{count, rows: ["id 名（要点）"…至多 12 行], more}`）、`rules`。`op=<名>`：该操作的完整 JSON Schema、示例、`permitted` 与说明（未知名 → `UNKNOWN_OP`）；`entity_kind=<类别>`：该类完整表（resources、characters、offices、regions、armies、factions、ledger、standing_orders、pending_choices）；`ids=[...]`：只给这些 id（附 `missing`） |
-| `audience` | `session_id, character` | 首行「# 召对方式：面见 / 书面奏对 / 遣使问对——说明」，再接人设卡 + 该人物可知的 StateDigest（含【记忆】）+ 口吻要求。由调用方模型扮演；死人或在押者返回拒绝。召对方式（`rules.audience_mode`）：与君主（玩家人物）同地且不在途 → 面见；远在他处 → 书面奏对（驿递往还，不令其入京）；在途 → 遣使问对。口吻要求、服务端提示词（minister_chat 末尾追加）与离线答话（前缀「〔书面奏对·自X驿递〕」「〔遣使问对·途中回奏〕」）随之变化；server 模式返回「某某（书面奏对）：…」 |
-| `court_debate` | `session_id, participants, topic?, memorial_id?` | 「议题命题」（对应奏疏时列出全部选项）、对应奏疏、「议题涉及」实体、引擎给出的各人立场与所主张 / 反对的选项（见 2 的廷议）+ 人设，调用方据此写辩论 |
+| `audience` | `session_id, character` | 首行「# 召对方式：面见 / 书面奏对 / 遣使问对——说明」，再接人设卡 + 该人物可知的 StateDigest（含【记忆】）+ 口吻要求。人设卡头衔（`persona_card.title`）在官职与开局不同时取现任官职名，静态 title 作 `former_title`（卡上「头衔：安西四镇节度使（旧衔：安西节度判官，已非现职）」）；开场白里的旧衔（静态 title 的缩写、或开局所任而今已不任的官职名）改为现任官职（无官职则删去该句），离线召对同。client 模式每次调用记一条轻量记录（见 export_log）。由调用方模型扮演；死人或在押者返回拒绝。召对方式（`rules.audience_mode`）：与君主（玩家人物）同地且不在途 → 面见；远在他处 → 书面奏对（驿递往还，不令其入京）；在途 → 遣使问对。口吻要求、服务端提示词（minister_chat 末尾追加）与离线答话（前缀「〔书面奏对·自X驿递〕」「〔遣使问对·途中回奏〕」）随之变化；server 模式返回「某某（书面奏对）：…」 |
+| `court_debate` | `session_id, participants, topic?, memorial_id?, option_id?` | 「议题命题」（对应奏疏时列出全部选项，并写明所议之案及其来历，或「诸案并陈，未有定案」）、对应奏疏、「议题涉及」实体、引擎给出的各人立场与所主张 / 反对的选项（见 2 的廷议）+ 人设，调用方据此写辩论。client 模式每次调用记一条轻量记录（见 export_log） |
 | `save_advice` | `session_id, character, text` | — |
-| `draft_edict` | `session_id, sections?, adopted?, ops?` | 回执：逐条显示 applied / rejected（错误码与原因，越权为 `OP_NOT_PERMITTED`）/ delayed（「延期原因：…；预计第 n 回合结算时执行」） |
-| `confirm_edict` | `session_id, edict_id` | 确认后的回执 |
-| `choose` | `session_id, choice_id, option_id` | — |
-| `end_turn` | `session_id` | TurnReport：事实（逐条去重，不含「终局」行）、「## 对账（期初 → 诏令 → 延期执行 → 经常收支 → 事件/选择 → 期末）」（公开资源每项一行，代替旧的「账目合计」；有取整余差时行内另列「取整差」；每行下附「  - 经常收支明细：…」；隐藏资源只注「数值不明」）、战斗、事件、危机分项（与随后的 briefing 相同，注明为下次结算的预计漂移）、「## 本季危机变化（结算当时的实际贡献）」、下次结算即终局时「## 注意：…」、outcome（末尾「终局」段只出现一次，附「判定条件」）。client 模式不再附与事实重复的「纪事」 |
+| `draft_edict` | `session_id, sections?, adopted?, ops?` | 首行「诏书草案 edict_id=edict-…」单独成行（次行说明须 confirm_edict）；回执逐条：`[applied 本季即行]`（确认即生效）/ `[rejected 被拒] [CODE]` / `[delayed 下季结算时执行（第 n 回合）]`（「延期原因：…（确认后不即生效，本季 end_turn 结算时执行）」）/ `[narrative_only 仅记录]` |
+| `confirm_edict` | `session_id, edict_id` | 确认后的回执；有新出奏疏时末行「本季新出奏疏：[id] 标题、…（可在 end_turn 前继续 draft_edict 采纳）」。编号不存在时错误列出本季可确认的草案编号 |
+| `choose` | `session_id, choice_id, option_id` | 事实；有新出奏疏时同上附「本季新出奏疏：…」 |
+| `end_turn` | `session_id, discard_drafts?` | 本季有未确认草案时报 `错误 [DRAFT_UNCONFIRMED]：本季尚有未确认的诏书草案：edict-…（摘要）…`（规则同 REST `/turn`）；`discard_drafts: true` 放弃后结算，文本附「## 已放弃的草案（未施行）：…」。TurnReport：事实（逐条去重，不含「终局」行）、「## 对账（期初 → 诏令 → 延期执行 → 经常收支 → 事件/选择 → 期末）」（公开资源每项一行，代替旧的「账目合计」；有取整余差时行内另列「取整差」；每行下附「  - 经常收支明细：…」；隐藏资源只注「数值不明」）、战斗、事件、危机分项（与随后的 briefing 相同，注明为下次结算的预计漂移）、「## 本季危机变化（结算当时的实际贡献）」、下次结算即终局时「## 注意：…」、outcome（末尾「终局」段只出现一次，附「判定条件」）。client 模式不再附与事实重复的「纪事」 |
 | `history` / `rewind` | — | — |
-| `export_log` | `session_id, from_turn?, to_turn?` | 结构化复盘日志（JSON，只读，公开视图）：`{session_id, scenario, scenario_version, seed, difficulty, turn, calendar_label, outcome, note, seasons: [...]}`。每季（按下诏所在季 T）：`adopted: [{memorial_id, option_id, title, label}]`（由 `memorial:<id>` 旗标还原，旧存档亦可）、`client_ops: [{op, status, summary, code?}]`、`drafts` / `confirms: [{edict_id, adopted, clauses: [{index, status, source, summary, code?, reason?, delay_reason?, due_turn?, memorial_id?, option_id?, op?（仅玩家自拟条款）}], changed_clauses?, execution_rate?}]`、`delayed: [{label, due_turn, summary}]`、`choices: [{choice_id, option_id, title, option}]`、`audiences: [{character, mode}]`、`debates: [{topic}]`、`advice`、`end_turn: {resolved_to, calendar_label, facts, events, battles, choices_opened, reconciliation, crisis, crisis_change, warnings, outcome, resources}`。拟诏回执写在旁路文件 `<session>.receipts.jsonl`（拟诏不改日志、不移动 head；只导出拟于当前分支路径上的草案），确认回执写进日志的 `edict` 条目。隐藏数值只有风闻区间 / 档位区间 |
+| `export_log` | `session_id, from_turn?, to_turn?` | 结构化复盘日志（JSON，只读，公开视图）：`{session_id, scenario, scenario_version, seed, difficulty, turn, calendar_label, outcome, note, seasons: [...]}`。每季（按下诏所在季 T）：`adopted: [{memorial_id, option_id, title, label}]`（由 `memorial:<id>` 旗标还原，旧存档亦可）、`client_ops: [{op, status, summary, code?}]`、`drafts` / `confirms: [{edict_id, adopted, clauses: [{index, status, source, summary, code?, reason?, delay_reason?, due_turn?, memorial_id?, option_id?, op?（仅玩家自拟条款）}], changed_clauses?, execution_rate?}]`、`delayed: [{label, due_turn, summary}]`、`choices: [{choice_id, option_id, title, option}]`、`audiences: [{character, mode, name?, mode_label?, via?}]`、`debates: [{topic, memorial_id?, option_id?, participants?, via?}]`（server 模式取自日志中的召对 / 廷议消息；client 模式取自旁路文件 `<session>.calls.jsonl` 的轻量记录，`via: "client"`，只记谁、方式、议题、参与者与回合，不含台词；按分支路径筛选）、`advice`、`end_turn: {resolved_to, calendar_label, facts, events, battles, choices_opened, reconciliation, crisis, crisis_change, warnings, outcome, resources}`。拟诏回执写在旁路文件 `<session>.receipts.jsonl`（拟诏不改日志、不移动 head；只导出拟于当前分支路径上的草案），确认回执写进日志的 `edict` 条目。隐藏数值只有风闻区间 / 档位区间 |
 
 工具的错误一律返回中文说明和错误码，不抛出堆栈。
 
