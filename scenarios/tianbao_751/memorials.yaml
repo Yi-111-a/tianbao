@@ -36,7 +36,7 @@
         - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 副使非其人}
         - {op: set_flag, key: hedong_to_an, value: true}
         - {op: set_flag, key: hedong_secured, value: true}
-      hint: 外重内轻 +5；乱时太原或可拒命
+      hint: 禄山兼统河东军（遥领，人不赴太原）；外重内轻 +5；乱时太原或可拒命
     - id: grant
       label: 照准，并赐铁券
       memory: {character: an_lushan, text: 天宝十载春，陛下许我兼领河东，并赐铁券}
@@ -46,7 +46,7 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: 8, reason: 安禄山兼领三镇}
         - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 兵权日重}
         - {op: set_flag, key: hedong_to_an, value: true}
-      hint: 外重内轻 +8（史事）
+      hint: 禄山兼统河东军（遥领，人不赴太原）；外重内轻 +8（史事）
 
 - id: t0_xier
   turn: 0
@@ -137,7 +137,7 @@
 - id: t0_huaqing
   turn: 0
   title: 府库充盈
-  summary: 度支奏左藏、太仓充盈，岁入有余，请修缮华清宫以备冬幸。
+  summary: 度支奏称左藏、太仓充盈，岁入有余，请修缮华清宫以备冬幸。（此为度支所奏；府库实数以账目为准）
   region: jingji
   illustration: event.huaqing_winter
   advisors:
@@ -195,7 +195,7 @@
         - {op: adjust_resource, resource: frontier_pressure, delta: -3, reason: 罢兵}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 赏罚分明}
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 国忠衔恨}
-      hint: 边患 −3，君威 +1，朝争 +3；免后续南征
+      hint: 边患 −3，君威 +1，朝争 +3；免后续南征（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: conscript
       label: 准分道募兵，再图南诏
       ops:
@@ -356,9 +356,9 @@
       ops:
         - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
         - {op: appoint, character: feng_changqing, office: anxi_jds}
-        - {op: set_army_commander, army: anxi_army, character: feng_changqing}
+        - {op: set_army_commander, army: anxi_army, character: feng_changqing, dispatch: true}
         - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 务实守边}
-      hint: 边患 −2；封常清得用
+      hint: 封常清实授安西节度、统安西军（不在安西则启程赴镇，行程按实际路线计）；边患 −2；封常清得用
 
 - id: t2_west_calm
   conditions:
@@ -366,11 +366,11 @@
       - {kind: turn, operator: eq, value: 2}
       - {kind: flag, operator: eq, key: anxi_restrained, value: true}
   title: 西域安堵
-  summary: 安西奏西域诸国朝贡不绝，大食未至葱岭以东。仙芝在京宿卫，四镇由判官封常清知留后。
+  summary: 安西奏西域诸国朝贡不绝，大食未至葱岭以东。四镇将吏请以余粮屯田。
   region: anxi
   illustration: event.anxi_triumph
   advisors:
-    - {character: feng_changqing, stance: support, line: 四镇无事，臣请以余粮屯田。}
+    - {character: feng_changqing, stance: support, line: 四镇无事，臣请以余粮屯田。, requires: {region: anxi}}
     - {character: gao_xianzhi, stance: oppose, line: 臣在京师闲着，骨头都要生锈了。, requires: {region: jingji}}
   options:
     - id: farm
@@ -389,6 +389,10 @@
 
 - id: t2_shuofang
   turn: 2
+  conditions:
+    all:
+      - {kind: office_holder, operator: eq, office: shuofang_jds, character: li_linfu}
+      - {kind: office_holder, operator: eq, office: hexi_jds, character: an_sishun}
   title: 朔方留后人选
   summary: 李林甫遥领朔方，意欲辞去，属意河西节度使安思顺兼领。郭子仪、李光弼皆以知兵有能名。
   region: shuofang
@@ -404,22 +408,22 @@
       ops:
         - {op: dismiss, character: li_linfu, office: shuofang_jds}
         - {op: appoint, character: guo_ziyi, office: shuofang_jds}
-        - {op: set_army_commander, army: shuofang_army, character: guo_ziyi}
+        - {op: set_army_commander, army: shuofang_army, character: guo_ziyi, dispatch: true}
         - {op: set_flag, key: shuofang_reliable, value: true}
         - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 节度不兼}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 拂右相之意}
-      hint: 外重内轻 −2，朝争 +2；朔方可恃
+      hint: 郭子仪实授朔方节度、统朔方军（不在军中则启程赴任，行程按实际路线计）；外重内轻 −2，朝争 +2；朔方可恃（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: li
       label: 以李光弼知朔方节度
       memory: {character: li_guangbi, text: 陛下破格以臣知朔方节度}
       ops:
         - {op: dismiss, character: li_linfu, office: shuofang_jds}
         - {op: appoint, character: li_guangbi, office: shuofang_jds}
-        - {op: set_army_commander, army: shuofang_army, character: li_guangbi}
+        - {op: set_army_commander, army: shuofang_army, character: li_guangbi, dispatch: true}
         - {op: set_flag, key: shuofang_reliable, value: true}
         - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 节度不兼}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 拂右相之意}
-      hint: 外重内轻 −2，朝争 +2；朔方可恃
+      hint: 李光弼实授朔方节度、统朔方军并启程赴任（行程按实际路线计）；外重内轻 −2，朝争 +2；朔方可恃（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: sishun
       label: 依右相，以安思顺兼领
       ops:
@@ -427,7 +431,7 @@
         - {op: appoint, character: an_sishun, office: shuofang_jds}
         - {op: set_army_commander, army: shuofang_army, character: an_sishun}
         - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 两镇并于一人}
-      hint: 外重内轻 +2（史事，十一载行之）
+      hint: 安思顺以河西节度兼领朔方（遥领，人仍驻河西）；外重内轻 +2（史事，十一载行之）
 
 - id: t2_census
   turn: 2
@@ -533,7 +537,7 @@
         - {op: adjust_resource, resource: corruption, delta: -3, reason: 黜贪}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 赏罚分明}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 权门不安}
-      hint: 积弊 −3，君威 +1，朝争 +2
+      hint: 积弊 −3，君威 +1，朝争 +2（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: lenient
       label: 依例考课，不另究
       ops:
@@ -577,6 +581,9 @@
     all:
       - {kind: turn, operator: gte, value: 2}
       - {kind: character_status, operator: eq, character: yan_gaoqing, value: alive}
+      - {kind: character_region, operator: eq, character: yan_gaoqing, region: fanyang}
+      - {not: {kind: flag, operator: eq, key: gaoqing_contacted, value: true}}
+      - {kind: flag, operator: absent, key: "memorial:p_gaoqing_away"}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   title: 范阳幕中之人
   summary: 颜真卿言其从兄颜杲卿在范阳幕府，忠义可托。可遣密使通问，以知范阳虚实。
@@ -594,7 +601,39 @@
         - {op: set_flag, key: "intel:an_ambition", value: true}
         - {op: set_flag, key: "intel:rebellion_risk", value: true}
         - {op: adjust_resource, resource: treasury, delta: -20, reason: 密使}
-      hint: 情报：「禄山异志」「渔阳鼙鼓」风闻区间宽度减半（异志在积弊 50 时由 ±12 收窄至 ±6）；情报只减半一次，与中使实奏不叠加；乱起时常山必应
+      hint: 情报：「禄山异志」「渔阳鼙鼓」风闻区间宽度减半（异志在积弊 50 时由 ±12 收窄至 ±6）；情报只减半一次，与中使实奏不叠加；乱起时常山必应；此后颜杲卿约每三季密报一次范阳军情（军心、兵马、拒命迹象、旧部去就）
+    - id: decline
+      label: 不必，以免打草惊蛇
+      ops:
+        - {op: adjust_resource, resource: an_ambition, delta: -1, reason: 未起疑}
+      hint: 异志（风闻）微降
+
+- id: p_gaoqing_away
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 2}
+      - {kind: character_status, operator: eq, character: yan_gaoqing, value: alive}
+      - {not: {kind: character_region, operator: eq, character: yan_gaoqing, region: fanyang}}
+      - {not: {kind: flag, operator: eq, key: gaoqing_contacted, value: true}}
+      - {kind: flag, operator: absent, key: "memorial:p_gaoqing"}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  title: 范阳幕中之人
+  summary: 颜真卿言其从兄颜杲卿曾久佐范阳幕府，今虽已离幽州，旧僚多在禄山左右，忠义可托。可遣密使通问，借其旧识以知范阳虚实。
+  region: fanyang
+  illustration: event.loyalist_courier
+  advisors:
+    - {character: yan_zhenqing, stance: support, line: 臣兄杲卿，忠义出于天性，可托以心腹之事。}
+    - {character: gao_lishi, stance: neutral, line: 此事须机密，经老奴之手便是。}
+  options:
+    - id: contact
+      label: 遣密使通问颜杲卿
+      memory: {character: yan_gaoqing, text: 陛下遣密使通问，托臣以范阳之事}
+      ops:
+        - {op: set_flag, key: gaoqing_contacted, value: true}
+        - {op: set_flag, key: "intel:an_ambition", value: true}
+        - {op: set_flag, key: "intel:rebellion_risk", value: true}
+        - {op: adjust_resource, resource: treasury, delta: -20, reason: 密使}
+      hint: 情报：「禄山异志」「渔阳鼙鼓」风闻区间宽度减半（异志在积弊 50 时由 ±12 收窄至 ±6）；情报只减半一次，与中使实奏不叠加；乱起时常山必应；此后颜杲卿约每三季密报一次范阳军情（军心、兵马、拒命迹象、旧部去就）
     - id: decline
       label: 不必，以免打草惊蛇
       ops:
@@ -638,6 +677,7 @@
       - {kind: flag, operator: eq, key: guozhong_in_power, value: true}
       - {not: {kind: flag, operator: eq, key: guozhong_restrained, value: true}}
       - {kind: character_status, operator: eq, character: yang_guozhong, value: alive}
+      - {kind: office_holder, operator: eq, office: you_xiang, character: yang_guozhong}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   title: 将相交恶
   summary: 右相杨国忠屡言禄山必反，欲激之以验其言。禄山亦上表诉国忠。将相不和，中外忧之。
@@ -732,10 +772,11 @@
       ops:
         - {op: set_flag, key: an_kept_in_capital, value: true}
         - {op: adjust_resource, resource: rebellion_risk, delta: -6, reason: 主帅在朝}
+        - {op: adjust_resource, resource: an_command, delta: -40, reason: 主帅不在镇}
         - {op: adjust_resource, resource: an_ambition, delta: 5, reason: 久羁生怨}
         - {op: adjust_resource, resource: fanzhen_power, delta: -3, reason: 帅不在镇}
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 朝野哗然}
-      hint: 鼙鼓 −6，外重内轻 −3，朝争 +3，异志（风闻）大升；范阳诸将或不安（反事实）
+      hint: 禄山兵柄 −40（官职未夺，旧部仍奉其为主），鼙鼓 −6，外重内轻 −3，朝争 +3，异志（风闻）大升；范阳诸将或不安（反事实）
     - id: detain
       label: 夺其范阳节度，留京奉朝请；范阳由高仙芝接任（平卢、河东随后解去）
       memory: {character: an_lushan, text: 奉召入京，竟被夺去范阳，留京奉朝请，范阳付与高仙芝}
@@ -746,9 +787,10 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
         - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
         - {op: set_flag, key: an_detained, value: true}
-      hint: 高仙芝实授范阳节度并赴镇（未到之前副将暂摄）；外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）
+      hint: 高仙芝实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
     - id: detain_guo
       label: 夺其范阳节度，留京奉朝请；范阳由郭子仪接任（平卢、河东随后解去）
       memory: {character: an_lushan, text: 奉召入京，竟被夺去范阳，留京奉朝请，范阳付与郭子仪}
@@ -759,9 +801,10 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
         - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
         - {op: set_flag, key: an_detained, value: true}
-      hint: 郭子仪实授范阳节度并赴镇（未到之前副将暂摄）；外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）
+      hint: 郭子仪实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
     - id: detain_feng
       label: 夺其范阳节度，留京奉朝请；范阳由封常清接任（平卢、河东随后解去）
       memory: {character: an_lushan, text: 奉召入京，竟被夺去范阳，留京奉朝请，范阳付与封常清}
@@ -772,9 +815,10 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
         - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
         - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
         - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
         - {op: set_flag, key: an_detained, value: true}
-      hint: 封常清实授范阳节度并赴镇（未到之前副将暂摄）；外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）
+      hint: 封常清实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4；范阳旧部或拒命（见奏疏「范阳旧部可虑」）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
     - id: release
       label: 慰谕数语，听其归镇
       memory: {character: an_lushan, text: 奉召入京，陛下慰谕数语，听我归镇}
@@ -795,6 +839,7 @@
     兵变之险：禄山留京满一季后，禄山异志风闻偏高（约 55 以上）时每季掷一次——尚无安抚之策约三成五，
     行一策约两成，二策约一成以下，三策以上可保无虞。可行之策：新帅到镇（自动计入）、清偿欠饷、赦免旧部、移河东军屯河北弹压；
     穷治党与反减一策。未满三策时，旧部不安，渔阳鼙鼓每季 +2。
+    新帅到镇且满三策，则旧部归心：禄山兵柄归零，危机计不再计其异志，渔阳鼙鼓逐季消退（约每季 −1.5）。
   region: fanyang
   illustration: event.fanyang_armoury
   advisors:
@@ -810,7 +855,7 @@
         - {op: set_flag, key: fanyang_paid, value: true}
         - {op: set_flag, key: fanyang_amnesty, value: true}
         - {op: adjust_resource, resource: an_ambition, delta: -2, reason: 旧部得安}
-      hint: 国库 −200，河东军移屯河北；安抚之策 +3（连同新帅到镇共可至 4 策，兵变不再发生）
+      hint: 国库 −200，河东军移屯河北（行程按实际路线计）；安抚之策 +3（满三策即不再兵变；新帅到镇后旧部归心，禄山兵柄归零）
     - id: pay_amnesty
       label: 清偿欠饷，下诏不问旧部
       ops:
@@ -819,14 +864,14 @@
         - {op: set_flag, key: fanyang_paid, value: true}
         - {op: set_flag, key: fanyang_amnesty, value: true}
         - {op: adjust_resource, resource: an_ambition, delta: -1, reason: 旧部得安}
-      hint: 国库 −160；安抚之策 +2
+      hint: 国库 −160；安抚之策 +2（连同新帅到镇共 3 策，旧部归心）
     - id: amnesty
       label: 只下诏不问旧部，加史思明以下官阶
       ops:
         - {op: adjust_resource, resource: treasury, delta: -40, reason: 赐物}
         - {op: adjust_counter, key: fanyang_measures, delta: 1}
         - {op: set_flag, key: fanyang_amnesty, value: true}
-      hint: 国库 −40；安抚之策 +1
+      hint: 国库 −40；安抚之策 +1（不足三策，旧部仍不安、兵变之险仍在）
     - id: purge
       label: 穷治禄山党与
       memory: {character: shi_siming, text: 主帅留京之后，朝廷穷治范阳党与}
@@ -834,7 +879,46 @@
         - {op: adjust_counter, key: fanyang_measures, delta: -1}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 威断}
         - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 党与被治}
-      hint: 君威 +1；安抚之策 −1（旧部疑惧，兵变之险反增）
+      hint: 君威 +1；安抚之策 −1（旧部疑惧，兵变之险反增，旧部难以归心）
+
+- id: p_court_harmony
+  conditions:
+    all:
+      - {kind: turn, operator: gte, value: 3}
+      - {kind: resource, id: court_strife, operator: gte, value: 58}
+  title: 朝堂调停
+  keywords: [朝争, 调停, 分职, 宣抚, 息争]
+  summary: >-
+    朝中相倾日甚，政事堂议论不决，诸司互相攻讦。左右请设法调停：或析分职守，或赐宴和解，或遣争端最烈者出使宣抚诸道。
+    朝争不会自行回落；此议处置之后，隔三季可再议。
+  region: jingji
+  illustration: event.zhengshi_hall
+  advisors:
+    - {character: gao_lishi, stance: support, line: 吵得久了，谁也不肯先住口。陛下给个台阶，大家都好下。}
+    - {character: yan_zhenqing, stance: neutral, line: 和则和矣，是非却须分明，不可一味调停。}
+  options:
+    - id: divide
+      label: 分职：析政事堂诸司之权，各专其事，不得相侵
+      ops:
+        - {op: adjust_resource, resource: court_strife, delta: -6, reason: 分职各守}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 政出多门}
+        - {op: adjust_resource, resource: corruption, delta: 1, reason: 诸司自专}
+      hint: 朝争 −6，君威 −2，积弊 +1（隔三季可再议）
+    - id: mediate
+      label: 调和：赐宴政事堂，诸臣各加恩赏以释前嫌
+      ops:
+        - {op: adjust_resource, resource: court_strife, delta: -5, reason: 赐宴释怨}
+        - {op: adjust_resource, resource: treasury, delta: -80, reason: 赐宴恩赏}
+        - {op: adjust_resource, resource: corruption, delta: 1, reason: 恩赏滥及}
+      hint: 朝争 −5，国库 −80，积弊 +1（隔三季可再议）
+    - id: envoy
+      label: 遣使宣抚：以争端最烈者出为诸道宣抚使
+      ops:
+        - {op: adjust_resource, resource: court_strife, delta: -5, reason: 争端者出使}
+        - {op: adjust_resource, resource: treasury, delta: -40, reason: 宣抚之费}
+        - {op: adjust_resource, resource: corruption, delta: 2, reason: 使臣借势需索}
+        - {op: adjust_resource, resource: morale, delta: 1, reason: 宣抚诸道}
+      hint: 朝争 −5，国库 −40，积弊 +2，民心 +1（隔三季可再议）
 
 - id: p_abdicate
   conditions:
@@ -972,7 +1056,7 @@
         - {op: adjust_resource, resource: corruption, delta: -3, reason: 惩贪}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 权门怨望}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 法令行}
-      hint: 积弊 −3，朝争 +2，君威 +1
+      hint: 积弊 −3，朝争 +2，君威 +1（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: quiet
       label: 薄责了事
       ops:
@@ -1059,7 +1143,7 @@
         - {op: adjust_resource, resource: authority, delta: 2, reason: 法令行}
         - {op: adjust_resource, resource: corruption, delta: -2, reason: 籍没聚敛之家}
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: 1}
-      hint: 朝争 +4，君威 +2，积弊 −2（史事：王鉷赐死）
+      hint: 朝争 +4，君威 +2，积弊 −2（史事：王鉷赐死）（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: limit
       label: 止诛首恶，不问余党
       ops:
@@ -1097,7 +1181,7 @@
         - {op: set_flag, key: chancellor_chosen, value: true}
         - {op: set_flag, key: chancellor_pick, value: chen_xilie}
         - {op: adjust_resource, resource: court_strife, delta: 1, reason: 杨氏失望}
-      hint: 朝争 +1；杨国忠不得入相
+      hint: 朝争 +1；杨国忠不得入相；右相病卒时另有「相位出缺」朝争 +5（无论所选）
     - id: yan
       label: 预定擢颜真卿为相
       memory: {character: yan_zhenqing, text: 右相病笃时，陛下预定擢臣为相}
@@ -1105,13 +1189,13 @@
         - {op: set_flag, key: chancellor_chosen, value: true}
         - {op: set_flag, key: chancellor_pick, value: yan_zhenqing}
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 超擢招忌}
-      hint: 朝争 +3；清流秉政（反事实）
+      hint: 朝争 +3；清流秉政（反事实）；真卿入相时另有「骤贵招忌」朝争 +5、积弊 −4；右相病卒时另有「相位出缺」朝争 +5（无论所选）（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: guozhong
       label: 属意杨国忠
       ops:
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: 1}
         - {op: adjust_resource, resource: court_strife, delta: 1, reason: 相党不安}
-      hint: 朝争 +1（史事）
+      hint: 朝争 +1（史事）；右相病卒时另有「相位出缺」朝争 +5（无论所选）
 
 - id: t6_feast
   turn: 6
@@ -1249,7 +1333,7 @@
         - {op: adjust_resource, resource: an_ambition, delta: -1, reason: 宿敌远去}
         - {op: adjust_resource, resource: authority, delta: -1, reason: 一委右相}
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: -2}
-      hint: 杨国忠实授剑南节度、统剑南军并赴成都（约两季）；出镇在外不得入相，召还京畿后此限解除；朝争 −3，君威 −1，异志（风闻）↓
+      hint: 杨国忠实授剑南节度、统剑南军并启程赴成都（行程按实际路线计）；出镇在外不得入相，召还京畿后此限解除；朝争 −3，君威 −1，异志（风闻）↓
 
 - id: t6_jiannan_vacant
   conditions:
@@ -1294,13 +1378,15 @@
         - {op: adjust_resource, resource: an_ambition, delta: -1, reason: 宿敌远去}
         - {op: adjust_resource, resource: authority, delta: -1, reason: 一委右相}
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: -2}
-      hint: 杨国忠实授剑南节度、统剑南军并赴成都（约两季）；出镇在外不得入相，召还京畿后此限解除；朝争 −3，君威 −1，异志（风闻）↓
+      hint: 杨国忠实授剑南节度、统剑南军并启程赴成都（行程按实际路线计）；出镇在外不得入相，召还京畿后此限解除；朝争 −3，君威 −1，异志（风闻）↓
 # ============================== T7 天宝十一载冬 ==============================
 - id: t7_anxi
   conditions:
     all:
       - {kind: turn, operator: eq, value: 7}
       - {kind: office_holder, operator: eq, office: anxi_jds, character: gao_xianzhi}
+      - {kind: character_region, operator: eq, character: gao_xianzhi, region: jingji}
+      - {kind: character_region, operator: eq, character: feng_changqing, region: anxi}
   title: 安西节度人选
   summary: 高仙芝久在京师，安西四镇由判官封常清知留后。或请即以常清为安西节度使。
   region: anxi
@@ -1315,15 +1401,48 @@
       ops:
         - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
         - {op: appoint, character: feng_changqing, office: anxi_jds}
-        - {op: set_army_commander, army: anxi_army, character: feng_changqing}
+        - {op: set_army_commander, army: anxi_army, character: feng_changqing, dispatch: true}
         - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
-      hint: 边患 −2（史事：十一载十二月）
+      hint: 封常清实授安西节度、统安西军；边患 −2（史事：十一载十二月）
     - id: keep
       label: 仍以仙芝遥领，补其兵额
       ops:
         - {op: adjust_army, army: anxi_army, delta: 5000, reason: 补兵}
         - {op: adjust_resource, resource: treasury, delta: -60, reason: 补兵}
-      hint: 安西兵 +5000，国库 −60
+      hint: 高仙芝仍遥领安西（人不在镇）；安西兵 +5000，国库 −60
+
+- id: t7_anxi_away
+  conditions:
+    all:
+      - {kind: turn, operator: eq, value: 7}
+      - {kind: office_holder, operator: eq, office: anxi_jds, character: gao_xianzhi}
+      - {not: {kind: character_region, operator: eq, character: gao_xianzhi, region: anxi}}
+      - any:
+          - {not: {kind: character_region, operator: eq, character: gao_xianzhi, region: jingji}}
+          - {not: {kind: character_region, operator: eq, character: feng_changqing, region: anxi}}
+  title: 安西节度人选
+  summary: 安西节度使高仙芝不在镇，四镇军务由副将摄理。或请即以封常清为安西节度使，令其赴镇。
+  region: anxi
+  illustration: event.jiedu_appointment
+  advisors:
+    - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。}
+    - {character: bian_lingcheng, stance: oppose, line: 封判官貌陋，恐不足以服诸蕃。}
+  options:
+    - id: feng
+      label: 以封常清为安西节度
+      memory: {character: feng_changqing, text: 陛下以臣为安西节度使}
+      ops:
+        - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
+        - {op: appoint, character: feng_changqing, office: anxi_jds}
+        - {op: set_army_commander, army: anxi_army, character: feng_changqing, dispatch: true}
+        - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
+      hint: 封常清实授安西节度、统安西军，不在安西则启程赴镇（行程按实际路线计；若其现统他军，该军改由副将暂摄）；边患 −2（史事：十一载十二月）
+    - id: keep
+      label: 仍以仙芝遥领，补其兵额
+      ops:
+        - {op: adjust_army, army: anxi_army, delta: 5000, reason: 补兵}
+        - {op: adjust_resource, resource: treasury, delta: -60, reason: 补兵}
+      hint: 高仙芝仍遥领安西（人不在镇）；安西兵 +5000，国库 −60
 
 - id: t7_jinjun
   turn: 7
@@ -1503,7 +1622,7 @@
         - {op: adjust_resource, resource: treasury, delta: 30, reason: 省俸}
         - {op: adjust_resource, resource: corruption, delta: -2, reason: 中使敛迹}
         - {op: adjust_resource, resource: court_strife, delta: 1, reason: 内廷怨望}
-      hint: 国库 +30，积弊 −2，朝争 +1
+      hint: 国库 +30，积弊 −2，朝争 +1（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: keep
       label: 依旧
       ops:
@@ -1528,7 +1647,7 @@
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 杨氏怨望}
         - {op: adjust_resource, resource: corruption, delta: -1, reason: 外戚敛迹}
         - {op: adjust_trait, character: yang_guifei, trait: favor, delta: -1}
-      hint: 君威 +3，朝争 +2，积弊 −1
+      hint: 君威 +3，朝争 +2，积弊 −1（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: slave_only
       label: 杖杀家奴，余不问
       ops:
@@ -1570,13 +1689,13 @@
         - {op: adjust_resource, resource: authority, delta: 2, reason: 抑相权}
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 国忠衔恨}
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: -1}
-      hint: 君威 +2，朝争 +3
+      hint: 君威 +2，朝争 +3（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
 
 # ============================== T9 天宝十二载夏 ==============================
 - id: t9_jinjun_command
   turn: 9
   title: 禁军谁统
-  summary: 北衙禁军久无宿将统领。或请以内侍监掌之，以亲近为固；或请以边镇宿将统之，以知兵为先。
+  summary: 北衙禁军统领之任，朝议不一：或请以内侍监掌之，以亲近为固；或请以边镇宿将统之，以知兵为先；或请仍旧。
   region: jingji
   illustration: event.eunuch_overseer
   advisors:
@@ -1596,12 +1715,12 @@
       label: 以李光弼统领禁军
       memory: {character: li_guangbi, text: 陛下以臣统领北衙禁军}
       ops:
-        - {op: set_army_commander, army: jinjun, character: li_guangbi}
+        - {op: set_army_commander, army: jinjun, character: li_guangbi, dispatch: true}
         - {op: adjust_resource, resource: fanzhen_power, delta: -3, reason: 宿将入卫}
         - {op: adjust_resource, resource: treasury, delta: -50, reason: 整军}
-      hint: 外重内轻 −3，国库 −50
+      hint: 李光弼统禁军，不在京则启程入京（行程按实际路线计；若其现统他军，该军改由副将暂摄）；外重内轻 −3，国库 −50
     - id: keep
-      label: 仍旧
+      label: 仍旧（禁军统领维持现状）
       ops:
         - {op: adjust_resource, resource: court_strife, delta: -1, reason: 无所更张}
       hint: 朝争 −1
@@ -1615,7 +1734,7 @@
   advisors:
     - {character: geshu_han, stance: support, line: 九曲水草最美。拿下来，吐蕃便少一处牧场！}
     - {character: gao_lishi, stance: neutral, line: 哥舒将军的仗打得赢。只是赢了，又多一个功高的。}
-    - {character: an_sishun, stance: oppose, line: 得地易，守地难。屯兵九曲，河西诸胡亦须转饷。}
+    - {character: an_sishun, stance: oppose, line: 得地易，守地难。屯兵九曲，河西诸胡亦须转饷。, requires: {office: hexi_jds}}
   options:
     - id: strike
       label: 许之，出师九曲
@@ -1667,7 +1786,7 @@
         - {op: adjust_resource, resource: morale, delta: 2, reason: 罢役}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 杨氏怏怏}
         - {op: adjust_trait, character: yang_guifei, trait: favor, delta: -1}
-      hint: 君威 +2，民心 +2，朝争 +2
+      hint: 君威 +2，民心 +2，朝争 +2（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: reduce
       label: 只取近道所产，减其驿程
       ops:
@@ -1678,6 +1797,10 @@
 # ============================== T10 天宝十二载秋 ==============================
 - id: t10_geshu
   turn: 10
+  conditions:
+    all:
+      - {kind: office_holder, operator: eq, office: hexi_jds, character: an_sishun}
+      - {kind: office_holder, operator: eq, office: longyou_jds, character: geshu_han}
   title: 哥舒翰请兼河西
   summary: 哥舒翰屡破吐蕃，请兼领河西节度，并求封爵。朝中或欲借以牵制安禄山。
   region: hexi
@@ -1698,7 +1821,7 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: 3, reason: 又一节度坐大}
         - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 宿敌得势}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 边帅相轧}
-      hint: 边患 −4，外重内轻 +3，朝争 +2（史事）
+      hint: 哥舒翰以陇右节度兼领河西（遥领，人仍驻陇右）；边患 −4，外重内轻 +3，朝争 +2（史事）
     - id: title_only
       label: 只加封爵，不兼河西
       ops:
@@ -1708,6 +1831,35 @@
     - id: deny
       label: 不许
       memory: {character: geshu_han, text: 请兼河西，陛下不许}
+      ops:
+        - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 边帅怨望}
+      hint: 边患 +2
+
+- id: t10_geshu_title
+  turn: 10
+  conditions:
+    all:
+      - {kind: character_status, operator: eq, character: geshu_han, value: alive}
+      - any:
+          - {not: {kind: office_holder, operator: eq, office: hexi_jds, character: an_sishun}}
+          - {not: {kind: office_holder, operator: eq, office: longyou_jds, character: geshu_han}}
+  title: 哥舒翰请封爵
+  summary: 哥舒翰屡破吐蕃，表请叙功封爵。朝中或欲借以牵制安禄山。（河西、陇右人事已非旧局，兼领之议不复提起）
+  region: longyou
+  illustration: event.jiedu_appointment
+  advisors:
+    - {character: yang_guozhong, stance: support, line: 厚封哥舒翰，压一压范阳，正是时候。}
+    - {character: gao_lishi, stance: oppose, line: 拿一个边将去压另一个，只会两个都更重。}
+  options:
+    - id: title_only
+      label: 加封爵，厚赐
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 赏功}
+        - {op: adjust_resource, resource: treasury, delta: -40, reason: 封赏}
+      hint: 君威 +1，国库 −40
+    - id: deny
+      label: 依常格叙功，不加封爵
+      memory: {character: geshu_han, text: 请封爵，陛下只依常格叙功}
       ops:
         - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 边帅怨望}
       hint: 边患 +2
@@ -1860,7 +2012,7 @@
         - {op: adjust_resource, resource: authority, delta: 2, reason: 法度}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 杨氏怨望}
         - {op: adjust_trait, character: yang_guifei, trait: favor, delta: -1}
-      hint: 积弊 −2，君威 +2，朝争 +2
+      hint: 积弊 −2，君威 +2，朝争 +2（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: indulge
       label: 置之不问
       ops:
@@ -2188,7 +2340,7 @@
   region: shuofang
   illustration: event.recruit_levy
   advisors:
-    - {character: guo_ziyi, stance: support, line: 朔方离京师最近，臣愿领兵入卫。}
+    - {character: guo_ziyi, stance: support, line: 朔方离京师最近，臣愿领兵入卫。, requires: {office: shuofang_jds}}
     - {character: an_sishun, stance: oppose, line: 朔方兵一动，北边恐有警。}
   options:
     - id: move
@@ -2197,7 +2349,7 @@
         - {op: move_army, army: shuofang_army, to_region: jingji}
         - {op: adjust_resource, resource: fanzhen_power, delta: -4, reason: 边兵入卫}
         - {op: adjust_resource, resource: frontier_pressure, delta: 3, reason: 北边稍虚}
-      hint: 外重内轻 −4，边患 +3；朔方军下季抵京畿
+      hint: 外重内轻 −4，边患 +3；朔方军移屯京畿（行程按实际路线计）
     - id: stay
       label: 留镇本道
       ops:
@@ -2224,7 +2376,7 @@
       ops:
         - {op: adjust_resource, resource: authority, delta: 4, reason: 亲政}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 宰相失权}
-      hint: 君威 +4，朝争 +2
+      hint: 君威 +4，朝争 +2（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: relief
       label: 发太仓赈关中
       ops:
@@ -2258,7 +2410,7 @@
       ops:
         - {op: adjust_resource, resource: authority, delta: 4, reason: 亲政}
         - {op: adjust_resource, resource: court_strife, delta: 2, reason: 宰相失权}
-      hint: 君威 +4，朝争 +2
+      hint: 君威 +4，朝争 +2（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: relief
       label: 发太仓粟赈恤关中贫户
       ops:
@@ -2354,7 +2506,7 @@
         - {op: adjust_resource, resource: corruption, delta: -3, reason: 拔擢寒素}
         - {op: adjust_resource, resource: authority, delta: 2, reason: 亲试}
         - {op: adjust_resource, resource: court_strife, delta: 3, reason: 权门失望}
-      hint: 积弊 −3，君威 +2，朝争 +3
+      hint: 积弊 −3，君威 +2，朝争 +3（改革之阻：朝争不会自行回落，可经奏疏「朝堂调停」化解）
     - id: poetry
       label: 依有司，策外加试诗赋
       ops:
@@ -2518,8 +2670,9 @@
     all:
       - {kind: turn, operator: eq, value: 16}
       - {kind: flag, operator: eq, key: geshu_ill, value: true}
+      - {kind: office_holder, operator: eq, office: longyou_jds, character: geshu_han}
   title: 陇右易帅
-  summary: 哥舒翰病风疾留京，陇右、河西军务无人主持。
+  summary: 陇右节度使哥舒翰得风疾，不能视事。陇右军务须另择人主持，或待其病愈。
   region: longyou
   illustration: event.jiedu_appointment
   advisors:
@@ -2529,13 +2682,13 @@
     - id: li
       label: 以李光弼摄陇右军务
       ops:
-        - {op: set_army_commander, army: longyou_army, character: li_guangbi}
+        - {op: set_army_commander, army: longyou_army, character: li_guangbi, dispatch: true}
         - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
-      hint: 边患 −2
+      hint: 李光弼统陇右军，不在陇右则启程赴任（行程按实际路线计；若其现统他军，该军改由副将暂摄）；边患 −2
     - id: wait
       label: 待哥舒翰病愈
       ops:
-        - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 军中无主}
+        - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 主帅卧病}
       hint: 边患 +2
 
 - id: t16_supi
@@ -2574,6 +2727,7 @@
     all:
       - {kind: turn, operator: eq, value: 16}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
   title: 政事堂议
   summary: 政事堂议范阳事，宰相与诸司意见相左，争执不下。左右请陛下亲临政事堂听议。
   region: jingji
@@ -2585,6 +2739,34 @@
     - id: attend
       label: 亲临听议，令宰相同心
       memory: {character: yang_guozhong, text: 陛下亲临政事堂听议范阳事，令宰相同心}
+      ops:
+        - {op: adjust_resource, resource: court_strife, delta: -3, reason: 天子临议}
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 亲政}
+      hint: 朝争 −3，君威 +1
+    - id: delegate
+      label: 一委宰相
+      ops:
+        - {op: adjust_resource, resource: court_strife, delta: 1, reason: 相权独重}
+        - {op: adjust_resource, resource: authority, delta: -1, reason: 倦政}
+      hint: 朝争 +1，君威 −1
+
+- id: t16_court_detained
+  conditions:
+    all:
+      - {kind: turn, operator: eq, value: 16}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+  title: 政事堂议·范阳善后
+  summary: 禄山留京之后，政事堂议范阳善后：新帅权限、旧部去留、禄山待遇，宰相与诸司意见相左，争执不下。左右请陛下亲临政事堂听议。
+  region: jingji
+  illustration: event.zhengshi_hall
+  advisors:
+    - {character: yang_guozhong, stance: support, line: 禄山虽在京，党与犹在范阳，须一一清理！}
+    - {character: gao_lishi, stance: neutral, line: 宰相们吵了一个月，陛下去听一回，便都不吵了。}
+  options:
+    - id: attend
+      label: 亲临听议，令宰相同心
+      memory: {character: yang_guozhong, text: 陛下亲临政事堂听议范阳善后，令宰相同心}
       ops:
         - {op: adjust_resource, resource: court_strife, delta: -3, reason: 天子临议}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 亲政}
@@ -2882,8 +3064,9 @@
       - {kind: turn, operator: eq, value: 18}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
       - {kind: office_holder, operator: eq, office: pingyuan_taishou, character: yan_zhenqing}
+      - {kind: character_region, operator: eq, character: yan_zhenqing, region: hebei}
   title: 河北诸郡
-  summary: 平原太守请密为城守之备，常山诸郡亦有忠义之士可用。
+  summary: 平原太守颜真卿在郡，请密为城守之备，常山诸郡亦有忠义之士可用。
   region: hebei
   illustration: event.loyalist_courier
   advisors:
@@ -2910,7 +3093,9 @@
     all:
       - {kind: turn, operator: eq, value: 18}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
-      - {not: {kind: office_holder, operator: eq, office: pingyuan_taishou, character: yan_zhenqing}}
+      - any:
+          - {not: {kind: office_holder, operator: eq, office: pingyuan_taishou, character: yan_zhenqing}}
+          - {not: {kind: character_region, operator: eq, character: yan_zhenqing, region: hebei}}
   title: 河北诸郡
   summary: 河北道采访使奏：平原、常山诸郡守令多有忠义之士，请许其密为城守之备。
   region: hebei
@@ -2955,13 +3140,13 @@
         - {op: set_flag, key: hedong_secured, value: true}
         - {op: set_flag, key: hedong_at_tongguan, value: true}
         - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 风声外泄}
-      hint: 河东军不再受禄山节制、改隶朝廷，下季抵潼关；鼙鼓 +2
+      hint: 河东军不再受禄山节制、改隶朝廷，移屯潼关（行程按实际路线计）；鼙鼓 +2
     - id: jinjun
       label: 禁军一部出屯潼关
       ops:
         - {op: move_army, army: jinjun, to_region: tongguan}
         - {op: adjust_region, region: jingji, stat: defense, delta: -5}
-      hint: 禁军下季抵潼关；京畿防务 −5
+      hint: 禁军一部移屯潼关（行程按实际路线计）；京畿防务 −5
 
 
 - id: t18_tongguan_safe
@@ -2987,13 +3172,13 @@
         - {op: move_army, army: hedong_army, to_region: tongguan}
         - {op: set_flag, key: hedong_at_tongguan, value: true}
         - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 风声外泄}
-      hint: 河东军连同现任统帅下季抵潼关；鼙鼓 +2
+      hint: 河东军连同现任统帅移屯潼关（行程按实际路线计）；鼙鼓 +2
     - id: jinjun
       label: 禁军一部出屯潼关
       ops:
         - {op: move_army, army: jinjun, to_region: tongguan}
         - {op: adjust_region, region: jingji, stat: defense, delta: -5}
-      hint: 禁军下季抵潼关；京畿防务 −5
+      hint: 禁军一部移屯潼关（行程按实际路线计）；京畿防务 −5
 
 - id: t18_huaqing
   turn: 18
@@ -3044,15 +3229,15 @@
       label: 遣封常清募兵守东都
       ops:
         - {op: adjust_army, army: dongdu_army, delta: 50000, reason: 东都募兵}
-        - {op: set_army_commander, army: dongdu_army, character: feng_changqing}
+        - {op: set_army_commander, army: dongdu_army, character: feng_changqing, dispatch: true}
         - {op: adjust_resource, resource: treasury, delta: -150, reason: 募兵}
-      hint: 东都兵 +5万（新募），国库 −150
+      hint: 封常清统东都兵并启程赴东都（行程按实际路线计；若其现统他军，该军改由副将暂摄）；东都兵 +5万（新募），国库 −150
     - id: abandon
       label: 弃东都，留守兵退保潼关
       ops:
         - {op: move_army, army: dongdu_army, to_region: tongguan}
         - {op: adjust_resource, resource: authority, delta: -4, reason: 弃东都}
-      hint: 君威 −4；东都兵下季入潼关
+      hint: 君威 −4；东都兵退入潼关（行程按实际路线计）
 
 - id: r_tongguan
   conditions:
@@ -3076,14 +3261,14 @@
       ops:
         - {op: move_army, army: jinjun, to_region: tongguan}
         - {op: set_flag, key: tongguan_garrisoned, value: true}
-      hint: 禁军下季抵潼关
+      hint: 禁军移屯潼关（行程按实际路线计）
     - id: hedong
       label: 河东军入关
       ops:
         - {op: move_army, army: hedong_army, to_region: tongguan}
         - {op: set_flag, key: tongguan_garrisoned, value: true}
         - {op: set_flag, key: hedong_at_tongguan, value: true}
-      hint: 河东军连同现任统帅下季抵潼关
+      hint: 河东军连同现任统帅移屯潼关（行程按实际路线计）
 
 
 - id: r_tongguan_jinjun
@@ -3109,7 +3294,7 @@
       ops:
         - {op: move_army, army: jinjun, to_region: tongguan}
         - {op: set_flag, key: tongguan_garrisoned, value: true}
-      hint: 禁军下季抵潼关
+      hint: 禁军移屯潼关（行程按实际路线计）
 - id: r_trust
   conditions:
     all:
@@ -3161,16 +3346,16 @@
       ops:
         - {op: dismiss, character: an_sishun, office: shuofang_jds}
         - {op: appoint, character: guo_ziyi, office: shuofang_jds}
-        - {op: set_army_commander, army: shuofang_army, character: guo_ziyi}
+        - {op: set_army_commander, army: shuofang_army, character: guo_ziyi, dispatch: true}
         - {op: move_army, army: shuofang_army, to_region: hedong}
         - {op: set_flag, key: guo_marched, value: true}
-      hint: 朔方军下季抵河东（史事：十一月授节度）
+      hint: 郭子仪实授朔方节度、随军东出，朔方军移屯河东（行程按实际路线计；史事：十一月授节度）
     - id: defend
       label: 朔方军入卫京畿
       ops:
         - {op: move_army, army: shuofang_army, to_region: jingji}
         - {op: set_flag, key: guo_marched, value: true}
-      hint: 朔方军下季抵京畿
+      hint: 朔方军入卫京畿（行程按实际路线计）
 
 - id: r_shuofang_march
   conditions:
@@ -3192,13 +3377,13 @@
       ops:
         - {op: move_army, army: shuofang_army, to_region: hedong}
         - {op: set_flag, key: guo_marched, value: true}
-      hint: 朔方军下季抵河东
+      hint: 朔方军移屯河东（行程按实际路线计）
     - id: defend
       label: 朔方军入卫京畿
       ops:
         - {op: move_army, army: shuofang_army, to_region: jingji}
         - {op: set_flag, key: guo_marched, value: true}
-      hint: 朔方军下季抵京畿
+      hint: 朔方军入卫京畿（行程按实际路线计）
 
 - id: r_hebei
   conditions:
@@ -3209,7 +3394,7 @@
       - {kind: flag_age, key: guo_marched, operator: gte, value: 1}
       - {not: {kind: flag, operator: eq, key: hebei_recovered, value: true}}
   title: 出井陉
-  summary: 朔方军已至河东。可东出井陉，收复河北，断叛军粮道；亦可南下入潼关。
+  summary: 朔方军既已东出。待其屯于河东，可东出井陉，收复河北，断叛军粮道；亦可南下入潼关。
   region: hebei
   illustration: event.changshan_rising
   advisors:
@@ -3239,7 +3424,7 @@
   illustration: event.frontier_raid
   advisors:
     - {character: gao_xianzhi, stance: support, line: 西兵精锐，调来守关，胜过新募十倍。}
-    - {character: an_sishun, stance: oppose, line: 河西兵一走，吐蕃明日便到。}
+    - {character: an_sishun, stance: oppose, line: 河西兵一走，吐蕃明日便到。, requires: {office: hexi_jds}}
   options:
     - id: call
       label: 征陇右、河西兵入援
@@ -3248,14 +3433,14 @@
         - {op: move_army, army: hexi_army, to_region: jingji}
         - {op: adjust_resource, resource: frontier_pressure, delta: 10, reason: 西陲空虚}
         - {op: set_flag, key: west_called, value: true}
-      hint: 两军两季后抵京畿；边患 +10
+      hint: 陇右、河西两军入援京畿（行程按实际路线计）；边患 +10
     - id: part
       label: 只征陇右一军
       ops:
         - {op: move_army, army: longyou_army, to_region: jingji}
         - {op: adjust_resource, resource: frontier_pressure, delta: 5, reason: 陇右空虚}
         - {op: set_flag, key: west_called, value: true}
-      hint: 陇右军两季后抵京畿；边患 +5
+      hint: 陇右军入援京畿（行程按实际路线计）；边患 +5
 
 - id: r_sortie
   conditions:

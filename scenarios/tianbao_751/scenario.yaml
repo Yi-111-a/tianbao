@@ -28,6 +28,9 @@ resources:
   - {id: an_ambition, name: 禄山异志, initial: 40, min: 0, max: 100, unit: 点, hidden: true, estimate_width: 8}
   - {id: fanzhen_power, name: 外重内轻, initial: 70, min: 0, max: 100, unit: 点}
   - {id: court_strife, name: 朝堂倾轧, initial: 50, min: 0, max: 100, unit: 点}
+  # 禄山兵柄：安禄山对范阳（及所兼平卢、河东）兵马的实际掌握。100 = 坐镇本镇；留京解镇后降至 20–30（旧部仍奉其为主）；
+  # 新帅到镇且安抚三策完备（旧部归心）后归零。危机计的「禄山异志」「外重内轻」「春秋渐高」三项按兵柄折算，兵柄归零后另有「兵柄已解」逐季消退。
+  - {id: an_command, name: 禄山兵柄, initial: 100, min: 0, max: 100, unit: 点}
   # 渔阳鼙鼓本身也设为隐藏（窄区间）：其漂移含隐藏的禄山异志，若总值公开、其余分项公开，
   # 玩家可用「本季增量 − 公开分项」反推异志。设为隐藏后 UI 显示「约 a–b」与所在区段，区段名仍可读。
   # 区间半宽 = 3 ×（1 + 积弊/100），约 ±4–5 点；密结颜杲卿或中使实奏后（flag intel:rebellion_risk）减半。
@@ -71,7 +74,7 @@ formulas:
     tax: {resource: treasury, formula: "tax * 1.5", per_region: true, controlled_only: true, label: 诸道税入}
     grain: {resource: grain, formula: "grain * 1.0", per_region: true, controlled_only: true, label: 诸道租米}
   drift:
-    rebellion_risk: "0.3 + 0.07*max(0, turn-8) + 0.06*min(15, max(0, an_ambition-40)) + 0.04*min(15, max(0, fanzhen_power-60)) + 0.04*max(0, court_strife-49) - 0.03*(authority-60) - 0.2*max(0, rebellion_risk-72)"
+    rebellion_risk: "(0.3 + 0.07*max(0, turn-8))*(0.2 + 0.008*an_command) + 0.06*min(15, max(0, an_ambition-40))*0.01*an_command + 0.04*min(15, max(0, fanzhen_power-60))*(0.2 + 0.008*an_command) + 0.04*max(0, court_strife-49)*(0.5 + 0.005*an_command) - 0.03*(authority-60) - 0.06*max(0, 25-an_command) - 0.2*max(0, rebellion_risk-72)"
     an_ambition: "0.5 + 0.02*(fanzhen_power-65) + 0.03*(court_strife-55) - 0.03*(authority-60)"
     authority: "-0.3 - max(0, court_strife-60)*0.03"
     morale: "-max(0, corruption-45)*0.04 - max(0, frontier_pressure-60)*0.03"
@@ -83,9 +86,12 @@ formulas:
     authority_factor: 0.0005
     corruption_factor: 0.001
 
-# 危机计：terms 与 drift.rebellion_risk 的六个分项一一对应（各项之和 = 每季漂移）。
+# 危机计：terms 与 drift.rebellion_risk 的七个分项一一对应（各项之和 = 每季漂移）。
 # 压力项只计超出部分（max(0,…)）且异志、外重两项有上限，故一味示好不能把危机「存」成负数，一味放任也不会无限加速；
 # 君威为双向项；「朝野戒备」在 70 以上抑制增势（放任之局 T19 约 75–95，而非顶格）。
+# 兵柄折算（#36）：渔阳鼙鼓衡量的是范阳起兵之势。禄山兵柄 an_command（0–100）为 100 时各项照旧；
+# 留京解镇后兵柄降至 20–30，「禄山异志」按兵柄比例计入，「外重内轻」「春秋渐高」保留两成底数，「朝堂倾轧」保留五成；
+# 兵柄 ≤ 25 时「兵柄已解」逐季回落（兵柄归零时每季 −1.5）。旧部未安时另有事件「范阳旧部不安」每季 +2，兵变之险照旧。
 # an 项引用隐藏资源 an_ambition，公开视图中应以区间显示（uses_hidden 为提示字段）。
 crisis:
   resource: rebellion_risk
@@ -96,11 +102,12 @@ crisis:
     - {max: 79, name: 山雨欲来}
     - {max: 100, name: 鼙鼓动地}
   terms:
-    - {id: base, label: 春秋渐高, expr: "0.3 + 0.07*max(0, turn-8)"}   # 天宝十二载以后逐季加重：君老、相争、边将坐大
-    - {id: an, label: 禄山异志, expr: "0.06*min(15, max(0, an_ambition-40))"}   # 引擎按风闻区间显示此项
-    - {id: fanzhen, label: 外重内轻, expr: "0.04*min(15, max(0, fanzhen_power-60))"}
-    - {id: strife, label: 朝堂倾轧, expr: "0.04*max(0, court_strife-49)"}
+    - {id: base, label: 春秋渐高, expr: "(0.3 + 0.07*max(0, turn-8))*(0.2 + 0.008*an_command)"}   # 天宝十二载以后逐季加重：君老、相争、边将坐大；禄山失兵柄后只余两成
+    - {id: an, label: 禄山异志, expr: "0.06*min(15, max(0, an_ambition-40))*0.01*an_command"}   # 引擎按风闻区间显示此项；无兵柄则异志无从发作
+    - {id: fanzhen, label: 外重内轻, expr: "0.04*min(15, max(0, fanzhen_power-60))*(0.2 + 0.008*an_command)"}
+    - {id: strife, label: 朝堂倾轧, expr: "0.04*max(0, court_strife-49)*(0.5 + 0.005*an_command)"}
     - {id: authority, label: 君威, expr: "-0.03*(authority-60)"}
+    - {id: disarm, label: 兵柄已解, expr: "-0.06*max(0, 25-an_command)"}   # 禄山兵柄 ≤ 25 起逐季消退，归零时 −1.5
     - {id: watch, label: 朝野戒备, expr: "-0.2*max(0, rebellion_risk-72)"}   # 人人言其必反之后，朝野自戒，增势放缓
 # 难度档（CONTRACT §1.12）。drift_scale 乘漂移量；gravity_scale 乘事件概率（截到 1；"*" 作用于全部事件，故只用 ≥ 1 的值）；
 # start 改开局资源；delay_scale 乘诏令延期概率。平衡实测：tools/sim_policies.py --backend engine --difficulty <id> --seeds 300。
@@ -153,7 +160,8 @@ objectives:
   - id: peace
     title: 弭兵
     detail: >-
-      未乱：至天宝十四载冬（T19）范阳未起兵且渔阳鼙鼓 < 60。
+      未乱：至天宝十四载冬（T19）范阳未起兵，且渔阳鼙鼓 < 60，或禄山兵柄已解（禄山兵柄 ≤ 10：留京解镇、新帅到镇、旧部安抚三策完备）。
+      T18 结算之后即至 T19 终局，T19 不再有决策（乱已起者延至 T23）。
       若乱已起，底线是潼关、京畿不失，且可提前终局：①叛军覆灭，或范阳收复、首逆（安禄山；兵变时为史思明）就擒或死且叛军余众 ≤ 2 万，即「乱平」，乱平后再善后两季以「再造唐室·乱平」终局；
       ②自天宝十五载春（T20）起，东都光复或叛军总兵力 ≤ 6 万，以「再造唐室」终局；③否则守至 T23，以「潼关相持」终局。
     conditions:
@@ -161,6 +169,9 @@ objectives:
         - all:
             - {not: {kind: flag, key: rebellion_started, operator: eq, value: true}}
             - {kind: resource, id: rebellion_risk, operator: lt, value: 60}
+        - all:
+            - {not: {kind: flag, key: rebellion_started, operator: eq, value: true}}
+            - {kind: resource, id: an_command, operator: lte, value: 10}
         - all:
             - {kind: flag, key: rebellion_started, operator: eq, value: true}
             - {not: {kind: flag, key: tongguan_lost, operator: eq, value: true}}
@@ -331,9 +342,23 @@ endings:
                 - {kind: resource, id: authority, operator: lte, value: 40}
         - {kind: flag, operator: eq, key: eunuch_army, value: true}
     text: 禁军尽归内侍，宦官监临诸镇，宰相不能与闻兵事。天宝之后，北司之势自此而起。此为本游戏虚构的结局。【达成条件】未起兵；朝堂倾轧 ≥ 80；君威 ≤ 25（或 T19 时 ≤ 40）；禁军归内侍监。
-  - id: e1_zhongxing
+  - id: e1_disarmed
     kind: ending
     priority: 11
+    title: 天宝中兴·夺镇弭兵
+    illustration: ending.e1_zhongxing
+    conditions:
+      all:
+        - {kind: turn, operator: gte, value: 19}
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: an_command, operator: lte, value: 10}
+        - {kind: resource, id: authority, operator: gte, value: 50}
+        - {kind: resource, id: treasury, operator: gt, value: 0}
+        - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
+    text: 天宝十四载冬，安禄山奉朝请于京师，范阳新帅号令已行，旧部受代无哗。渔阳之兵既归朝廷，鼙鼓无从而起；禁旅渐整，边镇分权，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵、未生兵变；禄山兵柄 ≤ 10（留京解镇、新帅到镇、旧部安抚三策完备）；君威 ≥ 50；国库有余；边患 < 80。
+  - id: e1_zhongxing
+    kind: ending
+    priority: 12
     title: 天宝中兴·消弭兵祸
     illustration: ending.e1_zhongxing
     conditions:
@@ -347,7 +372,7 @@ endings:
     text: 天宝十四载冬，范阳无事。边镇分权，禁旅渐整，朝堂不复相倾。渔阳鼙鼓终未响起，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵；渔阳鼙鼓 < 60；君威 ≥ 50；国库有余；边患 < 80。
   - id: e2_frontier_lost
     kind: ending
-    priority: 12
+    priority: 13
     title: 削藩而边陲失
     illustration: ending.e2_frontier_lost
     conditions:
@@ -363,7 +388,7 @@ endings:
     title: 山雨欲来
     illustration: ending.open_storm
     conditions: {kind: turn, operator: gte, value: 999}   # 仅作 fallback_ending 使用
-    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局：可进入延长模式。）【达成条件】至期限仍未满足其他任何结局。
+    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局。）【达成条件】至期限仍未满足其他任何结局。
 
 asset_requirements:
   # 本剧本的资产命名：立绘按用途分槽位，地区卡暂缺（舆图用 map.json 多边形）
@@ -402,6 +427,7 @@ settings:
     an_detained: 禄山留京解镇
     hedong_to_an: 河东归禄山
     hedong_secured: 河东归朝廷节制
+    fanyang_pacified: 范阳旧部归心
   counter_labels:
     bankrupt_streak: 府库枯竭连续季数
     alarm_seasons: 山雨欲来以上季数

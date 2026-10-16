@@ -15,6 +15,11 @@
    其 conditions 须正向包含该史事的旗标（不在 not 之内）；定义该旗标的事件本身除外。
 4. 情报上限：凡设置 intel:* 旗标的选项 / 事件，提示或正文须写明「只减半一次 / 不叠加」。
 5. 易逝人物：在其可能亡故之后仍可见的奏疏若以其为谏言人，须带「此人在世」条件或谏言 `requires`。
+6. 任职与所在（#38）：叙述性文字（奏疏标题 / summary / 谏言，事件标题 / 正文）断言「某官为某人」
+   （如「河西节度使安思顺」「右相杨国忠」）或「某人在某地」（如「仙芝在京」「哥舒翰留京」「颜杲卿在范阳幕府」），
+   须有相符的守卫：条件里正向的 office_holder / character_region（谏言可用 requires.office / requires.region），
+   或该事件自身的 appoint / move_character，或固定于 T0（开局状态确定）。
+   军队统帅无条件可验，故不得断言「禁军久无宿将」「军务无人主持」之类的统帅有无。
 """
 from __future__ import annotations
 
@@ -51,6 +56,25 @@ NAMED_EVENTS: list[tuple[str, list[str]]] = [
     (r"范阳兵起|范阳兵已起|叛军|讨贼|贼势|乱后", WAR),
     (r"叛乱既平|乱既平|乱平", ["rebellion_quelled"]),
 ]
+# ---- #38 任职 / 所在 / 统帅断言 ----
+# 人物简称（叙事中常用）：除 characters.yaml 的全名外另行识别
+CHAR_ALIASES = {
+    "an_lushan": ["禄山"], "gao_xianzhi": ["仙芝"], "yang_guozhong": ["国忠"], "yan_zhenqing": ["真卿"],
+    "yan_gaoqing": ["杲卿"], "an_sishun": ["思顺"], "feng_changqing": ["常清"], "guo_ziyi": ["子仪"],
+    "li_guangbi": ["光弼"], "li_linfu": ["林甫"], "chen_xilie": ["希烈"], "shi_siming": ["思明"],
+    "xianyu_zhongtong": ["仲通"], "geshu_han": ["哥舒"],
+}
+# 「某人在某地」的叙述（人物, 地区, 正则）
+LOCATION_CLAIMS: list[tuple[str, str, str]] = [
+    ("gao_xianzhi", "jingji", r"仙芝(久)?在京|仙芝在京宿卫|仙芝久在京师"),
+    ("geshu_han", "jingji", r"哥舒翰[^。；]{0,6}留(京|居京师)"),
+    ("an_lushan", "jingji", r"禄山(就)?在(京|华清宫)|禄山奉召至京"),
+    ("yan_gaoqing", "fanyang", r"杲卿[^。；]{0,3}在范阳幕府"),
+    ("feng_changqing", "anxi", r"判官封常清|常清知留后"),
+    ("yan_zhenqing", "hebei", r"平原太守(请|奏)"),
+]
+# 军队统帅无条件可验：不得断言统帅有无
+COMMANDER_CLAIMS = re.compile(r"久无宿将|无宿将统领|军务无人主持|无人统领|军中无帅")
 INTEL_CAP = re.compile(r"只减半一次|不叠加|不再收窄")
 # 可能中途亡故的人物：{人物: 最早亡故回合}（李林甫病卒事件自 T7 起掷骰）
 MORTAL_FROM = {"li_linfu": 7}
@@ -91,6 +115,26 @@ def positive_evidence(cond: Any, negated: bool = False) -> set[str]:
         found.add(str(cond.get("key")))
     elif kind == "region_controller" and cond.get("faction") == "yan":
         found.add("yan_control")
+    return found
+
+
+def positive_kinds(cond: Any, kind: str, negated: bool = False) -> set[tuple[str, str]]:
+    """条件里正向出现的 office_holder（(官职, 人物)）或 character_region（(人物, 地区)）。any 之内的不算（不一定成立）。"""
+    found: set[tuple[str, str]] = set()
+    if isinstance(cond, list):
+        for row in cond:
+            found |= positive_kinds(row, kind, negated)
+        return found
+    if not isinstance(cond, dict) or negated:
+        return found
+    if "all" in cond:
+        return positive_kinds(cond["all"], kind)
+    if "any" in cond or "not" in cond:
+        return found
+    if cond.get("kind") == kind == "office_holder" and cond.get("operator", "eq") == "eq":
+        found.add((str(cond.get("office")), str(cond.get("character"))))
+    elif cond.get("kind") == kind == "character_region" and cond.get("operator", "eq") == "eq":
+        found.add((str(cond.get("character")), str(cond.get("region"))))
     return found
 
 
@@ -179,6 +223,58 @@ def lint(pack: Path) -> list[str]:
             if hit and not evidence.intersection(flags):
                 problems.append(f"[史事] {where} 提到「{hit.group(0)}」，但条件里没有 {' / '.join(flags)} 之一")
 
+    office_names = {}
+    for row in data["scenario"].get("offices", []) or []:
+        name = str(row.get("name", ""))
+        if not name or row.get("id") == "emperor":
+            continue
+        office_names[name] = row["id"]
+        if name.endswith("使"):
+            office_names[name[:-1]] = row["id"]
+        if "四镇" in name:
+            office_names[name.replace("四镇", "")] = row["id"]
+            office_names[name.replace("四镇", "")[:-1]] = row["id"]
+    char_names: dict[str, str] = {}
+    for row in data["characters"] or []:
+        char_names[str(row.get("name"))] = row["id"]
+    for cid, aliases in CHAR_ALIASES.items():
+        for alias in aliases:
+            char_names.setdefault(alias, cid)
+    holder_re = re.compile(
+        "(" + "|".join(sorted(map(re.escape, office_names), key=len, reverse=True)) + ")"
+        + "(" + "|".join(sorted(map(re.escape, char_names), key=len, reverse=True)) + ")"
+    )
+
+    def check_state_claims(text: str, cond: Any, where: str, fixed_t0: bool, appoints: set[tuple[str, str]] = frozenset(),
+                           moves: set[tuple[str, str]] = frozenset(), req: dict[str, Any] | None = None,
+                           speaker: str | None = None) -> None:
+        if not text:
+            return
+        hit = COMMANDER_CLAIMS.search(text)
+        if hit:
+            problems.append(f"[任职] {where}「{hit.group(0)}」断言军队统帅有无，而统帅无条件可验；请改写为不依赖统帅状态的说法")
+        if fixed_t0:
+            return
+        req = req or {}
+        req_offices = req.get("office")
+        req_offices = set(req_offices if isinstance(req_offices, list) else [req_offices]) if req_offices else set()
+        req_regions = req.get("region")
+        req_regions = set(req_regions if isinstance(req_regions, list) else [req_regions]) if req_regions else set()
+        holders = positive_kinds(cond, "office_holder")
+        places = positive_kinds(cond, "character_region")
+        for match in holder_re.finditer(text):
+            office, cid = office_names[match.group(1)], char_names[match.group(2)]
+            if (office, cid) in holders or (office, cid) in appoints or (speaker == cid and office in req_offices):
+                continue
+            problems.append(f"[任职] {where} 称「{match.group(0)}」，但条件里没有 office_holder {office}={cid}")
+        for cid, region, pattern in LOCATION_CLAIMS:
+            hit = re.search(pattern, text)
+            if not hit:
+                continue
+            if (cid, region) in places or (cid, region) in moves or (speaker == cid and region in req_regions):
+                continue
+            problems.append(f"[所在] {where} 称「{hit.group(0)}」，但条件里没有 character_region {cid}={region}")
+
     # 奏疏
     for item in memos:
         mid = item.get("id")
@@ -188,11 +284,14 @@ def lint(pack: Path) -> list[str]:
             cid = adv.get("character")
             check_char(cid, f"奏疏 {mid} 谏言")
             check_named(adv.get("line", ""), cond, f"奏疏 {mid} 谏言（{cid}）")
+            check_state_claims(adv.get("line", ""), cond, f"奏疏 {mid} 谏言（{cid}）", item.get("turn") == 0,
+                               req=adv.get("requires") if isinstance(adv.get("requires"), dict) else None, speaker=cid)
             dies = MORTAL_FROM.get(cid)
             guarded = bool(adv.get("requires")) or alive_condition(cond, cid)  # requires 由引擎在列出时校验
             if dies is not None and first >= dies and not guarded:
                 problems.append(f"[易逝] 奏疏 {mid} 自 T{first} 可见，谏言人 {cid} 可能已故，却无「在世」条件")
         check_named(f"{item.get('title', '')}｜{item.get('summary', '')}", cond, f"奏疏 {mid} 标题/正文")
+        check_state_claims(f"{item.get('title', '')}｜{item.get('summary', '')}", cond, f"奏疏 {mid} 标题/正文", item.get("turn") == 0)
         for opt in item.get("options") or []:
             where = f"奏疏 {mid}.{opt.get('id')}"
             for mem in memories(opt.get("memory")):
@@ -209,6 +308,11 @@ def lint(pack: Path) -> list[str]:
         cond = ev.get("conditions")
         defines = {str(op.get("key")) for op in ops_of(ev.get("effects")) if op.get("op") == "set_flag" and op.get("value", True)}
         check_named(f"{ev.get('title', '')}｜{ev.get('text', '')}", cond, f"事件 {eid}", defines)
+        effects = list(ops_of(ev.get("effects")))
+        appoints = {(str(op.get("office")), str(op.get("character"))) for op in effects if op.get("op") == "appoint"}
+        moves = {(str(op.get("character")), str(op.get("to_region"))) for op in effects if op.get("op") == "move_character"}
+        t0 = (ev.get("when") or {}).get("turn") == 0
+        check_state_claims(f"{ev.get('title', '')}｜{ev.get('text', '')}", cond, f"事件 {eid}", t0, appoints, moves)
         for op in ops_of(ev.get("effects")):
             check_char(op.get("character"), f"事件 {eid} op {op.get('op')}")
         sets_intel = any(k.startswith("intel:") for k in defines)

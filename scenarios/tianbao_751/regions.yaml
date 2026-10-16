@@ -173,7 +173,7 @@
   name: 回纥
   seat: 漠北
   controller: huihe
-  note: 回纥牙帐（外，延长模式）
+  note: 回纥牙帐（外）
   map: {x: 61.0, y: 6.0, polygon: [[66.2, 8.4], [61.0, 10.8], [55.8, 8.4], [55.8, 3.6], [61.0, 1.2], [66.2, 3.6]]}
   adjacency: [{to: shuofang, travel_turns: 1}]
   stats: {prosperity: 0, order: 0, defense: 50, tax: 0, grain: 0}

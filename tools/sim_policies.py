@@ -553,6 +553,8 @@ VARIANT_BASE = {
     "t13_lishi_warn_peace": "t13_lishi_warn", "t14_lishi": "t14_rains", "t14_frontier_peace": "t14_frontier",
     "t15_luoyang_war": "t15_luoyang", "t16_court_war": "t16_court", "t16_famine_plain": "t16_famine",
     "t18_hebei_watch_far": "t18_hebei_watch", "t18_tongguan_safe": "t18_tongguan", "r_tongguan_jinjun": "r_tongguan",
+    "t7_anxi_away": "t7_anxi", "t10_geshu_title": "t10_geshu", "p_gaoqing_away": "p_gaoqing",
+    "t16_court_detained": "t16_court",
 }
 
 
@@ -744,6 +746,40 @@ def chaos(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     return picks, {k: v for k, v in choices.items() if v}
 
 
+# ---- 夺镇路线（#36）：留京解兵、新帅到镇、安抚旧部；careless 版只夺镇不安抚 ----
+DETAIN_PICK = "detain_guo"
+
+
+def _detain(m: Model, visible: list[dict], pending: list[dict], careful: bool) -> Decision:
+    picks, choices = wise(m, visible, pending)
+    picks = [(mid, oid) for mid, oid in picks if mid not in ("p_summon", "p_an_capital", "p_fanyang_warn", "t17_fanyang")]
+    for memo in visible:
+        mid = memo["id"]
+        if mid == "p_summon":
+            picks.append((mid, "summon"))  # 不论风闻高低，都设法召其入朝
+        elif mid == "p_an_capital":
+            picks.append((mid, DETAIN_PICK))
+        elif mid == "p_fanyang_warn":
+            if careful:
+                picks.append((mid, "all_three"))
+            else:
+                picks.append((mid, "purge"))
+    for p in pending:
+        if p["event_id"] == "an_court_visit":
+            choices[p["id"]] = DETAIN_PICK
+    return picks, choices
+
+
+def detain(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
+    """夺镇弭兵：召禄山入朝即留京解兵，郭子仪接范阳，三策安抚旧部。目标：E1 类结局 ≥ 60%。"""
+    return _detain(m, visible, pending, careful=True)
+
+
+def detain_careless(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
+    """只夺镇、不安抚（穷治党与）：目标：多数酿成范阳旧部兵变。"""
+    return _detain(m, visible, pending, careful=False)
+
+
 def _cost(opt: dict) -> float:
     """选项的钱粮花费（粮按 0.5 折钱），用于「挥霍」探针。"""
     cost = _treasury_cost(opt)
@@ -772,6 +808,7 @@ def mawei_refuse(m: Model, visible: list[dict], pending: list[dict]) -> Decision
 POLICIES: dict[str, Callable[[Model, list, list], Decision]] = {
     "do_nothing": do_nothing, "historical": historical, "wise": wise, "half_wise": half_wise,
     "defender": defender, "purge": purge, "chaos": chaos, "bankrupt": bankrupt, "mawei_refuse": mawei_refuse,
+    "detain": detain, "detain_careless": detain_careless,
 }
 
 

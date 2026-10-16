@@ -18,5 +18,5 @@
   name: 大食  # 远在葱岭以西，无地图区域；以事件体现
   relations: {tang: -30}
 - id: huihe
-  name: 回纥  # 延长模式启用
+  name: 回纥
   relations: {tang: 20}
