@@ -1,6 +1,6 @@
 // 舆图: full-bleed painted map with an SVG region overlay (hover, select, five layers),
 // army tokens, the canal lifeline and the historical rebel route.
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type WheelEvent } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent, type PointerEvent, type WheelEvent } from 'react';
 import { useAsset, useMapData, type MapData } from '../../api/assets';
 import { nameOf } from '../../lib/names';
 import type { Army, PublicState, ViewResponse } from '../../api/types';
@@ -21,6 +21,13 @@ import {
   toPath,
   type Pt,
 } from './geo';
+import { grow, hits, HUD_ATTR, height, inside, shift, largestFreeRect, measureHud, nudge, placeCard, rect, width, type Rect } from './safeArea';
+
+/** gap kept between the map content and any HUD piece, and from the screen edge (px) */
+const HUD_PAD = 8;
+const EDGE = 10;
+/** below this map scale, glyphs (names, seats, army tags) stop shrinking with the painting */
+const GLYPH_REF = 0.64;
 
 const FOREIGN = new Set(['tubo', 'nanzhao', 'khitan_xi', 'huihe']);
 const CANAL_REGIONS = ['jiangnan', 'huainan', 'henan', 'duji', 'tongguan', 'jingji'];
@@ -32,6 +39,8 @@ interface Shape {
   seat: Pt;
   label: Pt;
   foreign?: boolean;
+  /** bounding box in map coordinates (polygons, or a disc around the seat) */
+  bbox: Rect;
 }
 
 interface Geometry {
@@ -52,6 +61,18 @@ function centroid(poly: number[][]): Pt {
   return [x / poly.length, y / poly.length];
 }
 
+function bboxOf(polys: number[][][], seat: Pt, r: number): Rect {
+  let b = rect(seat[0] - r, seat[1] - r, seat[0] + r, seat[1] + r);
+  let first = true;
+  for (const p of polys) {
+    for (const [x, y] of p) {
+      b = first ? rect(x, y, x, y) : rect(Math.min(b.l, x), Math.min(b.t, y), Math.max(b.r, x), Math.max(b.b, y));
+      first = false;
+    }
+  }
+  return b;
+}
+
 function geometryFrom(map: MapData | null, hasImage: boolean, imgSize: [number, number] | null): Geometry {
   if (map) {
     const shapes: Shape[] = map.regions.map((r) => {
@@ -61,7 +82,7 @@ function geometryFrom(map: MapData | null, hasImage: boolean, imgSize: [number, 
       const seatRaw = r.capital ?? (Array.isArray(r.seat) ? r.seat : r.seat ? [r.seat.x, r.seat.y] : null) ?? r.center ?? r.label;
       const seat = (seatRaw as Pt | null) ?? fallback;
       const label = ((r.label ?? r.center) as Pt | undefined) ?? seat;
-      return { id: r.id, d, seat, label, foreign: r.foreign };
+      return { id: r.id, d, seat, label, foreign: r.foreign, bbox: bboxOf(polys, seat, 46 * (map.width / GEO_W)) };
     });
     return { width: map.width, height: map.height, shapes, mode: hasImage ? 'art' : 'schematic', scale: map.width / GEO_W };
   }
@@ -73,7 +94,10 @@ function geometryFrom(map: MapData | null, hasImage: boolean, imgSize: [number, 
       height: imgSize[1],
       mode: 'image-only',
       scale: sx,
-      shapes: Object.entries(SEATS).map(([id, p]) => ({ id, d: '', seat: [p[0] * sx, p[1] * sy] as Pt, label: [p[0] * sx, p[1] * sy] as Pt })),
+      shapes: Object.entries(SEATS).map(([id, p]) => {
+        const seat: Pt = [p[0] * sx, p[1] * sy];
+        return { id, d: '', seat, label: seat, bbox: bboxOf([], seat, 46 * sx) };
+      }),
     };
   }
   const cells = schematicCells();
@@ -82,7 +106,7 @@ function geometryFrom(map: MapData | null, hasImage: boolean, imgSize: [number, 
     height: GEO_H,
     mode: 'schematic',
     scale: 1,
-    shapes: Object.entries(SEATS).map(([id, seat]) => ({ id, d: cells[id], seat, label: seat })),
+    shapes: Object.entries(SEATS).map(([id, seat]) => ({ id, d: cells[id], seat, label: seat, bbox: bboxOf([], seat, 46) })),
   };
 }
 
@@ -260,43 +284,173 @@ export function MapView({
   const seatOf = useMemo(() => Object.fromEntries(geo.shapes.map((s) => [s.id, s.seat])), [geo]);
   const ready = mapSettled && baseSettled && (!baseUrl || mapData || imgSize);
 
-  // ---- pan & zoom (drag to pan, wheel to zoom); the map always covers the viewport
+  // ---- HUD safe area, fit, pan & zoom
+  // The lacquer HUD sits on every edge of the desk. The map is fitted, keeping its aspect, into the
+  // largest rectangle the HUD leaves free, so the whole content extent (every region polygon and
+  // label anchor) is in view on load; the desk shows around it. The wheel zooms in from there, and
+  // dragging can bring any region to the centre of the screen.
   const rootRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  const [hud, setHud] = useState<{ obs: Rect[]; key: string } | null>(null);
+  const [fontsIn, setFontsIn] = useState(false);
+  const [easing, setEasing] = useState(false);
   const [tf, setTf] = useState<{ s: number; x: number; y: number; key: string } | null>(null);
   const geoKey = `${geo.width}x${geo.height}`;
   const drag = useRef<{ x: number; y: number; tx: number; ty: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
+  const userMoved = useRef(false);
+  const lastBox = useRef({ w: 0, h: 0 });
+  const shownRef = useRef(false);
+  const easeTimer = useRef(0);
+
+  const measure = useCallback(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const host = el.getBoundingClientRect();
+    const obs = measureHud(el.closest('.desk') ?? el.ownerDocument, host).map((o) => grow(o, HUD_PAD));
+    const key = obs.map((o) => `${Math.round(o.l)},${Math.round(o.t)},${Math.round(o.r)},${Math.round(o.b)}`).join(';');
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    setBox((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+    setHud((prev) => (prev && prev.key === key ? prev : { obs, key }));
+  }, []);
+
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => setBox({ w: el.clientWidth, h: el.clientHeight }));
+    const scope = el.closest('.desk');
+    let raf = 0;
+    let alive = true;
+    const watched = new Set<Element>();
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        if (!alive) return;
+        measure();
+        (scope ?? document).querySelectorAll(`[${HUD_ATTR}]`).forEach((h) => {
+          if (watched.has(h)) return;
+          watched.add(h);
+          ro.observe(h);
+        });
+      });
+    };
+    const ro = new ResizeObserver(() => schedule());
     ro.observe(el);
-    setBox({ w: el.clientWidth, h: el.clientHeight });
-    return () => ro.disconnect();
-  }, []);
+    // HUD pieces that come and go (急务待决, the final notice) change the free area
+    const mo = new MutationObserver((list) => {
+      if (list.some((m) => !el.contains(m.target))) schedule();
+    });
+    if (scope) mo.observe(scope, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule);
+    measure();
+    schedule();
+    const timers = [window.setTimeout(schedule, 400), window.setTimeout(schedule, 1200)];
+    // the HUD's width depends on the webfonts: reveal the map once they are in and measured
+    const fonts = document.fonts?.ready ?? Promise.resolve();
+    void fonts.then(() =>
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!alive) return;
+          measure();
+          setFontsIn(true);
+        }),
+      ),
+    );
+    return () => {
+      alive = false;
+      cancelAnimationFrame(raf);
+      timers.forEach((x) => window.clearTimeout(x));
+      window.removeEventListener('resize', schedule);
+      ro.disconnect();
+      mo.disconnect();
+    };
+  }, [measure]);
+
+  /** what must be visible: every polygon and label anchor (the whole image for fallback art) */
+  const extent = useMemo(() => {
+    const full = rect(0, 0, geo.width, geo.height);
+    if (!mapData) return full;
+    let e: Rect | null = null;
+    for (const s of geo.shapes) {
+      for (const r of [s.bbox, rect(s.label[0], s.label[1], s.label[0], s.label[1])]) {
+        e = e ? rect(Math.min(e.l, r.l), Math.min(e.t, r.t), Math.max(e.r, r.r), Math.max(e.b, r.b)) : r;
+      }
+    }
+    if (!e || width(e) < 50 || height(e) < 50) return full;
+    return rect(Math.max(0, e.l), Math.max(0, e.t), Math.min(geo.width, e.r), Math.min(geo.height, e.b));
+  }, [geo, mapData]);
+  /** the points a player may want in the middle of the screen: seats and label anchors */
+  const anchors = useMemo(() => {
+    const xs = geo.shapes.flatMap((s) => [s.seat[0], s.label[0]]);
+    const ys = geo.shapes.flatMap((s) => [s.seat[1], s.label[1]]);
+    return xs.length ? rect(Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)) : extent;
+  }, [geo, extent]);
+
+  const layout = useMemo(() => {
+    if (!box.w || !box.h || !hud) return null;
+    const bounds = rect(EDGE, EDGE, box.w - EDGE, box.h - EDGE);
+    const free = largestFreeRect(bounds, hud.obs, width(extent) / height(extent));
+    const s = width(free) / width(extent);
+    return { bounds, free, fit: { s, x: free.l - extent.l * s, y: free.t - extent.t * s } };
+  }, [box.w, box.h, hud, extent]);
   const cover = box.w && box.h ? Math.max(box.w / geo.width, box.h / geo.height) : 1;
+  const maxScale = layout ? Math.max(cover * 2.4, layout.fit.s * 3.2) : cover * 2.4;
+
   const clampTf = useCallback(
     (t: { s: number; x: number; y: number }) => {
-      const s = Math.max(cover, Math.min(cover * 2.4, t.s));
-      const OVER_Y = 96;
-      const x = Math.min(0, Math.max(box.w - geo.width * s, t.x));
-      const y = Math.min(OVER_Y, Math.max(box.h - geo.height * s - OVER_Y, t.y));
-      return { s, x, y };
+      if (!layout) return t;
+      const { free, fit } = layout;
+      const s = Math.max(fit.s, Math.min(maxScale, t.s));
+      // either the content fills the free rect (padding = the HUD insets), or any seat / label
+      // anchor may sit at the centre of the screen (or of the free rect)
+      const axis = (pos: number, fLo: number, fHi: number, eLo: number, eHi: number, aLo: number, aHi: number, size: number) => {
+        const a = fLo - eLo * s;
+        const b = fHi - eHi * s;
+        const c1 = Math.min((fLo + fHi) / 2, size / 2);
+        const c2 = Math.max((fLo + fHi) / 2, size / 2);
+        return Math.max(Math.min(a, b, c1 - aHi * s), Math.min(Math.max(a, b, c2 - aLo * s), pos));
+      };
+      return {
+        s,
+        x: axis(t.x, free.l, free.r, extent.l, extent.r, anchors.l, anchors.r, box.w),
+        y: axis(t.y, free.t, free.b, extent.t, extent.b, anchors.t, anchors.b, box.h),
+      };
     },
-    [cover, box.w, box.h, geo.width, geo.height],
+    [layout, maxScale, extent, anchors, box.w, box.h],
   );
+
+  const shown = Boolean(fontsIn && ready && layout && tf);
   useEffect(() => {
-    if (!box.w) return;
-    // initial view: north edge just below the top HUD (the north is where the story is)
-    setTf((prev) =>
-      prev && prev.key === geoKey
-        ? { ...clampTf({ ...prev, s: Math.max(prev.s, cover) }), key: geoKey }
-        : { ...clampTf({ s: cover, x: (box.w - geo.width * cover) / 2, y: Math.min(96, box.h * 0.11 - geo.height * 0.08 * cover) }), key: geoKey },
-    );
-  }, [box.w, box.h, cover, geo.width, geo.height, clampTf, geoKey]);
+    if (!layout || !ready) return;
+    const resized = lastBox.current.w !== box.w || lastBox.current.h !== box.h;
+    lastBox.current = { w: box.w, h: box.h };
+    setTf((prev) => {
+      const fresh = !prev || prev.key !== geoKey;
+      if (fresh) userMoved.current = false;
+      const next = fresh || resized || !userMoved.current ? layout.fit : clampTf(prev);
+      return { ...next, key: geoKey };
+    });
+    // once the map is on screen, refits glide instead of jumping
+    if (shownRef.current) {
+      setEasing(true);
+      window.clearTimeout(easeTimer.current);
+      easeTimer.current = window.setTimeout(() => setEasing(false), 700);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout, ready, geoKey]);
+  useEffect(() => {
+    if (!shown) return;
+    const id = window.setTimeout(() => (shownRef.current = true), 50);
+    return () => window.clearTimeout(id);
+  }, [shown]);
+  useEffect(() => () => window.clearTimeout(easeTimer.current), []);
   const t = tf ?? { s: cover, x: 0, y: 0 };
 
+  const stopEasing = () => {
+    if (!easing) return;
+    window.clearTimeout(easeTimer.current);
+    setEasing(false);
+  };
   const onPointerDown = (e: PointerEvent) => {
     if (e.button !== 0) return;
     drag.current = { x: e.clientX, y: e.clientY, tx: t.x, ty: t.y, moved: false };
@@ -311,7 +465,9 @@ export function MapView({
       d.moved = true;
       (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
       setHover(null);
+      stopEasing();
     }
+    userMoved.current = true;
     setTf({ ...clampTf({ s: t.s, x: d.tx + dx, y: d.ty + dy }), key: geoKey });
   };
   const onPointerUp = () => {
@@ -320,21 +476,132 @@ export function MapView({
   };
   const onWheel = (e: WheelEvent) => {
     const host = rootRef.current?.getBoundingClientRect();
-    if (!host) return;
+    if (!host || !layout) return;
     const f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-    const s = Math.max(cover, Math.min(cover * 2.4, t.s * f));
+    const s = Math.max(layout.fit.s, Math.min(maxScale, t.s * f));
     const px = e.clientX - host.left;
     const py = e.clientY - host.top;
+    if (f < 1 && s <= layout.fit.s * 1.0001) {
+      // zoomed all the way out: glide back to the fitted view (whole map in the safe area)
+      if (t.s <= layout.fit.s * 1.0001 && Math.abs(t.x - layout.fit.x) < 1 && Math.abs(t.y - layout.fit.y) < 1) return;
+      userMoved.current = false;
+      setTf({ ...layout.fit, key: geoKey });
+      setEasing(true);
+      window.clearTimeout(easeTimer.current);
+      easeTimer.current = window.setTimeout(() => setEasing(false), 700);
+      return;
+    }
+    stopEasing();
+    userMoved.current = true;
     setTf({ ...clampTf({ s, x: px - ((px - t.x) * s) / t.s, y: py - ((py - t.y) * s) / t.s }), key: geoKey });
   };
 
-  const moveTip = (e: MouseEvent) => {
+  // ---- glyph size: when the map is shown small, names, seats and army tags shrink less than the
+  // painting so they stay legible
+  const glyph = Math.max(1, Math.min(1.75, GLYPH_REF / t.s));
+  const G = k * glyph;
+
+  // ---- region labels: measured once (font metrics), then nudged out from under the HUD
+  const [labelBoxes, setLabelBoxes] = useState<Record<string, [number, number, number, number]>>({});
+  const regionCount = Object.keys(state.regions).length;
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el || !ready) return;
+    const next: Record<string, [number, number, number, number]> = {};
+    el.querySelectorAll<SVGTextElement>('text.region-name[data-label]').forEach((tx) => {
+      try {
+        const b = tx.getBBox();
+        if (b.width > 0) next[tx.dataset.label!] = [b.x, b.y, b.width, b.height];
+      } catch {
+        /* not rendered */
+      }
+    });
+    setLabelBoxes((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  }, [ready, geo, fontsIn, regionCount]);
+  /** where each region's name is drawn: its anchor, plus a nudge (map units) out from under the HUD */
+  const labelAt = (sh: Shape): { lp: Pt; y: number; foreign: boolean } => {
+    const foreign = sh.foreign ?? FOREIGN.has(sh.id);
+    const split = Math.hypot(sh.label[0] - sh.seat[0], sh.label[1] - sh.seat[1]) > 60 * k;
+    return { lp: foreign || split ? sh.label : sh.seat, y: foreign || split ? 8 : -20, foreign };
+  };
+  const placements: Record<string, { dx: number; dy: number; hidden: boolean }> = {};
+  if (layout && hud) {
+    const screen = rect(0, 0, box.w, box.h);
+    const maxDist = Math.max(90, Math.min(box.w, box.h) * 0.3);
+    const fixed: Rect[] = [];
+    const pending: { id: string; lb: Rect; region: Rect }[] = [];
+    for (const sh of geo.shapes) {
+      const name = state.regions[sh.id]?.name;
+      if (!name) continue;
+      const { lp, y, foreign } = labelAt(sh);
+      const fs = foreign ? 30 : 25;
+      const ew = name.length * fs * (foreign ? 1.5 : 1.18);
+      const [bx, by, bw, bh] = labelBoxes[sh.id] ?? [-ew / 2, y - fs, ew, fs * 1.3];
+      const l = t.x + (lp[0] + bx * G) * t.s;
+      const tp = t.y + (lp[1] + by * G) * t.s;
+      const lb = rect(l, tp, l + bw * G * t.s, tp + bh * G * t.s);
+      // a name whose anchor has been dragged off screen goes with its region
+      const ax = t.x + lp[0] * t.s;
+      const ay = t.y + lp[1] * t.s;
+      if (!inside(rect(ax, ay, ax, ay), screen)) {
+        placements[sh.id] = { dx: 0, dy: 0, hidden: true };
+        continue;
+      }
+      if (inside(lb, layout.bounds) && !hud.obs.some((o) => hits(lb, o))) {
+        placements[sh.id] = { dx: 0, dy: 0, hidden: false };
+        fixed.push(lb);
+        continue;
+      }
+      const region = rect(t.x + sh.bbox.l * t.s, t.y + sh.bbox.t * t.s, t.x + sh.bbox.r * t.s, t.y + sh.bbox.b * t.s);
+      pending.push({ id: sh.id, lb, region });
+    }
+    // names under the HUD move inward: clear of the HUD, preferably of the other names too, and
+    // still within their own region; failing that they fade out
+    for (const { id, lb, region } of pending) {
+      const ok = (d: [number, number] | null) => {
+        if (!d) return false;
+        const cx = (lb.l + lb.r) / 2 + d[0];
+        const cy = (lb.t + lb.b) / 2 + d[1];
+        return cx >= region.l && cx <= region.r && cy >= region.t && cy <= region.b;
+      };
+      let d = nudge(lb, layout.bounds, [...hud.obs, ...fixed.map((f) => grow(f, 2))], maxDist);
+      if (!ok(d)) d = nudge(lb, layout.bounds, hud.obs, maxDist);
+      if (d && ok(d)) {
+        placements[id] = { dx: d[0] / t.s, dy: d[1] / t.s, hidden: false };
+        fixed.push(shift(lb, d[0], d[1]));
+      } else placements[id] = { dx: 0, dy: 0, hidden: true };
+    }
+  }
+
+  // ---- hover card: beside the hovered region, clear of the HUD
+  const cursor = useRef<[number, number]>([0, 0]);
+  const hoverRef = useRef<string | null>(null);
+  hoverRef.current = hover;
+  const placeTip = useCallback(() => {
     const el = tipRef.current;
-    if (!el) return;
-    const host = (e.currentTarget as Element).closest('.map-root')!.getBoundingClientRect();
-    const x = e.clientX - host.left;
-    const y = e.clientY - host.top;
-    el.style.transform = `translate(${Math.min(x + 18, host.width - 270)}px, ${Math.min(y + 18, host.height - 170)}px)`;
+    const root = rootRef.current;
+    const id = hoverRef.current;
+    if (!el || !root || !id) return;
+    const host = root.getBoundingClientRect();
+    const shape = geo.shapes.find((x) => x.id === id);
+    const avoid = shape ? rect(t.x + shape.bbox.l * t.s, t.y + shape.bbox.t * t.s, t.x + shape.bbox.r * t.s, t.y + shape.bbox.b * t.s) : null;
+    // an open region card is HUD for the tip too
+    const obs = [...(hud?.obs ?? []), ...measureHud(root.closest('.desk') ?? document, host, '.region-card').map((o) => grow(o, HUD_PAD))];
+    const names = [...root.querySelectorAll('text.region-name:not(.is-hidden)')].map((n) => {
+      const r = n.getBoundingClientRect();
+      return rect(r.left - host.left, r.top - host.top, r.right - host.left, r.bottom - host.top);
+    });
+    const [x, y] = placeCard(el.offsetWidth || 250, el.offsetHeight || 120, cursor.current, avoid, rect(EDGE, EDGE, host.width - EDGE, host.height - EDGE), obs, names);
+    el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  }, [geo, t.x, t.y, t.s, hud]);
+  useLayoutEffect(() => {
+    if (hover) placeTip();
+  }, [hover, placeTip]);
+  const moveTip = (e: MouseEvent) => {
+    const host = rootRef.current?.getBoundingClientRect();
+    if (!host) return;
+    cursor.current = [e.clientX - host.left, e.clientY - host.top];
+    placeTip();
   };
 
   const hovered = hover ? state.regions[hover] : null;
@@ -363,7 +630,13 @@ export function MapView({
         }
       }}
     >
-      <div className="map-stage" style={{ width: geo.width, height: geo.height, transform: `translate(${t.x}px, ${t.y}px) scale(${t.s})` }}>
+      <div
+        className={cls('map-stage', shown && 'is-shown', easing && 'is-easing')}
+        data-testid="map.stage"
+        data-scale={t.s.toFixed(4)}
+        data-fit-scale={layout ? layout.fit.s.toFixed(4) : undefined}
+        style={{ width: geo.width, height: geo.height, transform: `translate(${t.x}px, ${t.y}px) scale(${t.s})`, ['--inv' as string]: 1 / t.s }}
+      >
       {baseUrl ? (
         <svg className="map-base" viewBox={`0 0 ${geo.width} ${geo.height}`} preserveAspectRatio="none" aria-hidden="true">
           <image
@@ -444,7 +717,7 @@ export function MapView({
               if (!p) return null;
               const heat = Math.max(0.25, Math.min(1, (crisisValue - 20) / 70 - i * 0.08));
               return (
-                <g key={`f${id}`} transform={`translate(${p[0] + 38 * k} ${p[1] - 30 * k}) scale(${k})`} className="beacon" style={{ animationDelay: `${i * 0.37}s` }}>
+                <g key={`f${id}`} transform={`translate(${p[0] + 38 * G} ${p[1] - 30 * G}) scale(${G})`} className="beacon" style={{ animationDelay: `${i * 0.37}s` }}>
                   <circle r={22 * heat + 8} fill="url(#mo-fire)" opacity={0.85} />
                   <path d="M-5 10 L -3 -2 L 3 -2 L 5 10 Z" fill="#3d2a1c" />
                 </g>
@@ -476,14 +749,13 @@ export function MapView({
           {geo.shapes.map((s) => {
             const region = state.regions[s.id];
             if (!region) return null;
-            const foreign = s.foreign ?? FOREIGN.has(s.id);
             const capital = s.id === 'jingji' || s.id === 'duji';
-            const split = Math.hypot(s.label[0] - s.seat[0], s.label[1] - s.seat[1]) > 60 * k;
-            const lp: Pt = foreign || split ? s.label : s.seat;
+            const { lp, y: ly, foreign } = labelAt(s);
+            const nudged = placements[s.id] ?? { dx: 0, dy: 0, hidden: false };
             return (
               <g key={`l${s.id}`} className={cls('region-label', foreign && 'is-foreign', selected === s.id && 'is-selected')} pointerEvents="none">
                 {!foreign && (
-                  <g transform={`translate(${s.seat[0]} ${s.seat[1]}) scale(${k})`}>
+                  <g transform={`translate(${s.seat[0]} ${s.seat[1]}) scale(${G})`}>
                     <g className="seat-mark">
                       {capital ? (
                         <g transform="translate(0 2)">
@@ -502,7 +774,16 @@ export function MapView({
                     )}
                   </g>
                 )}
-                <text className="region-name" transform={`translate(${lp[0]} ${lp[1]}) scale(${k})`} y={foreign || split ? 8 : -20} textAnchor="middle">
+                <text
+                  className={cls('region-name', nudged.hidden && 'is-hidden')}
+                  data-label={s.id}
+                  data-testid={`map.label.${s.id}`}
+                  data-anchor={`${Math.round(lp[0])},${Math.round(lp[1])}`}
+                  data-nudged={nudged.dx || nudged.dy ? '1' : undefined}
+                  transform={`translate(${lp[0] + nudged.dx} ${lp[1] + nudged.dy}) scale(${G})`}
+                  y={ly}
+                  textAnchor="middle"
+                >
                   {region.name}
                 </text>
               </g>
@@ -521,7 +802,7 @@ export function MapView({
                 <g
                   key={a.id}
                   className={cls('army-token', hostile && 'is-rebel', foreign && 'is-foreign', a.in_transit && 'is-moving')}
-                  transform={`translate(${p[0] + ((shape?.foreign ?? FOREIGN.has(rid)) ? -30 : 14) * k} ${p[1] + ((shape?.foreign ?? FOREIGN.has(rid)) ? 26 : -2) * k + i * 22 * k}) scale(${k})`}
+                  transform={`translate(${p[0] + ((shape?.foreign ?? FOREIGN.has(rid)) ? -30 : 14) * G} ${p[1] + ((shape?.foreign ?? FOREIGN.has(rid)) ? 26 : -2) * G + i * 22 * G}) scale(${G})`}
                   data-testid={`map.army.${a.id}`}
                 >
                   <title>{`${a.name}　${a.strength.toLocaleString('zh-CN')}人${transit(a.in_transit) ? `（行军${transit(a.in_transit)}）` : ''}`}</title>

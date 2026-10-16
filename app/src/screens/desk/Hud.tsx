@@ -24,7 +24,7 @@ export function ResourceBar({ view, deltas }: { view: ViewResponse; deltas: Reco
   const shown = pinned ?? open;
   const state = view.state;
   return (
-    <div className="resbar lacquer on-dark" data-testid="resources.bar">
+    <div className="resbar lacquer on-dark" data-testid="resources.bar" data-hud="resources">
       <CornerFlourish className="resbar-corner resbar-corner--l" size={30} />
       <CornerFlourish className="resbar-corner resbar-corner--r" size={30} rotate={90} />
       {BAR_RESOURCES.filter((id) => state.resources[id]).map((id) => {
@@ -142,7 +142,7 @@ export function CalendarSlip({ view }: { view: ViewResponse }) {
   const turn = view.state.turn;
   const year = 751 + Math.floor(turn / 4);
   return (
-    <div className="calendar-slip" data-testid="desk.calendar">
+    <div className="calendar-slip" data-testid="desk.calendar" data-hud="calendar">
       <div className="calendar-paper">
         <div className="calendar-label t-title">{view.calendar_label}</div>
         <div className="calendar-ad t-num">公元 {year} 年 · 第 {turn + 1} 季</div>
@@ -170,7 +170,7 @@ export function objectiveTone(status: string): 'ok' | 'warn' | 'fail' {
 export function Objectives({ view }: { view: ViewResponse }) {
   const [open, setOpen] = useState<string | null>(null);
   return (
-    <div className="objectives">
+    <div className="objectives" data-hud="objectives">
       {view.objectives.map((o, i) => (
         <button
           key={o.id}
@@ -219,7 +219,7 @@ const RIBBONS: RibbonDef[] = [
 export function FactionRibbons({ view, onSummon }: { view: ViewResponse; onSummon: (characterId: string) => void }) {
   const [tip, setTip] = useState<string | null>(null);
   return (
-    <div className="ribbons" data-testid="desk.ribbons">
+    <div className="ribbons" data-testid="desk.ribbons" data-hud="ribbons">
       <div className="ribbon-rod" aria-hidden="true" />
       {RIBBONS.map((r) => {
         const value = Math.max(0, Math.min(100, r.influence(view.state)));
@@ -290,7 +290,7 @@ export function CrisisDrum({ view }: { view: ViewResponse }) {
   const show = hover || pinned;
   const an = view.state.resources.an_ambition;
   return (
-    <div className="crisis" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <div className="crisis" data-hud="crisis" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
       <button className={cls('crisis-drum', severity >= 2 && 'is-alarm', severity >= 3 && 'is-fire')} data-testid="desk.crisis" onClick={() => setPinned((p) => !p)} aria-label={`${c.title ?? '渔阳鼙鼓'} ${label} ${c.band}`} style={{ ['--band' as string]: color }}>
         <svg viewBox="-70 -70 140 140" width="132" height="132" aria-hidden="true">
           <defs>
@@ -387,7 +387,7 @@ export function Medallion({ glyph, label, testid, onClick, badge }: { glyph: str
 // ---------------------------------------------------------------- memorial book & edict scroll
 export function MemorialBook({ count, onOpen }: { count: number; onOpen: () => void }) {
   return (
-    <button className="memorial-book" data-testid="desk.memorialBook" onClick={onOpen} aria-label={`奏疏 ${count} 件`}>
+    <button className="memorial-book" data-testid="desk.memorialBook" data-hud="memorials" onClick={onOpen} aria-label={`奏疏 ${count} 件`}>
       <span className="book-page book-page--3" />
       <span className="book-page book-page--2" />
       <span className="book-cover">
@@ -404,7 +404,7 @@ export function MemorialBook({ count, onOpen }: { count: number; onOpen: () => v
 
 export function EdictScroll({ count, onOpen }: { count: number; onOpen: () => void }) {
   return (
-    <button className="edict-scroll" data-testid="desk.edictScroll" onClick={onOpen} aria-label="拟诏">
+    <button className="edict-scroll" data-testid="desk.edictScroll" data-hud="edict" onClick={onOpen} aria-label="拟诏">
       <span className="scroll-body">
         <span className="scroll-cap scroll-cap--l" />
         <span className="scroll-brocade" />
@@ -448,7 +448,7 @@ const LEGENDS: Record<MapLayer, { c: string; t: string }[]> = {
 
 export function LayerSwitcher({ layer, onChange }: { layer: MapLayer; onChange: (l: MapLayer) => void }) {
   return (
-    <div className="layers">
+    <div className="layers" data-hud="layers">
       <div className="layer-tabs lacquer on-dark" role="tablist" aria-label="舆图图层">
         {LAYERS.map((l) => (
           <button key={l.id} role="tab" aria-selected={layer === l.id} className={cls('layer-tab t-title', layer === l.id && 'is-on')} data-testid={`map.layer.${l.id}`} disabled={layer === l.id} onClick={() => onChange(l.id)}>

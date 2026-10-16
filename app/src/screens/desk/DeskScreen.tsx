@@ -46,7 +46,7 @@ export function DeskScreen() {
 
       <div className="hud-right">
         <CrisisDrum view={view} />
-        <nav className="medallions" aria-label="御案">
+        <nav className="medallions" aria-label="御案" data-hud="medallions">
           <Medallion glyph="召" label="召对" testid="desk.medallion.audience" onClick={() => g.openPanel('audience')} />
           <Medallion glyph="议" label="廷议" testid="desk.medallion.debate" onClick={() => g.openPanel('debate')} />
           <Medallion glyph="谏" label="谏言库" testid="desk.medallion.advice" onClick={() => g.openPanel('advice')} badge={g.advice.length || undefined} />
@@ -62,7 +62,7 @@ export function DeskScreen() {
 
       <div className="hud-bottom-center">
         {view.final_notice?.next_is_final && (
-          <div className="final-notice" data-testid="desk.finalNotice" role="status" title={view.final_notice.text}>
+          <div className="final-notice" data-testid="desk.finalNotice" data-hud="final-notice" role="status" title={view.final_notice.text}>
             <b className="t-title">下次结算即终局</b>
             <span>{view.final_notice.text.replace(/^下次结算即终局[：:]?/, '')}</span>
           </div>
@@ -72,7 +72,7 @@ export function DeskScreen() {
 
       <div className="hud-bottom-right">
         {choices.length > 0 && g.choiceDeferred && (
-          <button className="choice-badge" data-testid="desk.choiceBadge" onClick={() => g.deferChoice(false)}>
+          <button className="choice-badge" data-testid="desk.choiceBadge" data-hud="choice-badge" onClick={() => g.deferChoice(false)}>
             <span className="t-title">急务待决</span>
             <b className="t-num">{choices.length}</b>
           </button>
@@ -94,7 +94,7 @@ export function DeskScreen() {
               </motion.div>
             )}
           </AnimatePresence>
-          <button className="btn btn-ink advance-btn" data-testid="desk.advance" disabled={!view.can_advance || g.busy.turn} onClick={onAdvance}>
+          <button className="btn btn-ink advance-btn" data-testid="desk.advance" data-hud="advance" disabled={!view.can_advance || g.busy.turn} onClick={onAdvance}>
             <span className="advance-glyph" aria-hidden="true" />
             推演本季
           </button>

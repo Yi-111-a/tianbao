@@ -18,12 +18,11 @@
   background-image: radial-gradient(ellipse at 50% 40%, rgba(120, 70, 35, 0.35), rgba(0, 0, 0, 0.55) 80%), var(--tex-wood);
 }
 .desk-map-frame {
+  /* the map is fitted inside the HUD-free area (MapView); around it the desk itself shows */
   position: absolute;
-  inset: 8px;
+  inset: 0;
   overflow: hidden;
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(201, 162, 75, 0.55), 0 0 0 5px #2b1a10, 0 0 0 6px rgba(201, 162, 75, 0.35), 0 20px 50px rgba(0, 0, 0, 0.6);
-  background: #d9c08a;
+  background: transparent;
 }
 .map-root {
   position: absolute;
@@ -52,6 +51,28 @@
   top: 0;
   transform-origin: 0 0;
   will-change: transform;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-ink);
+  /* the painted map lies on the desk in a thin gilt mount; --inv = 1 / scale keeps it hairline */
+  --inv: 1;
+  border-radius: calc(3px * var(--inv));
+  box-shadow: 0 0 0 calc(1px * var(--inv)) rgba(201, 162, 75, 0.7), 0 0 0 calc(4px * var(--inv)) #2b1a10,
+    0 0 0 calc(5px * var(--inv)) rgba(201, 162, 75, 0.45), 0 calc(16px * var(--inv)) calc(42px * var(--inv)) rgba(0, 0, 0, 0.62);
+}
+.map-stage > .map-base {
+  border-radius: inherit;
+}
+.map-stage.is-shown {
+  opacity: 1;
+}
+.map-stage.is-easing {
+  transition: opacity 0.6s var(--ease-ink), transform 0.6s var(--ease-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-stage,
+  .map-stage.is-easing {
+    transition: none;
+  }
 }
 .map-vignette {
   position: absolute;
@@ -103,6 +124,7 @@
   stroke-width: 4;
 }
 .region-label .region-name {
+  transition: opacity 0.25s, visibility 0.25s;
   font-family: var(--font-title);
   font-size: 25px;
   letter-spacing: 0.18em;
@@ -111,6 +133,10 @@
   stroke: rgba(244, 232, 200, 0.82);
   stroke-width: 4.5px;
   stroke-linejoin: round;
+}
+.region-label .region-name.is-hidden {
+  opacity: 0;
+  visibility: hidden;
 }
 .region-label.is-selected .region-name {
   fill: var(--zhusha-deep);
@@ -223,7 +249,8 @@
   position: absolute;
   left: 0;
   top: 0;
-  z-index: 20;
+  /* under the HUD (z 9–10): it is placed clear of it, and must never cover its buttons */
+  z-index: 8;
   width: 250px;
   padding: 12px 14px;
   border-radius: 3px;
