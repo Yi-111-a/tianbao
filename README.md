@@ -75,7 +75,7 @@
 
 1. 下载 [`tianbao_0.1.0_x64-setup.exe`](https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao_0.1.0_x64-setup.exe)（[发布说明](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)）。
 2. 双击安装：装到当前用户（`%LOCALAPPDATA%\天宝`），不需要管理员权限。安装包没有代码签名，Windows 若弹出 SmartScreen，点「更多信息」→「仍要运行」。
-3. 打开「天宝」，点「开始新局」。存档在 `%APPDATA%	ianbao`。
+3. 打开「天宝」，点「开始新局」。存档在 `%APPDATA%\tianbao`。
 
 游戏本身不需要联网，不配模型也能完整玩一局；想让大臣由大模型扮演，在「设置 · 模型路由」里填任意 OpenAI 兼容接口。
 
