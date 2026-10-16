@@ -31,6 +31,16 @@
 11. 养兵（round 6）：剧本启用 formulas.upkeep 时，凡给本方军队增兵（adjust_army delta > 0）的选项，提示须写明此后的「养兵」负担。
 12. 首季账目（round 6）：T1 才设立的经常账目（add_ledger recurring）须同时补扣首季（同一资源、reason 含「首季」的 adjust_resource），
     否则 T0 的第一次结算会漏记这些固定支出。
+13. 官缺断言（round 7）：文字（奏疏标题 / summary / 谏言 / 选项标题与提示，事件标题 / 正文 / 抉择）称「某官出缺 / 官缺 / 久缺 / 仍空」，
+    须有正向的 office_holder 某官 = null 守卫（或该选项 / 事件自身 dismiss 该官，或固定于 T0 且开局即缺）。
+14. 中枢口吻（round 7）：谏言以在京理事的口吻说话（「臣督办」「臣一手可理」「臣好收息」「京师有臣」……），
+    须以 requires.region: jingji 保证其人在京（出镇在外者另写远方来奏的谏言）。
+15. 养兵净额（round 7，扩充第 11 项）：按选项对本方军队兵额的净变化计——净增兵须写「养兵」负担，
+    写明的「养兵每季 +X 万贯」须与净增兵相符（每万兵 formulas.upkeep 之数）；净额为零的调拨不得写养兵增加。
+16. 到任之效（round 7）：任命边将并启程赴任（dispatch）的选项，不得在下诏时即给「得人 / 新帅」之类的边患收益，
+    应设旗标、由「到镇」事件（character_region + army_commander）落实。
+17. 结局文字（round 7）：结局正文称「朝堂议论渐平 / 不复相倾」须有 court_strife 上限条件，称「朝争犹存 / 倾轧犹烈」须有下限条件；
+    称「旧部受代 / 渔阳之兵既归朝廷」须有 an_command 上限条件。
 """
 from __future__ import annotations
 
@@ -79,6 +89,7 @@ CHAR_ALIASES = {
 LOCATION_CLAIMS: list[tuple[str, str, str]] = [
     ("gao_xianzhi", "jingji", r"仙芝(久)?在京|仙芝在京宿卫|仙芝久在京师"),
     ("geshu_han", "jingji", r"哥舒翰[^。；]{0,6}留(京|居京师)"),
+    ("geshu_han", "jingji", r"哥舒翰[^。；]{0,8}(同时)?入朝|哥舒翰[^。；]{0,8}同朝"),
     ("an_lushan", "jingji", r"禄山(就)?在(京|华清宫)|禄山奉召至京"),
     ("yan_gaoqing", "fanyang", r"杲卿[^。；]{0,3}在范阳幕府"),
     ("feng_changqing", "anxi", r"判官封常清|常清知留后"),
@@ -92,6 +103,16 @@ MORTAL_FROM = {"li_linfu": 7}
 # ---- round 6 ----
 PARTIAL_WORDS = re.compile(r"一部|分兵|偏师|半数|分其兵|分[^。；，]{0,4}兵[一二三四五六七八九十百千万\d]")
 SELF_IN_CAPITAL = re.compile(r"京师有臣|臣在京|臣在朝中")
+# ---- round 7 ----
+VACANCY_WORDS = r"(?:出缺|官缺|久缺|暂缺|虚位|仍空)"
+COURT_VOICE = re.compile(r"(?<![重大])臣督办|臣愿督办|臣一手可理|臣好收息|臣这里|京师有臣|臣在京|臣另有安排")
+UPKEEP_CLAIM = re.compile(r"养兵每季 ?\+ ?([\d.]+) ?万贯")
+ARRIVAL_REASONS = {"得人", "新帅", "新帅到镇", "易帅得人"}
+ENDING_CLAIMS: list[tuple[str, str, str]] = [   # (正则, 资源, 须有的界限方向)
+    (r"朝堂议论渐平|朝堂不复相倾|朝堂渐和", "court_strife", "upper"),
+    (r"朝争犹存|朝争未息|倾轧犹烈|争执未息", "court_strife", "lower"),
+    (r"旧部受代|渔阳之兵既归朝廷|兵柄尽归", "an_command", "upper"),
+]
 MOVE_OPS = {"move_army", "march", "detach"}
 
 
@@ -401,11 +422,26 @@ def lint(pack: Path) -> list[str]:
                 if "行程" not in str(opt.get("hint", "")):
                     problems.append(f"[末季] 奏疏 {mid}.{opt.get('id')} 在最后决策季调兵，提示未写行程（终局前能否抵达）")
         if upkeep:
+            per_treasury = next((float(row.get("amount", 0)) / float(row.get("per", 1)) for row in upkeep
+                                 if row.get("resource") == "treasury"), 0.0)
             for opt in options:
-                grow = sum(float(op.get("delta", 0)) for op in ops_of(opt.get("ops"))
-                           if op.get("op") == "adjust_army" and float(op.get("delta", 0)) > 0 and army_faction.get(op.get("army")) == player)
-                if grow > 0 and "养兵" not in str(opt.get("hint", "")):
-                    problems.append(f"[养兵] 奏疏 {mid}.{opt.get('id')} 增兵 {grow:g}，提示未写此后的养兵负担")
+                net = sum(float(op.get("delta", 0)) for op in ops_of(opt.get("ops"))
+                          if op.get("op") == "adjust_army" and army_faction.get(op.get("army")) == player)
+                hint = str(opt.get("hint", ""))
+                claim = UPKEEP_CLAIM.search(hint)
+                where = f"奏疏 {mid}.{opt.get('id')}"
+                if net > 0 and "养兵" not in hint:
+                    problems.append(f"[养兵] {where} 净增兵 {net:g}，提示未写此后的养兵负担")
+                if claim and net <= 0:
+                    problems.append(f"[养兵] {where} 提示称「{claim.group(0)}」，但本方兵额净变化为 {net:g}（调拨不增养兵）")
+                elif claim and per_treasury and abs(float(claim.group(1)) - net * per_treasury) > 0.06:
+                    problems.append(f"[养兵] {where} 提示称「{claim.group(0)}」，按净增兵 {net:g} 应为 +{net * per_treasury:g} 万贯")
+        for opt in options:
+            ops = list(ops_of(opt.get("ops")))
+            if any(op.get("dispatch") and op.get("op") in APPOINT_OPS for op in ops) and any(
+                    op.get("op") == "adjust_resource" and op.get("resource") == "frontier_pressure"
+                    and float(op.get("delta", 0)) < 0 and str(op.get("reason", "")) in ARRIVAL_REASONS for op in ops):
+                problems.append(f"[到任] 奏疏 {mid}.{opt.get('id')} 任将赴镇，却在下诏时即给边患收益；应由到镇事件落实")
     for eid, ev in events.items():
         effects = list(ops_of(ev.get("effects")))
         check_partial(str(ev.get("title", "")) + "｜" + str(ev.get("text", "")), effects, f"事件 {eid}")
@@ -416,6 +452,67 @@ def lint(pack: Path) -> list[str]:
             caught_up = {str(op.get("resource")) for op in effects if op.get("op") == "adjust_resource" and "首季" in str(op.get("reason", ""))}
             for resource in sorted(recurring - caught_up):
                 problems.append(f"[账目] 事件 {eid} 在 T1 才设经常账目（{resource}），却没有补扣首季（reason 含「首季」的 adjust_resource）")
+
+    # ---- round 7：官缺断言 / 中枢口吻 ----
+    vacancy_re = re.compile("(" + "|".join(sorted(map(re.escape, office_names), key=len, reverse=True)) + ")" + VACANCY_WORDS)
+    vacant_at_start = {str(row["id"]) for row in data["scenario"].get("offices", []) or []} - {
+        str(office) for row in data["characters"] or [] for office in (row.get("offices") or [row.get("office")]) if office}
+
+    def check_vacancy(text: str, cond: Any, where: str, fixed_t0: bool, dismissed: set[str] = frozenset()) -> None:
+        holders = positive_kinds(cond, "office_holder")
+        for match in vacancy_re.finditer(text or ""):
+            office = office_names[match.group(1)]
+            if (office, "None") in holders or office in dismissed or (fixed_t0 and office in vacant_at_start):
+                continue
+            problems.append(f"[官缺] {where} 称「{match.group(0)}」，但条件里没有 office_holder {office}=null")
+
+    for item in memos:
+        mid = item.get("id")
+        cond = item.get("conditions")
+        t0 = item.get("turn") == 0
+        check_vacancy(f"{item.get('title', '')}｜{item.get('summary', '')}", cond, f"奏疏 {mid} 标题/正文", t0)
+        for adv in item.get("advisors") or []:
+            check_vacancy(str(adv.get("line", "")), cond, f"奏疏 {mid} 谏言（{adv.get('character')}）", t0)
+            hit = COURT_VOICE.search(str(adv.get("line", "")))
+            if hit and not t0:
+                req = adv.get("requires") if isinstance(adv.get("requires"), dict) else {}
+                regions = req.get("region")
+                regions = set(regions if isinstance(regions, list) else [regions]) if regions else set()
+                if regions != {"jingji"} and (adv.get("character"), "jingji") not in positive_kinds(cond, "character_region"):
+                    problems.append(f"[所在] 奏疏 {mid} 谏言（{adv.get('character')}）以在京理事口吻说「{hit.group(0)}」，但没有 requires.region: jingji")
+        for opt in options_of(item):
+            dismissed = {str(op.get("office")) for op in ops_of(opt.get("ops")) if op.get("op") == "dismiss"}
+            check_vacancy(f"{opt.get('label', '')}｜{opt.get('hint', '')}", cond, f"奏疏 {mid}.{opt.get('id')}", t0, dismissed)
+    for eid, ev in events.items():
+        dismissed = {str(op.get("office")) for op in ops_of(ev.get("effects")) if op.get("op") == "dismiss"}
+        check_vacancy(f"{ev.get('title', '')}｜{ev.get('text', '')}", ev.get("conditions"), f"事件 {eid}",
+                      (ev.get("when") or {}).get("turn") == 0, dismissed)
+        for choice in ev.get("choices") or []:
+            chosen = {str(op.get("office")) for op in ops_of(choice.get("effects")) if op.get("op") == "dismiss"}
+            check_vacancy(str(choice.get("text", "")), ev.get("conditions"), f"事件 {eid}.{choice.get('id')}", False, dismissed | chosen)
+
+    # ---- round 7：结局文字与条件 ----
+    def bounds(cond: Any) -> set[tuple[str, str]]:
+        found: set[tuple[str, str]] = set()
+        if isinstance(cond, list):
+            for row in cond:
+                found |= bounds(row)
+        elif isinstance(cond, dict):
+            if "all" in cond:
+                found |= bounds(cond["all"])
+            elif cond.get("kind") == "resource":
+                found.add((str(cond.get("id")), str(cond.get("operator", "gte"))))
+        return found
+
+    for ending in data["scenario"].get("endings", []) or []:
+        have = bounds(ending.get("conditions"))
+        for pattern, resource, direction in ENDING_CLAIMS:
+            hit = re.search(pattern, str(ending.get("text", "")))
+            if not hit:
+                continue
+            ok = {"upper": {"lt", "lte"}, "lower": {"gt", "gte"}}[direction]
+            if not any(res == resource and op in ok for res, op in have):
+                problems.append(f"[结局] 结局 {ending.get('id')} 称「{hit.group(0)}」，但条件里没有 {resource} 的相应界限")
 
     # 奏疏（原有检查）
     for item in memos:

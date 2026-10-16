@@ -82,6 +82,8 @@
       - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
       - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
       - {not: {kind: flag, operator: eq, key: an_kept_in_capital, value: true}}
+      - {kind: flag, operator: absent, key: "memorial:p_an_in_capital"}   # 奏疏「禄山在京未归」已决其去留
+      - {kind: office_holder, operator: eq, office: fanyang_jds, character: an_lushan}
   gravity: 0.9
   text: 安禄山陛辞，驰驿还镇。
   effects:
@@ -347,9 +349,24 @@
   title: 哥安失和
   kind: scheduled
   when: {turn: 7}
-  conditions: {not: {kind: flag, operator: eq, key: geshu_an_kept_apart, value: true}}
+  conditions: {kind: flag, operator: eq, key: "memorial:t6_feast", value: feast}
   gravity: 0.6
-  text: 哥舒翰、安禄山同时入朝，上使高力士设宴城东，欲令二人释怨。席间二人言语相激，几至失色，力士目止乃罢。
+  text: 高力士奉旨致书哥舒翰、安禄山，分赐御酒，劝二人释怨。二人复书，各诋其短，书辞传于朝中，物议哗然。（史载二人同朝时宴于城东、席间相激；本局二人各在其镇，改为书信相激）
+  effects:
+    - {op: adjust_resource, resource: court_strife, delta: 4, reason: 边帅相仇}
+    - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 怨望}
+  illustration: event.geshu_an_quarrel
+
+- id: geshu_an_quarrel_plain
+  title: 哥安失和
+  kind: scheduled
+  when: {turn: 7}
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: geshu_an_kept_apart, value: true}}
+      - {not: {kind: flag, operator: eq, key: "memorial:t6_feast", value: feast}}
+  gravity: 0.6
+  text: 哥舒翰、安禄山各上表互诋，言辞相激，书辞传于朝中，物议哗然。（史载二人同朝时宴于城东、席间相激；本局二人各在其镇，改为表奏相讦）
   effects:
     - {op: adjust_resource, resource: court_strife, delta: 4, reason: 边帅相仇}
     - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 怨望}
@@ -603,6 +620,25 @@
       - {kind: flag, operator: eq, key: an_detained, value: true}
       - {kind: counter, key: fanyang_measures, operator: gte, value: 3}
       - {not: {kind: flag, operator: eq, key: fanyang_pacified, value: true}}
+      - {not: {kind: flag, operator: eq, key: fanyang_commander_present, value: true}}
+      - not:   # 新帅本季已到镇者不再报「待新帅」（gpt-06 #9：同季先报到镇、又报待新帅）
+          any:
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: gao_xianzhi}, {kind: character_region, operator: eq, character: gao_xianzhi, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: guo_ziyi}, {kind: character_region, operator: eq, character: guo_ziyi, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: li_guangbi}, {kind: character_region, operator: eq, character: li_guangbi, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: feng_changqing}, {kind: character_region, operator: eq, character: feng_changqing, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: geshu_han}, {kind: character_region, operator: eq, character: geshu_han, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: an_sishun}, {kind: character_region, operator: eq, character: an_sishun, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: li_linfu}, {kind: character_region, operator: eq, character: li_linfu, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: yang_guozhong}, {kind: character_region, operator: eq, character: yang_guozhong, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: chen_xilie}, {kind: character_region, operator: eq, character: chen_xilie, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: gao_lishi}, {kind: character_region, operator: eq, character: gao_lishi, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: yan_zhenqing}, {kind: character_region, operator: eq, character: yan_zhenqing, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: yan_gaoqing}, {kind: character_region, operator: eq, character: yan_gaoqing, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: xianyu_zhongtong}, {kind: character_region, operator: eq, character: xianyu_zhongtong, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: bian_lingcheng}, {kind: character_region, operator: eq, character: bian_lingcheng, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: ji_wen}, {kind: character_region, operator: eq, character: ji_wen, region: fanyang}]
+            - all: [{kind: army_commander, army: fanyang_army, operator: eq, character: li_heng}, {kind: character_region, operator: eq, character: li_heng, region: fanyang}]
   gravity: 1.0
   text: 颜杲卿遣家僮间道密奏——兵马：如籍，器械渐次归库；军心：欠饷既清、赦令既下，士卒稍安；拒命之迹：未见；旧部服从：诸将静待新帅到镇，史思明亦表请参谒。新帅一到，人心可定。（定性军情，不改风闻精度）
   effects:
@@ -660,6 +696,97 @@
   effects:
     - {op: set_flag, key: "memorial:p_court_harmony", value: null}
 
+# 中枢官缺（gpt-07 #8）：右相、左相、判度支、御史中丞、京兆尹出缺满两季（计数器 vacant_*，见 scenario.yaml counters）后，
+# 每季一点小耗（君威 −0.3 或积弊 +0.2～0.3），直到补授为止；奏疏「中枢官缺」提示并可令诸司次官权知（四季内免耗）。
+- id: vacancy_cost_you_xiang
+  title: 右相久缺
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: counter, key: vacant_you_xiang, operator: gte, value: 2}
+      - {kind: office_holder, operator: eq, office: you_xiang, character: null}
+      - {not: {kind: flag_age, key: vacancy_acting, operator: lt, value: 4}}
+  gravity: 1.0
+  text: 右相出缺已久，有司代行，事多稽滞。
+  effects:
+    - {op: adjust_resource, resource: authority, delta: -0.3, reason: 相位久虚，政出多门}
+
+- id: vacancy_cost_zuo_xiang
+  title: 左相久缺
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: counter, key: vacant_zuo_xiang, operator: gte, value: 2}
+      - {kind: office_holder, operator: eq, office: zuo_xiang, character: null}
+      - {not: {kind: flag_age, key: vacancy_acting, operator: lt, value: 4}}
+  gravity: 1.0
+  text: 左相出缺已久，有司代行，事多稽滞。
+  effects:
+    - {op: adjust_resource, resource: authority, delta: -0.3, reason: 相位久虚，政出多门}
+
+- id: vacancy_cost_duzhi
+  title: 判度支久缺
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: counter, key: vacant_duzhi, operator: gte, value: 2}
+      - {kind: office_holder, operator: eq, office: duzhi, character: null}
+      - {not: {kind: flag_age, key: vacancy_acting, operator: lt, value: 4}}
+  gravity: 1.0
+  text: 判度支出缺已久，有司代行，事多稽滞。
+  effects:
+    - {op: adjust_resource, resource: corruption, delta: 0.3, reason: 度支久无专判，胥吏因缘为奸}
+
+- id: vacancy_cost_yushi_zhongcheng
+  title: 御史中丞久缺
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: counter, key: vacant_yushi_zhongcheng, operator: gte, value: 2}
+      - {kind: office_holder, operator: eq, office: yushi_zhongcheng, character: null}
+      - {not: {kind: flag_age, key: vacancy_acting, operator: lt, value: 4}}
+  gravity: 1.0
+  text: 御史中丞出缺已久，有司代行，事多稽滞。
+  effects:
+    - {op: adjust_resource, resource: corruption, delta: 0.3, reason: 宪台久无其长，纠劾不行}
+
+- id: vacancy_cost_jingzhao_yin
+  title: 京兆尹久缺
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: counter, key: vacant_jingzhao_yin, operator: gte, value: 2}
+      - {kind: office_holder, operator: eq, office: jingzhao_yin, character: null}
+      - {not: {kind: flag_age, key: vacancy_acting, operator: lt, value: 4}}
+  gravity: 1.0
+  text: 京兆尹出缺已久，有司代行，事多稽滞。
+  effects:
+    - {op: adjust_resource, resource: corruption, delta: 0.2, reason: 京兆久无其尹，诸县自专}
+
+# 奏疏「中枢官缺」处置后隔四季复议（清空其处置旗标，仍有久缺则奏疏重新出现）。
+- id: vacancy_memorial_rearm
+  title: 中枢官缺复议
+  kind: system
+  repeatable: true
+  cooldown: 1
+  conditions:
+    all:
+      - {kind: flag, operator: exists, key: "memorial:p_vacancies"}
+      - {kind: flag_age, key: "memorial:p_vacancies", operator: gte, value: 4}
+  gravity: 1.0
+  effects:
+    - {op: set_flag, key: "memorial:p_vacancies", value: null}
+
 # ======================== 第三幕 754–755：将相交恶 ========================
 - id: an_sets_out
   title: 禄山应召入朝
@@ -695,7 +822,10 @@
   choices:
     - id: detain
       text: 留京宿卫，解其范阳节度，以高仙芝接任（平卢、河东随后解去）
-      conditions: {kind: character_status, operator: eq, character: gao_xianzhi, value: alive}
+      conditions:
+        all:
+          - {kind: character_status, operator: eq, character: gao_xianzhi, value: alive}
+          - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与高仙芝}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
@@ -708,7 +838,10 @@
         - {op: set_flag, key: an_detained, value: true}
     - id: detain_guo
       text: 留京宿卫，解其范阳节度，以郭子仪接任（平卢、河东随后解去）
-      conditions: {kind: character_status, operator: eq, character: guo_ziyi, value: alive}
+      conditions:
+        all:
+          - {kind: character_status, operator: eq, character: guo_ziyi, value: alive}
+          - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与郭子仪}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
@@ -721,7 +854,10 @@
         - {op: set_flag, key: an_detained, value: true}
     - id: detain_feng
       text: 留京宿卫，解其范阳节度，以封常清接任（平卢、河东随后解去）
-      conditions: {kind: character_status, operator: eq, character: feng_changqing, value: alive}
+      conditions:
+        all:
+          - {kind: character_status, operator: eq, character: feng_changqing, value: alive}
+          - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
       memory: {character: an_lushan, text: 华清宫入朝，竟被留京，范阳付与封常清}
       effects:
         - {op: dismiss, character: an_lushan, office: fanyang_jds}
@@ -769,6 +905,83 @@
 # 兵变规则（奏疏 p_fanyang_warn 以白话写明）：禄山留京满一季、异志 ≥ 55 时每季掷一次；
 # 安抚之策计入计数器 fanyang_measures（新帅到镇、清偿欠饷、赦免旧部、移兵弹压各 +1，穷治党与 −1）：
 #   ≤ 0 策 35%，1 策 20%，2 策 8%，3 策以上不再兵变。
+# 通用诏令夺镇（gpt-07）：不经奏疏，以诏令把禄山调入京畿并免其范阳节度（范阳军亦不归其统领）——与留京夺镇是同一局面，
+# 一律并入留京路线：设 an_detained，此后平卢 / 河东兼职随后解去（an_stripped_*）、范阳出缺则择帅、旧部不安与兵变之险、
+# 三策安抚、新帅到镇、旧部归心兵柄归零，均与奏疏「禄山在京」/ 华清宫入朝的留京选项相同。数值同奏疏 detain 选项。
+- id: an_disarmed_by_ops
+  title: 禄山留京解镇
+  kind: conditional
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_kept_in_capital, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: character_status, operator: eq, character: an_lushan, value: alive}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: office_holder, operator: eq, office: fanyang_jds, character: an_lushan}}
+      - {kind: army_commander, army: fanyang_army, operator: ne, character: an_lushan}
+  gravity: 1.0
+  text: 安禄山身在京师，范阳节度已罢，范阳军不复归其统领——与留京夺镇无异，并入留京之局。（禄山兵柄 −70；平卢、河东若仍兼领，随后一并解去；范阳旧部不安、兵变之险与三策安抚，见奏疏「范阳旧部可虑」；未经召见而夺镇者另有「诸镇自危」）
+  effects:
+    - {op: set_flag, key: an_detained, value: true}
+    - {op: set_flag, key: an_disarmed_by_ops, value: true}
+    - {op: adjust_resource, resource: an_command, delta: -70, reason: 留京解其范阳节度}
+    - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
+    - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+    - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
+    - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
+    - {op: remember, character: an_lushan, fact: 我在京师，朝廷罢我范阳节度，范阳兵马不复归我}
+  illustration: event.jiedu_appointment
+
+# 先「留京宿卫，不夺其官」（兵柄已 −40），后又以诏令罢其范阳节度：补足至与留京夺镇相同（再 −30）。
+- id: an_disarmed_by_ops_kept
+  title: 禄山留京解镇
+  kind: conditional
+  conditions:
+    all:
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {kind: flag, operator: eq, key: an_kept_in_capital, value: true}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: character_status, operator: eq, character: an_lushan, value: alive}
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {not: {kind: office_holder, operator: eq, office: fanyang_jds, character: an_lushan}}
+      - {kind: army_commander, army: fanyang_army, operator: ne, character: an_lushan}
+  gravity: 1.0
+  text: 禄山既留京宿卫，今又罢其范阳节度，范阳军不复归其统领，并入留京夺镇之局。（禄山兵柄再 −30；平卢、河东若仍兼领，随后一并解去；范阳旧部之险与三策安抚，见奏疏「范阳旧部可虑」）
+  effects:
+    - {op: set_flag, key: an_detained, value: true}
+    - {op: set_flag, key: an_disarmed_by_ops, value: true}
+    - {op: adjust_resource, resource: an_command, delta: -30, reason: 留京之后又解其范阳节度}
+    - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 夺镇之恨}
+    - {op: adjust_resource, resource: fanzhen_power, delta: -9, reason: 范阳易帅}
+    - {op: adjust_resource, resource: court_strife, delta: 1, reason: 朝野哗然}
+    - {op: remember, character: an_lushan, fact: 留京之后，朝廷又罢我范阳节度}
+  illustration: event.jiedu_appointment
+
+# 未经召见而夺镇（gpt-06 #12 开局即可留京；gpt-07 以诏令调禄山入京再免官）：禄山既非奉召（p_summon）、亦非应召入朝（an_coming），
+# 骤夺其镇，诸镇自危、范阳旧部尤惧。留京路线的兵变之险与三策安抚照旧，另多一层：安抚之策先记 −1（须多行一策），
+# 其后两季旧部不能归心、每季约一成五鼓噪之险（fanyang_mutiny_early），异志、朝争上升，君威下降。召而后夺者无此一节。
+- id: an_detained_early
+  title: 诸镇自危
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: an_detained, value: true}
+      - {not: {kind: flag, operator: eq, key: an_summon_arrived, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_coming, value: true}}
+      - {not: {kind: flag, operator: eq, key: early_detain_alarm, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 1.0
+  text: 禄山未有反迹，又非奉召入朝，骤被夺镇留京。诸镇节度人人自危，各固其兵；范阳旧部尤惧，史思明等私相约结。（安抚之策 −1，须多行一策；此后两季内旧部不能归心，每季约一成五有鼓噪之险，不论异志高低、安抚几策；异志、朝争上升，君威 −3，外重内轻 +4）
+  effects:
+    - {op: set_flag, key: early_detain_alarm, value: true}
+    - {op: adjust_counter, key: fanyang_measures, delta: -1}
+    - {op: adjust_resource, resource: an_ambition, delta: 6, reason: 无罪见夺}
+    - {op: adjust_resource, resource: authority, delta: -3, reason: 无故夺镇}
+    - {op: adjust_resource, resource: court_strife, delta: 3, reason: 诸镇自危}
+    - {op: adjust_resource, resource: fanzhen_power, delta: 4, reason: 诸镇各固其兵}
+  illustration: event.fanyang_armoury
+
 - id: an_stripped_pinglu
   title: 解禄山平卢节度
   kind: conditional
@@ -849,21 +1062,57 @@
       - {kind: flag, operator: eq, key: an_detained, value: true}
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
       - {not: {kind: flag, operator: eq, key: fanyang_commander_present, value: true}}
-      - any:
+      - any:   # 范阳军新统帅（不论经奏疏、抉择或诏令任命）已到镇
           - all:
-              - {kind: office_holder, operator: eq, office: fanyang_jds, character: gao_xianzhi}
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: gao_xianzhi}
               - {kind: character_region, operator: eq, character: gao_xianzhi, region: fanyang}
           - all:
-              - {kind: office_holder, operator: eq, office: fanyang_jds, character: guo_ziyi}
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: guo_ziyi}
               - {kind: character_region, operator: eq, character: guo_ziyi, region: fanyang}
           - all:
-              - {kind: office_holder, operator: eq, office: fanyang_jds, character: li_guangbi}
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: li_guangbi}
               - {kind: character_region, operator: eq, character: li_guangbi, region: fanyang}
           - all:
-              - {kind: office_holder, operator: eq, office: fanyang_jds, character: feng_changqing}
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: feng_changqing}
               - {kind: character_region, operator: eq, character: feng_changqing, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: geshu_han}
+              - {kind: character_region, operator: eq, character: geshu_han, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: an_sishun}
+              - {kind: character_region, operator: eq, character: an_sishun, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: li_linfu}
+              - {kind: character_region, operator: eq, character: li_linfu, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: yang_guozhong}
+              - {kind: character_region, operator: eq, character: yang_guozhong, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: chen_xilie}
+              - {kind: character_region, operator: eq, character: chen_xilie, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: gao_lishi}
+              - {kind: character_region, operator: eq, character: gao_lishi, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: yan_zhenqing}
+              - {kind: character_region, operator: eq, character: yan_zhenqing, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: yan_gaoqing}
+              - {kind: character_region, operator: eq, character: yan_gaoqing, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: xianyu_zhongtong}
+              - {kind: character_region, operator: eq, character: xianyu_zhongtong, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: bian_lingcheng}
+              - {kind: character_region, operator: eq, character: bian_lingcheng, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: ji_wen}
+              - {kind: character_region, operator: eq, character: ji_wen, region: fanyang}
+          - all:
+              - {kind: army_commander, army: fanyang_army, operator: eq, character: li_heng}
+              - {kind: character_region, operator: eq, character: li_heng, region: fanyang}
   gravity: 1.0
-  text: 新任范阳节度到镇，诸将参谒，军中稍定。（安抚之策 +1）
+  text: 范阳军新帅到镇，诸将参谒，军中稍定。（安抚之策 +1）
   effects:
     - {op: set_flag, key: fanyang_commander_present, value: true}
     - {op: adjust_counter, key: fanyang_measures, delta: 1}
@@ -899,6 +1148,7 @@
       - {kind: flag, operator: eq, key: fanyang_commander_present, value: true}
       - {kind: counter, key: fanyang_measures, operator: gte, value: 3}
       - {not: {kind: flag, operator: eq, key: fanyang_pacified, value: true}}
+      - {not: {kind: flag_age, key: early_detain_alarm, operator: lte, value: 1}}   # 未经召见而夺镇后两季内旧部未能归心
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   gravity: 1.0
   text: 新帅号令已行于范阳：欠饷得清，赦令已下，史思明以下诸将受代参谒，部伍如籍。禄山既去其镇，旧部不复以东平郡王为主。（禄山兵柄归零：渔阳鼙鼓自此逐季消退；安抚已满三策，兵变不再发生）
@@ -940,6 +1190,32 @@
       - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
   gravity: 0.35
   text: 范阳诸将以主帅久留京师，鼓噪不受代，推史思明为帅，声言迎还东平郡王。朝廷未行安抚之策，旧部无所顾忌。（反事实）
+  effects:
+    - {op: set_flag, key: rebellion_started, value: true}
+    - {op: set_flag, key: mutiny_rebellion, value: true}
+    - {op: set_flag, key: fanyang_army_rebel, value: true}
+    - {op: set_army_faction, army: fanyang_army, faction: yan}
+    - {op: set_army_commander, army: fanyang_army, character: shi_siming}
+    - {op: adjust_army, army: fanyang_army, delta: -25000, reason: 诸将离心，部伍不全}
+    - {op: set_region_controller, region: fanyang, faction: yan}
+    - {op: adjust_resource, resource: authority, delta: -6, reason: 边兵哗变}
+    - {op: adjust_resource, resource: rebellion_risk, delta: 30, reason: 范阳兵变}
+    - {op: move_army, army: fanyang_army, to_region: hebei}
+  illustration: event.fanyang_uprising
+
+# 未经召见而夺镇（「诸镇自危」）之后两季：旧部闻变，不论异志高低、安抚几策，每季约一成五鼓噪之险；此两季内旧部不能归心（反事实）。
+- id: fanyang_mutiny_early
+  title: 范阳兵变
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: early_detain_alarm, value: true}
+      - {kind: flag_age, key: early_detain_alarm, operator: lte, value: 1}
+      - {kind: character_status, operator: eq, character: shi_siming, value: alive}
+      - {not: {kind: flag, operator: eq, key: fanyang_pacified, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+  gravity: 0.15
+  text: 禄山无罪见夺，范阳诸将闻变不服，推史思明为帅，鼓噪不受代，声言迎还东平郡王。（反事实；未经召见而夺镇后两季内，每季约一成五）
   effects:
     - {op: set_flag, key: rebellion_started, value: true}
     - {op: set_flag, key: mutiny_rebellion, value: true}
@@ -1160,15 +1436,28 @@
   choice_deadline: 1
   illustration: event.fanjiang_swap
 
+# 中使在途（gpt-06 #7）：遣出后第一次结算报一条在途消息，免得玩家以为使命丢失。
+- id: envoy_en_route
+  title: 中使在途
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: eq, value: 1}
+  gravity: 1.0
+  text: 察看范阳的使者已出京，行在途中。往返约两季，预计下季结算时回奏（遣出后第二次结算）。
+  illustration: event.envoy_in_fanyang
+
 - id: envoy_bribed
   title: 中使受贿
   kind: conditional
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: gte, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
-  gravity: 0.8
+  gravity: 1.0
   text: 察看范阳的中使受安禄山厚赂，还奏盛言禄山竭忠奉国，无二心。
   effects:
     - {op: set_flag, key: envoy_bribed, value: true}
@@ -1184,12 +1473,13 @@
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: lt, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
       - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
       - {kind: resource, id: an_ambition, operator: gte, value: 55}
-  gravity: 0.8
+  gravity: 1.0
   text: 中使还自范阳，实奏——兵马：私市战马、增置甲仗，城中昼夜锻作，兵数逾于籍；军心：将吏多出禄山门下，士卒只知有东平郡王；拒命之迹：中使所至，诸将先禀帅府而后受命；朝廷所授告身多不下达。其志难测，宜早为之备。（情报：异志、鼙鼓风闻区间减半；已有颜杲卿密报者不再收窄）
   effects:
     - {op: set_flag, key: envoy_truth, value: true}
@@ -1203,13 +1493,14 @@
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: lt, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
       - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
       - {kind: resource, id: an_ambition, operator: lt, value: 55}
       - {kind: resource, id: an_ambition, operator: gte, value: 40}
-  gravity: 0.8
+  gravity: 1.0
   text: 中使还自范阳，实奏——兵马：兵数、马匹、仓储大体如籍，甲仗略有增置；军心：士卒安堵，将吏多观望；拒命之迹：未见，然禄山待中使礼厚而词多怨望，屡言为权臣所忌。去就之间，尚可以恩信维系。（情报：异志、鼙鼓风闻区间减半；已有颜杲卿密报者不再收窄）
   effects:
     - {op: set_flag, key: envoy_truth, value: true}
@@ -1223,12 +1514,13 @@
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: lt, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
       - {kind: character_region, operator: eq, character: an_lushan, region: fanyang}
       - {kind: resource, id: an_ambition, operator: lt, value: 40}
-  gravity: 0.8
+  gravity: 1.0
   text: 中使还自范阳，实奏——兵马：兵数、仓储如籍，无私市战马之事；军心：将吏奉法，士卒安堵；拒命之迹：无，诏敕所至，奉行如仪。禄山感恩无他，外间流言多属过甚。（情报：异志、鼙鼓风闻区间减半；已有颜杲卿密报者不再收窄）
   effects:
     - {op: set_flag, key: envoy_truth, value: true}
@@ -1243,12 +1535,13 @@
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: lt, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
       - {not: {kind: character_region, operator: eq, character: an_lushan, region: fanyang}}
       - {kind: counter, key: fanyang_measures, operator: lt, value: 3}
-  gravity: 0.8
+  gravity: 1.0
   text: 中使还自范阳，实奏——兵马：部伍如籍，然器械多不入库，私藏于诸将营中；军心：士卒思旧帅，营中夜有私议；拒命之迹：史思明等称疾不赴朝使之召，诸将上下其手、先禀思明而后行；旧部服从：新命十不行五。安抚之策未备，恐有鼓噪。（情报：异志、鼙鼓风闻区间减半；已有颜杲卿密报者不再收窄）
   effects:
     - {op: set_flag, key: envoy_truth, value: true}
@@ -1262,12 +1555,13 @@
   conditions:
     all:
       - {kind: flag, operator: eq, key: envoy_sent, value: true}
+      - {kind: flag_age, key: envoy_sent, operator: gte, value: 2}   # 往返约两季：遣出后第二次结算回奏
       - {kind: resource, id: corruption, operator: lt, value: 50}
       - {not: {kind: flag, operator: eq, key: envoy_bribed, value: true}}
       - {not: {kind: flag, operator: eq, key: envoy_truth, value: true}}
       - {not: {kind: character_region, operator: eq, character: an_lushan, region: fanyang}}
       - {kind: counter, key: fanyang_measures, operator: gte, value: 3}
-  gravity: 0.8
+  gravity: 1.0
   text: 中使还自范阳，实奏——兵马：部伍如籍，器械归库；军心：欠饷既清，赦令既下，士卒稍安；拒命之迹：未见，诸将受代参谒如礼；旧部服从：史思明以下奉行新命，然思旧帅者尚有其人，宜久任新帅以固之。（情报：异志、鼙鼓风闻区间减半；已有颜杲卿密报者不再收窄）
   effects:
     - {op: set_flag, key: envoy_truth, value: true}
@@ -1409,14 +1703,60 @@
   illustration: event.summon_refused
 
 # ---- 中后期压力（【虚】数值；史事依据见 FACT_CHECK） ----
+# 边镇加给（gpt-06 #6 / gpt-07 #6）：T7 先有奏疏「度支预告边镇加给」，T8 结算时入岁计（可见事件，写明数额、期限、不可撤）。
 - id: border_costs_rise
-  title: 边费岁增
-  kind: system
+  title: 边镇加给入岁计
+  kind: scheduled
   when: {turn: 8}
+  conditions: {not: {kind: flag, operator: eq, key: "memorial:t7_border_notice", value: halve}}
   gravity: 1.0
-  text: 诸镇屡奏衣赐不足、赏格岁增，度支另立加给一项（按镇计，不随兵额；诸军按兵额的衣赐粮料另见「诸军衣赐」「诸军粮料」）。
+  text: 度支依前奏，另立「边镇加给」一项入岁计：诸镇衣赐不足、赏格岁增，按镇计、不随兵额，自本季起每季支国库 35 万贯，常年支给，不可撤（诸军按兵额的衣赐、粮料另见「诸军衣赐」「诸军粮料」）。
   effects:
-    - {op: add_ledger, name: 边镇加给, category: treasury, amount: -35, kind: recurring, reason: 诸镇衣赐、赏格岁增（游戏折算）, cancellable: false}
+    - {op: add_ledger, name: 边镇加给, category: treasury, amount: -35, kind: recurring, reason: 诸镇衣赐、赏格岁增（奏疏「度支预告边镇加给」；游戏折算）, cancellable: false}
+  illustration: event.winter_clothing
+
+- id: border_costs_rise_half
+  title: 边镇加给入岁计（核减其半）
+  kind: scheduled
+  when: {turn: 8}
+  conditions: {kind: flag, operator: eq, key: "memorial:t7_border_notice", value: halve}
+  gravity: 1.0
+  text: 度支依核减之旨，另立「边镇加给」一项入岁计：自本季起每季支国库 18 万贯，常年支给，不可撤。诸镇以赏格不足，颇有怨言。
+  effects:
+    - {op: add_ledger, name: 边镇加给, category: treasury, amount: -18, kind: recurring, reason: 诸镇衣赐、赏格（核减其半；奏疏「度支预告边镇加给」；游戏折算）, cancellable: false}
+  illustration: event.winter_clothing
+
+# 赴任之效（gpt-06 #10）：边将任命的「得人」之效（边患 −2）在新帅到镇时才落实，而非下诏即得。
+# 奏疏选项设 *_commander_pending 旗标；新帅为该军统帅且身在本镇（抵达那一季结算后）时触发。
+- id: anxi_commander_arrives
+  title: 安西新帅到镇
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: anxi_commander_pending, value: true}
+      - {kind: army_commander, army: anxi_army, operator: eq, character: feng_changqing}
+      - {kind: character_region, operator: eq, character: feng_changqing, region: anxi}
+  gravity: 1.0
+  text: 封常清到镇视事，四镇将吏参谒，号令一新。（边患 −2）
+  effects:
+    - {op: set_flag, key: anxi_commander_pending, value: false}
+    - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 新帅到镇}
+  illustration: event.jiedu_appointment
+
+- id: longyou_commander_arrives
+  title: 陇右新帅到镇
+  kind: conditional
+  conditions:
+    all:
+      - {kind: flag, operator: eq, key: longyou_commander_pending, value: true}
+      - {kind: army_commander, army: longyou_army, operator: eq, character: li_guangbi}
+      - {kind: character_region, operator: eq, character: li_guangbi, region: longyou}
+  gravity: 1.0
+  text: 李光弼至陇右，摄节度军务，诸军始有所统。（边患 −2）
+  effects:
+    - {op: set_flag, key: longyou_commander_pending, value: false}
+    - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 新帅到镇}
+  illustration: event.jiedu_appointment
 
 - id: fanyang_rumor
   title: 范阳流言

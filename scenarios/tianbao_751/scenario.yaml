@@ -150,6 +150,17 @@ counters:
   - id: strife_streak          # 朝争连续高位
     mode: streak
     conditions: {kind: resource, id: court_strife, operator: gte, value: 75}
+  # 中枢官缺连续季数（events.yaml vacancy_cost_*：满两季后每季小耗；京兆尹开局即缺，自 T6 起计）
+  - {id: vacant_you_xiang, mode: streak, conditions: {kind: office_holder, operator: eq, office: you_xiang, character: null}}
+  - {id: vacant_zuo_xiang, mode: streak, conditions: {kind: office_holder, operator: eq, office: zuo_xiang, character: null}}
+  - {id: vacant_duzhi, mode: streak, conditions: {kind: office_holder, operator: eq, office: duzhi, character: null}}
+  - {id: vacant_yushi_zhongcheng, mode: streak, conditions: {kind: office_holder, operator: eq, office: yushi_zhongcheng, character: null}}
+  - id: vacant_jingzhao_yin
+    mode: streak
+    conditions:
+      all:
+        - {kind: office_holder, operator: eq, office: jingzhao_yin, character: null}
+        - {kind: turn, operator: gte, value: 6}
 
 wars:
   - {a: tang, b: yan}
@@ -170,6 +181,7 @@ objectives:
       T18 结算之后即至 T19 终局，T19 不再有决策（乱已起者延至 T23）。
       「禄山兵柄」只计范阳旧部是否仍奉禄山为主，不随兼镇多少而变：罢其平卢、河东兼领、分割诸镇兵权只降外重内轻，兵柄仍为 100；
       唯禄山离镇方降——召其入朝后留京解镇（兵柄降至约 30；平卢、河东若仍兼领，随后解去再各降 10），新帅到镇且安抚旧部满三策后归零。
+      不经奏疏、以诏令调禄山入京畿并免其范阳节度（范阳军不归其统领）者，同样算作留京解镇（事件「禄山留京解镇」），此后兼职解除、择帅、兵变之险与三策安抚全同；唯未经召见（奏疏「召禄山入朝」或应召入朝）而夺镇者，另有「诸镇自危」：安抚之策先记 −1，其后两季旧部不能归心、每季约一成五兵变之险。
       若乱已起，底线是潼关、京畿不失，且可提前终局：①叛军覆灭，或范阳收复、首逆（安禄山；兵变时为史思明）就擒或死且叛军余众 ≤ 2 万，即「乱平」，乱平后再善后两季以「再造唐室·乱平」终局；
       ②自天宝十五载春（T20）起，东都光复或叛军总兵力 ≤ 6 万，以「再造唐室」终局；③否则守至 T23，以「潼关相持」终局。
     conditions:
@@ -350,6 +362,8 @@ endings:
                 - {kind: resource, id: authority, operator: lte, value: 40}
         - {kind: flag, operator: eq, key: eunuch_army, value: true}
     text: 禁军尽归内侍，宦官监临诸镇，宰相不能与闻兵事。天宝之后，北司之势自此而起。此为本游戏虚构的结局。【达成条件】未起兵；朝堂倾轧 ≥ 80；君威 ≤ 25（或 T19 时 ≤ 40）；禁军归内侍监。
+  # 结局文字须与终局状态相符（gpt-07 #10）：E1 按朝堂倾轧分两段（< 50 渐和 / ≥ 50 犹存），同题同图；
+  # 「消弭兵祸」排在「夺镇弭兵」之后，命中时禄山兵柄必 > 10，故明写「兵柄未解、兵祸暂弭」。
   - id: e1_disarmed
     kind: ending
     priority: 11
@@ -363,7 +377,23 @@ endings:
         - {kind: resource, id: authority, operator: gte, value: 50}
         - {kind: resource, id: treasury, operator: gt, value: 0}
         - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
-    text: 天宝十四载冬，安禄山奉朝请于京师，范阳新帅号令已行，旧部受代无哗。渔阳之兵既归朝廷，鼙鼓无从而起；禁旅渐整，边镇分权，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵、未生兵变；禄山兵柄 ≤ 10（留京解镇、新帅到镇、旧部安抚三策完备）；君威 ≥ 50；国库有余；边患 < 80。
+        - {kind: resource, id: court_strife, operator: lt, value: 50}
+    text: 天宝十四载冬，安禄山奉朝请于京师，范阳新帅号令已行，旧部受代无哗。渔阳之兵既归朝廷，鼙鼓无从而起；朝堂议论渐平，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵、未生兵变；禄山兵柄 ≤ 10（留京解镇、新帅到镇、旧部安抚三策完备）；君威 ≥ 50；国库有余；边患 < 80；朝堂倾轧 < 50。
+  - id: e1_disarmed_strife
+    kind: ending
+    priority: 11.5
+    title: 天宝中兴·夺镇弭兵
+    illustration: ending.e1_zhongxing
+    conditions:
+      all:
+        - {kind: turn, operator: gte, value: 19}
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: an_command, operator: lte, value: 10}
+        - {kind: resource, id: authority, operator: gte, value: 50}
+        - {kind: resource, id: treasury, operator: gt, value: 0}
+        - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
+        - {kind: resource, id: court_strife, operator: gte, value: 50}
+    text: 天宝十四载冬，安禄山奉朝请于京师，范阳新帅号令已行，旧部受代无哗。渔阳之兵既归朝廷，鼙鼓无从而起。然政事堂中争执未息，朝堂倾轧犹烈，中兴之局尚待调和。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵、未生兵变；禄山兵柄 ≤ 10（留京解镇、新帅到镇、旧部安抚三策完备）；君威 ≥ 50；国库有余；边患 < 80（朝堂倾轧 ≥ 50，故结语言朝争未息）。
   - id: e1_zhongxing
     kind: ending
     priority: 12
@@ -377,7 +407,23 @@ endings:
         - {kind: resource, id: authority, operator: gte, value: 50}
         - {kind: resource, id: treasury, operator: gt, value: 0}
         - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
-    text: 天宝十四载冬，范阳无事。边镇分权，禁旅渐整，朝堂不复相倾。渔阳鼙鼓终未响起，盛世得以延续。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵；渔阳鼙鼓 < 60；君威 ≥ 50；国库有余；边患 < 80。
+        - {kind: resource, id: court_strife, operator: lt, value: 50}
+    text: 天宝十四载冬，范阳无事，渔阳鼙鼓终未响起；朝堂议论渐平，盛世得以延续。然禄山仍拥范阳旧部，兵柄未解，兵祸只是暂弭，非已永除。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵；渔阳鼙鼓 < 60；君威 ≥ 50；国库有余；边患 < 80；朝堂倾轧 < 50（禄山兵柄 > 10，否则为「夺镇弭兵」）。
+  - id: e1_zhongxing_strife
+    kind: ending
+    priority: 12.5
+    title: 天宝中兴·消弭兵祸
+    illustration: ending.e1_zhongxing
+    conditions:
+      all:
+        - {kind: turn, operator: gte, value: 19}
+        - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+        - {kind: resource, id: rebellion_risk, operator: lt, value: 60}
+        - {kind: resource, id: authority, operator: gte, value: 50}
+        - {kind: resource, id: treasury, operator: gt, value: 0}
+        - {kind: resource, id: frontier_pressure, operator: lt, value: 80}
+        - {kind: resource, id: court_strife, operator: gte, value: 50}
+    text: 天宝十四载冬，范阳无事，渔阳鼙鼓终未响起。然朝堂倾轧犹烈，禄山仍拥范阳旧部、兵柄未解——兵祸暂弭，朝争犹存，隐忧尚多。此为本游戏的反事实结局。【达成条件】至天宝十四载冬（T19）范阳未起兵；渔阳鼙鼓 < 60；君威 ≥ 50；国库有余；边患 < 80（朝堂倾轧 ≥ 50，禄山兵柄 > 10，故结语言兵祸暂弭、朝争犹存）。
   - id: e2_frontier_lost
     kind: ending
     priority: 13
@@ -396,7 +442,7 @@ endings:
     title: 山雨欲来
     illustration: ending.open_storm
     conditions: {kind: turn, operator: gte, value: 999}   # 仅作 fallback_ending 使用
-    text: 天宝十四载岁暮，鼙鼓未鸣，隐忧未除。范阳之兵仍在，朝堂之争未息，后事如何，史书尚未写下。（开放结局。）【达成条件】至期限仍未满足其他任何结局。
+    text: 天宝十四载岁暮，中兴之业未竟，隐忧未除；后事如何，史书尚未写下。（开放结局。）【达成条件】至期限仍未满足其他任何结局（例如未起兵而渔阳鼙鼓 ≥ 60 且禄山兵柄未解，或君威、国库、边患未达中兴之数）。
 
 asset_requirements:
   # 本剧本的资产命名：立绘按用途分槽位，地区卡暂缺（舆图用 map.json 多边形）

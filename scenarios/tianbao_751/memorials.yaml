@@ -14,7 +14,7 @@
   proposal: grant
   advisors:
     - {character: li_linfu, stance: support, option: grant, line: 陛下圣明。蕃将无党援，专任之，边事可无忧。, requires: {office: you_xiang}}
-    - {character: gao_lishi, stance: neutral, line: 圣意所在，老奴不敢多言。}
+    - {character: gao_lishi, stance: neutral, line: 圣意所在，老奴不敢多言。, option: grant_watch}
     - {character: yang_guozhong, stance: oppose, option: deny, line: 三镇之兵近二十万，尽付一胡，臣以为不可。}
   options:
     - id: deny
@@ -56,9 +56,10 @@
   region: jingji
   illustration: event.xi_er
   advisors:
-    - {character: yang_guozhong, stance: support, line: 厚赐以示恩宠，范阳必感激图报。}
-    - {character: yan_zhenqing, stance: oppose, line: 礼者，所以别嫌明微。边将出入宫掖，非礼也。}
-    - {character: yang_guifei, stance: support, line: 不过一场玩笑，三郎何必当真？}
+    - {character: yang_guozhong, stance: support, line: 厚赐以示恩宠，范阳必感激图报。, option: lavish}
+    - {character: yan_zhenqing, stance: oppose, line: 礼者，所以别嫌明微。边将出入宫掖，非礼也。, option: rites}
+    - {character: yang_guifei, stance: support, line: 不过一场玩笑，三郎何必当真？, option: lavish}
+  proposal: lavish
   options:
     - id: modest
       label: 依常例赏赐，禁中出入有节
@@ -91,9 +92,10 @@
   region: jiannan
   illustration: event.xier_defeat
   advisors:
-    - {character: yang_guozhong, stance: support, line: 蛮夷犯顺，不讨无以示威。仲通一出，指日可平。}
-    - {character: gao_xianzhi, stance: oppose, line: 西南山险瘴深，不宜深入。}
-    - {character: xianyu_zhongtong, stance: support, line: 南诏小蛮，臣发兵一举可平。}
+    - {character: yang_guozhong, stance: support, line: 蛮夷犯顺，不讨无以示威。仲通一出，指日可平。, option: campaign}
+    - {character: gao_xianzhi, stance: oppose, line: 西南山险瘴深，不宜深入。, option: appease}
+    - {character: xianyu_zhongtong, stance: support, line: 南诏小蛮，臣发兵一举可平。, option: campaign}
+  proposal: campaign
   options:
     - id: appease
       label: 查办张虔陀之过，许南诏谢罪
@@ -117,9 +119,10 @@
   region: anxi
   illustration: event.anxi_triumph
   advisors:
-    - {character: li_linfu, stance: neutral, line: 诸胡之心可用，臣以为宜留思顺。, requires: {office: you_xiang}}
-    - {character: gao_xianzhi, stance: support, line: 石国余党投大食，不早除，后患不小。}
-    - {character: geshu_han, stance: oppose, line: 西陲已苦战数年，士卒当歇一歇了。}
+    - {character: li_linfu, stance: neutral, line: 诸胡之心可用，臣以为宜留思顺。, requires: {office: you_xiang}, option: restrain}
+    - {character: gao_xianzhi, stance: support, line: 石国余党投大食，不早除，后患不小。, option: campaign}
+    - {character: geshu_han, stance: oppose, line: 西陲已苦战数年，士卒当歇一歇了。, option: restrain}
+  proposal: campaign
   options:
     - id: restrain
       label: 留思顺于河西，命仙芝不得擅启边衅
@@ -145,9 +148,10 @@
   region: jingji
   illustration: event.huaqing_winter
   advisors:
-    - {character: yang_guozhong, stance: support, line: 今岁所入，较往岁又增，皆陛下洪福。修宫室正当其时。}
-    - {character: gao_lishi, stance: oppose, line: 老奴斗胆：宿卫诸军，久不操练了。}
-    - {character: chen_xilie, stance: neutral, line: 右相与度支所言皆是，臣无异议。, requires: {office: [zuo_xiang, you_xiang]}}
+    - {character: yang_guozhong, stance: support, line: 今岁所入，较往岁又增，皆陛下洪福。修宫室正当其时。, option: palace}
+    - {character: gao_lishi, stance: oppose, line: 老奴斗胆：宿卫诸军，久不操练了。, option: train}
+    - {character: chen_xilie, stance: neutral, line: 右相与度支所言皆是，臣无异议。, requires: {office: [zuo_xiang, you_xiang]}, option: palace}
+  proposal: palace
   options:
     - id: train
       label: 拨款整训京畿禁军
@@ -187,9 +191,10 @@
   region: jiannan
   illustration: event.xier_defeat
   advisors:
-    - {character: yang_guozhong, stance: support, line: 小挫而已，臣已筹得军资，再发兵数万，必雪此耻。}
-    - {character: yan_zhenqing, stance: oppose, line: 六万之众，一朝覆没，而以功闻，欺天也。}
-    - {character: gao_lishi, stance: neutral, line: 老奴听说，募兵的道上，哭声不绝。}
+    - {character: yang_guozhong, stance: support, line: 小挫而已，臣已筹得军资，再发兵数万，必雪此耻。, option: conscript}
+    - {character: yan_zhenqing, stance: oppose, line: 六万之众，一朝覆没，而以功闻，欺天也。, option: peace}
+    - {character: gao_lishi, stance: neutral, line: 老奴听说，募兵的道上，哭声不绝。, option: peace}
+  proposal: conscript
   options:
     - id: peace
       label: 追究败责，罢兵议和
@@ -244,9 +249,10 @@
   region: fanyang
   illustration: event.fanyang_armoury
   advisors:
-    - {character: li_linfu, stance: support, line: 边将请战，忠勇可嘉，臣以为可许。, requires: {office: you_xiang}}
-    - {character: geshu_han, stance: oppose, line: 那胖胡要借讨契丹之名，把河东兵也攥在手里。}
-    - {character: gao_lishi, stance: neutral, line: 老奴只记得，契丹去岁并不曾犯边。}
+    - {character: li_linfu, stance: support, line: 边将请战，忠勇可嘉，臣以为可许。, requires: {office: you_xiang}, option: approve}
+    - {character: geshu_han, stance: oppose, line: 那胖胡要借讨契丹之名，把河东兵也攥在手里。, option: forbid}
+    - {character: gao_lishi, stance: neutral, line: 老奴只记得，契丹去岁并不曾犯边。, option: forbid}
+  proposal: approve
   options:
     - id: forbid
       label: 不许河东兵出境，令其固守
@@ -270,8 +276,9 @@
   region: henan
   illustration: event.tax_treasury
   advisors:
-    - {character: yang_guozhong, stance: support, line: 江淮加运，一季可得百余万石，臣督办即是。, requires: {office: [duzhi, you_xiang]}}
-    - {character: yan_zhenqing, stance: oppose, line: 加运则扰民，不如修汴渠以为久计。}
+    - {character: yang_guozhong, stance: support, line: 江淮加运，一季可得百余万石，臣督办即是。, requires: {office: [duzhi, you_xiang], region: jingji}, option: extra_haul}
+    - {character: yan_zhenqing, stance: oppose, line: 加运则扰民，不如修汴渠以为久计。, option: canal}
+  proposal: extra_haul
   options:
     - id: canal
       label: 修治汴渠漕路
@@ -308,7 +315,7 @@
   proposal: allow
   advisors:
     - {character: li_linfu, stance: support, option: allow, line: 臣不敢言东宫有过，然属官交结边将，不可不问。, requires: {office: you_xiang}}
-    - {character: li_heng, stance: neutral, line: 儿臣管束不严，请父皇责罚。}
+    - {character: li_heng, stance: neutral, line: 儿臣管束不严，请父皇责罚。, option: protect}
     - {character: gao_lishi, stance: oppose, option: protect, line: 老奴斗胆：太子仁孝，此事恐有人构之。}
   options:
     - id: protect
@@ -339,8 +346,9 @@
   region: anxi
   illustration: event.talas
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 败在葛逻禄反复，非战之罪。再给臣兵，可复此仇。}
-    - {character: feng_changqing, stance: oppose, line: 四镇存粮不支一冬，再征则安西自乱。}
+    - {character: gao_xianzhi, stance: support, line: 败在葛逻禄反复，非战之罪。再给臣兵，可复此仇。, option: avenge}
+    - {character: feng_changqing, stance: oppose, line: 四镇存粮不支一冬，再征则安西自乱。, option: hold}
+  proposal: avenge
   options:
     - id: hold
       label: 稳守四镇，安抚葛逻禄
@@ -377,7 +385,7 @@
   proposal: farm
   advisors:
     - {character: feng_changqing, stance: support, option: farm, line: 四镇无事，臣请以余粮屯田。, requires: {region: anxi}}
-    - {character: gao_xianzhi, stance: oppose, line: 臣在京师闲着，骨头都要生锈了。, requires: {region: jingji}}
+    - {character: gao_xianzhi, stance: oppose, line: 臣在京师闲着，骨头都要生锈了。, requires: {region: jingji}, option: reward}
   options:
     - id: farm
       label: 准安西屯田
@@ -404,9 +412,10 @@
   region: shuofang
   illustration: event.jiedu_appointment
   advisors:
-    - {character: li_linfu, stance: support, line: 思顺久镇河西，诸胡服之，兼领朔方最为稳便。, requires: {office: you_xiang}}
-    - {character: gao_lishi, stance: neutral, line: 老奴听说，朔方军里有个郭子仪，士卒都肯为他死。}
+    - {character: li_linfu, stance: support, line: 思顺久镇河西，诸胡服之，兼领朔方最为稳便。, requires: {office: you_xiang}, option: sishun}
+    - {character: gao_lishi, stance: neutral, line: 老奴听说，朔方军里有个郭子仪，士卒都肯为他死。, option: guo}
     - {character: guo_ziyi, stance: neutral, line: 臣名位尚卑，唯陛下所使。}
+  proposal: sishun
   options:
     - id: guo
       label: 以郭子仪知朔方节度
@@ -444,8 +453,9 @@
   region: jingji
   illustration: event.tax_treasury
   advisors:
-    - {character: yang_guozhong, stance: support, line: 诸州轻货变造入京，一转手便是百余万贯。, requires: {office: [duzhi, you_xiang]}}
-    - {character: yan_zhenqing, stance: oppose, line: 聚敛之臣，不如盗臣。请遣御史分道按察。}
+    - {character: yang_guozhong, stance: support, line: 诸州轻货变造入京，一转手便是百余万贯。, requires: {office: [duzhi, you_xiang]}, option: convert}
+    - {character: yan_zhenqing, stance: oppose, line: 聚敛之臣，不如盗臣。请遣御史分道按察。, option: censors}
+  proposal: convert
   options:
     - id: censors
       label: 遣御史分道按察
@@ -475,8 +485,9 @@
   region: duji
   illustration: event.city_walls
   advisors:
-    - {character: chen_xilie, stance: neutral, line: 天下太平，东都无警，徐修可也。, requires: {office: [zuo_xiang, you_xiang]}}
-    - {character: feng_changqing, stance: support, line: 城不修、兵不练，有事时便来不及了。}
+    - {character: chen_xilie, stance: neutral, line: 天下太平，东都无警，徐修可也。, requires: {office: [zuo_xiang, you_xiang]}, option: walls}
+    - {character: feng_changqing, stance: support, line: 城不修、兵不练，有事时便来不及了。, option: garrison}
+  proposal: garrison
   options:
     - id: walls
       label: 修东都城防
@@ -503,7 +514,7 @@
   advisors:
     - {character: yang_guifei, stance: support, option: reward, line: 禄山孝顺得很，陛下该好好赏他。}
     - {character: yang_guozhong, stance: oppose, option: plain, line: 贡物愈多，其心愈不可测。}
-    - {character: gao_lishi, stance: neutral, line: 道上的牛羊，老奴看着倒像是在点数。}
+    - {character: gao_lishi, stance: neutral, line: 道上的牛羊，老奴看着倒像是在点数。, option: plain}
   options:
     - id: reward
       label: 优诏答之，回赐金帛
@@ -533,8 +544,9 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 考课不严，则吏不畏法。请黜其尤者以儆百官。}
-    - {character: li_linfu, stance: oppose, line: 陛下圣明。然州郡多事，臣恐骤加黜陟，人人自危。, requires: {office: you_xiang}}
+    - {character: yan_zhenqing, stance: support, line: 考课不严，则吏不畏法。请黜其尤者以儆百官。, option: strict}
+    - {character: li_linfu, stance: oppose, line: 陛下圣明。然州郡多事，臣恐骤加黜陟，人人自危。, requires: {office: you_xiang}, option: lenient}
+  proposal: strict
   options:
     - id: strict
       label: 严加黜陟
@@ -557,8 +569,9 @@
   region: jingji
   illustration: event.winter_clothing
   advisors:
-    - {character: yang_guozhong, stance: oppose, line: 边费岁增，减其半亦足御寒。}
-    - {character: geshu_han, stance: support, line: 士卒冻馁，谁肯卖命？}
+    - {character: yang_guozhong, stance: oppose, line: 边费岁增，减其半亦足御寒。, option: half}
+    - {character: geshu_han, stance: support, line: 士卒冻馁，谁肯卖命？, option: full}
+  proposal: full
   options:
     - id: full
       label: 按旧额支给，并加赏赐
@@ -596,8 +609,9 @@
   region: fanyang
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 臣兄杲卿，忠义出于天性，可托以心腹之事。}
-    - {character: gao_lishi, stance: neutral, line: 此事须机密，经老奴之手便是。}
+    - {character: yan_zhenqing, stance: support, line: 臣兄杲卿，忠义出于天性，可托以心腹之事。, option: contact}
+    - {character: gao_lishi, stance: neutral, line: 此事须机密，经老奴之手便是。, option: contact}
+  proposal: contact
   options:
     - id: contact
       label: 遣密使通问颜杲卿
@@ -630,8 +644,9 @@
   region: fanyang
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 臣兄杲卿，忠义出于天性，可托以心腹之事。}
-    - {character: gao_lishi, stance: neutral, line: 此事须机密，经老奴之手便是。}
+    - {character: yan_zhenqing, stance: support, line: 臣兄杲卿，忠义出于天性，可托以心腹之事。, option: contact}
+    - {character: gao_lishi, stance: neutral, line: 此事须机密，经老奴之手便是。, option: contact}
+  proposal: contact
   options:
     - id: contact
       label: 遣密使通问颜杲卿
@@ -659,16 +674,17 @@
   region: fanyang
   illustration: event.envoy_in_fanyang
   advisors:
-    - {character: yang_guozhong, stance: support, line: 遣人一看便知，臣早说过他必反。}
-    - {character: bian_lingcheng, stance: support, line: 奴婢愿往，必替大家看个明白。}
-    - {character: yan_zhenqing, stance: neutral, line: 所遣非人，所见亦非实。请先清吏治。}
+    - {character: yang_guozhong, stance: support, line: 遣人一看便知，臣早说过他必反。, option: eunuch}
+    - {character: bian_lingcheng, stance: support, line: 奴婢愿往，必替大家看个明白。, option: eunuch}
+    - {character: yan_zhenqing, stance: neutral, line: 所遣非人，所见亦非实。请先清吏治。, option: censor}
+  proposal: eunuch
   options:
     - id: eunuch
       label: 遣中使以赐物为名往察
       ops:
         - {op: set_flag, key: envoy_sent, value: true}
         - {op: adjust_resource, resource: treasury, delta: -30, reason: 赐物}
-      hint: 积弊 < 50 时得实奏：给出范阳虚实的定性结论，并使异志、鼙鼓风闻区间宽度减半（已有颜杲卿密报者不再收窄，情报只减半一次）；积弊 ≥ 50 时中使多受贿，奏报不实
+      hint: 国库 −30；中使往返约两季：本季遣出，下季结算报「中使在途」，再下一季结算时回奏（遣出后第二次结算）。积弊 < 50 时得实奏：给出范阳虚实的定性结论，并使异志、鼙鼓风闻区间宽度减半（已有颜杲卿密报者不再收窄，情报只减半一次）；积弊 ≥ 50 时中使多受贿，奏报不实
     - id: censor
       label: 遣御史持节宣慰
       memory: {character: an_lushan, text: 朝廷遣御史持节来范阳察看}
@@ -677,7 +693,7 @@
         - {op: adjust_resource, resource: corruption, delta: -2, reason: 御史清望}
         - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 受察而疑}
         - {op: adjust_resource, resource: treasury, delta: -30, reason: 宣慰}
-      hint: 积弊 −2，异志（风闻）↑
+      hint: 国库 −30，积弊 −2，异志（风闻）↑；御史往返约两季，遣出后第二次结算时回奏（实奏与否同中使）
 
 - id: p_restrain_guozhong
   conditions:
@@ -692,9 +708,10 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: yang_guozhong, stance: oppose, line: 臣句句是为陛下！禄山不除，必为后患。}
-    - {character: gao_lishi, stance: support, line: 老奴斗胆：两虎相斗，伤的是陛下。}
-    - {character: yang_guifei, stance: neutral, line: 阿兄性子急，陛下好好说他便是。}
+    - {character: yang_guozhong, stance: oppose, line: 臣句句是为陛下！禄山不除，必为后患。, option: heed}
+    - {character: gao_lishi, stance: support, line: 老奴斗胆：两虎相斗，伤的是陛下。, option: restrain}
+    - {character: yang_guifei, stance: neutral, line: 阿兄性子急，陛下好好说他便是。, option: restrain}
+  proposal: restrain
   options:
     - id: restrain
       label: 约束国忠，不许擅逼范阳
@@ -717,6 +734,16 @@
         - {op: adjust_resource, resource: an_ambition, delta: -5, reason: 宿敌去位}
         - {op: adjust_trait, character: yang_guifei, trait: favor, delta: -2}
       hint: 朝争 +4，君威 +3，异志（风闻）大降；右相出缺
+    - id: heed
+      label: 听国忠所言，切责禄山上表自明
+      memory: {character: yang_guozhong, text: 将相交恶时，陛下听臣所言，切责禄山}
+      ops:
+        - {op: set_flag, key: guozhong_restrained, value: true}
+        - {op: adjust_resource, resource: court_strife, delta: 2, reason: 将相之争公开化}
+        - {op: adjust_resource, resource: an_ambition, delta: 3, reason: 朝廷切责}
+        - {op: adjust_resource, resource: rebellion_risk, delta: 2, reason: 范阳惊疑}
+        - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: 1}
+      hint: 朝争 +2，鼙鼓 +2，异志（风闻）↑；国忠益得宠
 
 - id: p_summon
   conditions:
@@ -834,6 +861,104 @@
         - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 疑惧未解}
       hint: 异志（风闻）↑
 
+# 禄山在京而非奉召（开局即在长安，或经诏令移驻京畿）：就地决其去留（gpt-06 #12）。留京诸选项与「禄山在京」同（兵变之险、三策安抚相同），
+# 另因无召见之名，夺镇者君威 −2。若不处置，开局之季结算后禄山自行辞归（事件「禄山辞归范阳」）。
+- id: p_an_in_capital
+  conditions:
+    all:
+      - {kind: character_region, operator: eq, character: an_lushan, region: jingji}
+      - {kind: office_holder, operator: eq, office: fanyang_jds, character: an_lushan}
+      - {not: {kind: flag, operator: eq, key: an_summon_arrived, value: true}}   # 奉召而来者见「禄山在京」
+      - {not: {kind: flag, operator: eq, key: an_coming, value: true}}           # 应召入朝者见华清宫入朝之抉择
+      - {not: {kind: flag, operator: eq, key: an_detained, value: true}}
+      - {not: {kind: flag, operator: eq, key: an_kept_in_capital, value: true}}
+      - {not: {kind: flag, operator: eq, key: rebellion_started, value: true}}
+      - {kind: turn, operator: lte, value: 17}
+  title: 禄山在京未归
+  keywords: [留京, 留禄山, 遣还, 禄山在京, 禄山未归]
+  summary: >-
+    安禄山身在京师（入朝未归，或奉诏移驻京畿），范阳、平卢军务暂付部将。若不处置，禄山将陛辞还镇。
+    留之京师、夺其范阳，则禄山兵柄大减，然范阳诸将多出其门下，须防旧部拒命（届时另有奏疏详陈兵变之险与三策安抚）；
+    无召见之名而骤夺其镇，诸将不免自疑。
+  region: jingji
+  illustration: event.an_court_visit
+  advisors:
+    - {character: yang_guozhong, stance: support, option: keep, line: 他人在京里，正好留住，放回去便是纵虎归山。}
+    - {character: gao_lishi, stance: neutral, line: 留他，范阳的兵谁管？放他，又如何收得回？}
+    - {character: li_linfu, stance: oppose, option: release, line: 陛下圣明。禄山无过，骤留之，诸镇将何以自安？, requires: {office: you_xiang}}
+  proposal: keep
+  options:
+    - id: release
+      label: 慰谕数语，听其归镇
+      memory: {character: an_lushan, text: 在京陛辞，陛下慰谕数语，听我归镇}
+      ops:
+        - {op: move_character, character: an_lushan, to_region: fanyang}
+      hint: 禄山启程还镇（行程按实际路线计）；诸事如常
+    - id: honor
+      label: 加官厚赐，遣还范阳
+      memory: {character: an_lushan, text: 在京陛辞，陛下加官厚赐，遣我还镇}
+      ops:
+        - {op: move_character, character: an_lushan, to_region: fanyang}
+        - {op: adjust_resource, resource: treasury, delta: -100, reason: 厚赐}
+        - {op: adjust_resource, resource: an_ambition, delta: -4, reason: 恩赐优渥}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -3, reason: 君臣释疑}
+        - {op: adjust_resource, resource: fanzhen_power, delta: 2, reason: 宠任益隆}
+        - {op: set_flag, key: an_honored, value: true}
+      hint: 国库 −100，鼙鼓 −3，外重内轻 +2，异志（风闻）↓；禄山启程还镇
+    - id: keep
+      label: 留京宿卫，不夺其官；范阳暂由副将知留后（不任命）
+      memory: {character: an_lushan, text: 在京欲归，竟被留住，不得还镇}
+      ops:
+        - {op: set_flag, key: an_kept_in_capital, value: true}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -6, reason: 主帅在朝}
+        - {op: adjust_resource, resource: an_command, delta: -40, reason: 主帅不在镇}
+        - {op: adjust_resource, resource: an_ambition, delta: 5, reason: 久羁生怨}
+        - {op: adjust_resource, resource: fanzhen_power, delta: -3, reason: 帅不在镇}
+        - {op: adjust_resource, resource: court_strife, delta: 3, reason: 朝野哗然}
+      hint: 禄山兵柄 −40（官职未夺，旧部仍奉其为主），鼙鼓 −6，外重内轻 −3，朝争 +3，异志（风闻）大升；范阳诸将或请还帅（同「禄山在京」之留京宿卫）；此后再以诏令罢其范阳节度，即并入留京夺镇
+    - id: detain
+      label: 夺其范阳节度，留京奉朝请；范阳由高仙芝接任（平卢、河东随后解去）
+      memory: {character: an_lushan, text: 入朝未归，竟被夺去范阳，留京奉朝请，范阳付与高仙芝}
+      ops:
+        - {op: dismiss, character: an_lushan, office: fanyang_jds}
+        - {op: appoint, character: gao_xianzhi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
+        - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
+        - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 无故夺镇，诸将自疑}
+        - {op: set_flag, key: an_detained, value: true}
+      hint: 高仙芝实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4，君威 −2（无故夺镇，诸将自疑）；未经召见而夺镇另有「诸镇自危」（安抚之策先记 −1；此后两季内旧部不能归心，每季约一成五兵变之险，不论异志高低、安抚几策；异志、朝争↑，君威 −3，外重内轻 +4）；平卢、河东若仍兼领随后解去；范阳旧部或拒命（见奏疏「范阳旧部可虑」：兵变之险与三策安抚同留京夺镇）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
+    - id: detain_guo
+      label: 夺其范阳节度，留京奉朝请；范阳由郭子仪接任（平卢、河东随后解去）
+      memory: {character: an_lushan, text: 入朝未归，竟被夺去范阳，留京奉朝请，范阳付与郭子仪}
+      ops:
+        - {op: dismiss, character: an_lushan, office: fanyang_jds}
+        - {op: appoint, character: guo_ziyi, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
+        - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
+        - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 无故夺镇，诸将自疑}
+        - {op: set_flag, key: an_detained, value: true}
+      hint: 郭子仪实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4，君威 −2（无故夺镇，诸将自疑）；未经召见而夺镇另有「诸镇自危」（安抚之策先记 −1；此后两季内旧部不能归心，每季约一成五兵变之险，不论异志高低、安抚几策；异志、朝争↑，君威 −3，外重内轻 +4）；平卢、河东若仍兼领随后解去；范阳旧部或拒命（见奏疏「范阳旧部可虑」：兵变之险与三策安抚同留京夺镇）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
+    - id: detain_feng
+      label: 夺其范阳节度，留京奉朝请；范阳由封常清接任（平卢、河东随后解去）
+      memory: {character: an_lushan, text: 入朝未归，竟被夺去范阳，留京奉朝请，范阳付与封常清}
+      ops:
+        - {op: dismiss, character: an_lushan, office: fanyang_jds}
+        - {op: appoint, character: feng_changqing, office: fanyang_jds, dispatch: true}   # 实授并启程赴任（兼统fanyang_army）
+        - {op: adjust_resource, resource: fanzhen_power, delta: -12, reason: 范阳易帅}
+        - {op: adjust_resource, resource: an_ambition, delta: 8, reason: 夺镇之恨}
+        - {op: adjust_resource, resource: rebellion_risk, delta: -10, reason: 首领在朝}
+        - {op: adjust_resource, resource: an_command, delta: -70, reason: 夺其范阳节度}
+        - {op: adjust_resource, resource: court_strife, delta: 4, reason: 朝野哗然}
+        - {op: adjust_resource, resource: authority, delta: -2, reason: 无故夺镇，诸将自疑}
+        - {op: set_flag, key: an_detained, value: true}
+      hint: 封常清实授范阳节度并启程赴镇（行程按实际路线计，未到之前副将暂摄）；禄山兵柄 −70，外重内轻 −12，鼙鼓 −10，朝争 +4，君威 −2（无故夺镇，诸将自疑）；未经召见而夺镇另有「诸镇自危」（安抚之策先记 −1；此后两季内旧部不能归心，每季约一成五兵变之险，不论异志高低、安抚几策；异志、朝争↑，君威 −3，外重内轻 +4）；平卢、河东若仍兼领随后解去；范阳旧部或拒命（见奏疏「范阳旧部可虑」：兵变之险与三策安抚同留京夺镇）；新帅到镇且安抚满三策后旧部归心，兵柄归零、鼙鼓逐季消退
+
 - id: p_fanyang_warn
   conditions:
     all:
@@ -850,8 +975,9 @@
   region: fanyang
   illustration: event.fanyang_armoury
   advisors:
-    - {character: gao_lishi, stance: support, line: 拔了树根，枝叶还在。范阳那些将官，得先安住了。}
-    - {character: yang_guozhong, stance: oppose, line: 胡将尽是禄山死党，安抚何用？当一网打尽！}
+    - {character: gao_lishi, stance: support, line: 拔了树根，枝叶还在。范阳那些将官，得先安住了。, option: all_three}
+    - {character: yang_guozhong, stance: oppose, line: 胡将尽是禄山死党，安抚何用？当一网打尽！, option: purge}
+  proposal: all_three
   options:
     - id: all_three
       label: 三策并行：清偿欠饷、下诏不问旧部、移河东军屯河北
@@ -901,8 +1027,9 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: gao_lishi, stance: support, line: 吵得久了，谁也不肯先住口。陛下给个台阶，大家都好下。}
-    - {character: yan_zhenqing, stance: neutral, line: 和则和矣，是非却须分明，不可一味调停。}
+    - {character: gao_lishi, stance: support, line: 吵得久了，谁也不肯先住口。陛下给个台阶，大家都好下。, option: mediate}
+    - {character: yan_zhenqing, stance: neutral, line: 和则和矣，是非却须分明，不可一味调停。, option: divide}
+  proposal: mediate
   options:
     - id: divide
       label: 分职：析政事堂诸司之权，各专其事，不得相侵
@@ -927,6 +1054,40 @@
         - {op: adjust_resource, resource: morale, delta: 1, reason: 宣抚诸道}
       hint: 朝争 −5，国库 −40，积弊 +2，民心 +1（隔三季可再议）
 
+# 中枢官缺（gpt-07 #8）：右相、左相、判度支、御史中丞、京兆尹任一出缺满两季即见（计数器 vacant_*）。处置后隔四季复议。
+- id: p_vacancies
+  conditions:
+    any:
+      - {kind: counter, key: vacant_you_xiang, operator: gte, value: 2}
+      - {kind: counter, key: vacant_zuo_xiang, operator: gte, value: 2}
+      - {kind: counter, key: vacant_duzhi, operator: gte, value: 2}
+      - {kind: counter, key: vacant_yushi_zhongcheng, operator: gte, value: 2}
+      - {kind: counter, key: vacant_jingzhao_yin, operator: gte, value: 2}
+  title: 中枢官缺
+  keywords: [官缺, 出缺, 补授, 有司代行]
+  summary: >-
+    中书奏：中枢要职有久缺不补者（右相、左相、判度支、御史中丞、京兆尹之中，出缺已满两季者见官职表「出缺」一栏），诸司以次官代行，事多稽滞。
+    官缺满两季后，每缺每季小耗：相位君威 −0.3，判度支、御史中丞积弊 +0.3，京兆尹积弊 +0.2，补授之后即止。
+    补授须以诏令 appoint 择人（人选须才具相当、未兼他职或未达兼职上限）；本条只决代行之法。
+  region: jingji
+  illustration: event.zhengshi_hall
+  advisors:
+    - {character: gao_lishi, stance: support, option: noted, line: 位子空着，底下的人便各行其是。陛下早些定了人吧。}
+    - {character: chen_xilie, stance: neutral, option: acting, line: 诸司次官尚可代行一时，臣请暂委之。, requires: {office: [zuo_xiang, you_xiang]}}
+  proposal: noted
+  options:
+    - id: noted
+      label: 知道了，朕自择人，另以诏令处分
+      ops: []
+      hint: 不另处置；官缺之耗照旧，直到以诏令 appoint 补授（隔四季复议）
+    - id: acting
+      label: 令诸司次官权知其事，限期四季
+      ops:
+        - {op: set_flag, key: vacancy_acting, value: true}
+        - {op: adjust_resource, resource: corruption, delta: 1, reason: 次官权知，责任不专}
+        - {op: adjust_resource, resource: court_strife, delta: 1, reason: 诸司争权}
+      hint: 积弊 +1，朝争 +1；此后四季内官缺不再逐季小耗（期满仍缺则复耗，奏疏复议）
+
 - id: p_abdicate
   conditions:
     all:
@@ -937,8 +1098,9 @@
   region: jingji
   illustration: event.gao_lishi_counsel
   advisors:
-    - {character: li_heng, stance: oppose, line: 儿臣万死不敢！父皇春秋正盛。}
+    - {character: li_heng, stance: oppose, line: 儿臣万死不敢！父皇春秋正盛。, option: rouse}
     - {character: gao_lishi, stance: neutral, line: 老奴只听陛下的。}
+  proposal: abdicate
   options:
     - id: abdicate
       label: 下制传位东宫
@@ -1035,8 +1197,9 @@
   region: huainan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 折变轻货，一可省运费，二可实左藏。}
-    - {character: yan_zhenqing, stance: oppose, line: 关中仰食江淮，折变则太仓空矣。}
+    - {character: yang_guozhong, stance: support, line: 折变轻货，一可省运费，二可实左藏。, option: convert}
+    - {character: yan_zhenqing, stance: oppose, line: 关中仰食江淮，折变则太仓空矣。, option: boats}
+  proposal: convert
   options:
     - id: boats
       label: 增造漕船
@@ -1059,8 +1222,9 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 法者，天下之公器。请依律科断。}
-    - {character: li_linfu, stance: oppose, line: 臣恐株连太广，有伤和气。, requires: {office: you_xiang}}
+    - {character: yan_zhenqing, stance: support, line: 法者，天下之公器。请依律科断。, option: punish}
+    - {character: li_linfu, stance: oppose, line: 臣恐株连太广，有伤和气。, requires: {office: you_xiang}, option: quiet}
+  proposal: punish
   options:
     - id: punish
       label: 依律科断，不论亲故
@@ -1110,14 +1274,19 @@
       hint: 边患 −2，君威 −1
 
 - id: t5_jingzhao
-  turn: 5
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t5_jingzhao_held"}}   # 同题分支：已处理其一则不再出现
+      - {kind: turn, operator: eq, value: 5}
+      - {kind: office_holder, operator: eq, office: jingzhao_yin, character: null}
   title: 国忠请兼京兆尹
   summary: 京兆尹出缺。杨国忠请以本官兼领，统京城诸县与市易。
   region: jingji
   illustration: event.guozhong_chancellor
   advisors:
-    - {character: yang_guozhong, stance: support, line: 京城钱谷，臣一手可理，岁入还能再增。}
-    - {character: li_linfu, stance: oppose, line: 陛下圣明。然一人兼领太多，臣恐非国家之福。, requires: {office: you_xiang}}
+    - {character: yang_guozhong, stance: support, line: 京城钱谷，臣一手可理，岁入还能再增。, requires: {region: jingji}, option: approve}
+    - {character: li_linfu, stance: oppose, line: 陛下圣明。然一人兼领太多，臣恐非国家之福。, requires: {office: you_xiang}, option: deny}
+  proposal: approve
   options:
     - id: approve
       label: 准兼京兆尹
@@ -1134,7 +1303,41 @@
         - {op: adjust_resource, resource: authority, delta: 1, reason: 抑外戚}
         - {op: adjust_resource, resource: corruption, delta: -1, reason: 清望}
         - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: -1}
-      hint: 君威 +1，积弊 −1；京兆尹官缺仍空（游戏中不任命）
+      hint: 君威 +1，积弊 −1；京兆尹官缺仍空（本条不任命；可另以诏令 appoint 择人，中枢官缺久不补另有小耗，见奏疏「中枢官缺」）
+
+# 京兆尹已有其人（玩家先已任命）：国忠请夺其任而自领。appoint 不能顶替现任，故不设「准兼」，改为分理之议。
+- id: t5_jingzhao_held
+  variant_of: t5_jingzhao   # 同一议题按局势写的分支（content_lint 检查互斥）
+  conditions:
+    all:
+      - {not: {kind: flag, operator: exists, key: "memorial:t5_jingzhao"}}   # 同题分支：已处理其一则不再出现
+      - {kind: turn, operator: eq, value: 5}
+      - {not: {kind: office_holder, operator: eq, office: jingzhao_yin, character: null}}
+      - {kind: character_status, operator: eq, character: yang_guozhong, value: alive}
+  title: 国忠请兼京兆尹
+  summary: 京兆尹现有其人在任（见官职表）。杨国忠言京城钱谷、市易散在诸司，请夺现任，以本官兼领京兆。
+  region: jingji
+  illustration: event.guozhong_chancellor
+  advisors:
+    - {character: yang_guozhong, stance: support, line: 京兆诸县的钱谷，交给臣，岁入还能再增。, requires: {region: jingji}, option: share}
+    - {character: li_linfu, stance: oppose, line: 陛下圣明。京兆既已得人，臣恐夺此与彼，非国家之福。, requires: {office: you_xiang}, option: deny}
+  proposal: share
+  options:
+    - id: deny
+      label: 驳回国忠之请，京兆一仍其旧
+      memory: {character: yang_guozhong, text: 请兼京兆尹，陛下以京兆已有其人，不许}
+      ops:
+        - {op: adjust_resource, resource: authority, delta: 1, reason: 抑外戚}
+        - {op: adjust_resource, resource: corruption, delta: -1, reason: 清望}
+        - {op: adjust_trait, character: yang_guozhong, trait: favor, delta: -1}
+      hint: 君威 +1，积弊 −1；京兆尹现任不动
+    - id: share
+      label: 加国忠京畿采访之名，与京兆分理钱谷（不改官职）
+      ops:
+        - {op: adjust_resource, resource: treasury, delta: 30, reason: 京城市易}
+        - {op: adjust_resource, resource: corruption, delta: 2, reason: 外戚揽权}
+        - {op: adjust_resource, resource: court_strife, delta: 3, reason: 两署相侵}
+      hint: 国库 +30，积弊 +2，朝争 +3；京兆尹现任不动，国忠不任京兆尹
 
 - id: t5_wanghong
   turn: 5
@@ -1144,9 +1347,10 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: yang_guozhong, stance: support, line: 王鉷兄弟同谋，岂有不知之理！请付臣推按。}
-    - {character: li_linfu, stance: oppose, line: 陛下圣明。王鉷素来恭谨，臣恐为其弟所累。, requires: {office: you_xiang}}
-    - {character: gao_lishi, stance: neutral, line: 这案子一深究，政事堂里便要换人了。}
+    - {character: yang_guozhong, stance: support, line: 王鉷兄弟同谋，岂有不知之理！请付臣推按。, option: purge}
+    - {character: li_linfu, stance: oppose, line: 陛下圣明。王鉷素来恭谨，臣恐为其弟所累。, requires: {office: you_xiang}, option: pardon}
+    - {character: gao_lishi, stance: neutral, line: 这案子一深究，政事堂里便要换人了。, option: limit}
+  proposal: purge
   options:
     - id: purge
       label: 穷治党与，赐王鉷自尽
@@ -1183,9 +1387,10 @@
   region: jingji
   illustration: event.chancellor_appointed
   advisors:
-    - {character: yang_guozhong, stance: support, line: 臣不敢有此心……但陛下若用臣，臣必尽死。}
+    - {character: yang_guozhong, stance: support, line: 臣不敢有此心……但陛下若用臣，臣必尽死。, option: guozhong}
     - {character: chen_xilie, stance: neutral, line: 臣……唯陛下所命。, requires: {office: [zuo_xiang, you_xiang]}}
-    - {character: gao_lishi, stance: oppose, line: 老奴斗胆：外戚为相，自古少有善终。}
+    - {character: gao_lishi, stance: oppose, line: 老奴斗胆：外戚为相，自古少有善终。, option: yan}
+  proposal: guozhong
   options:
     - id: chen
       label: 预定陈希烈继任右相
@@ -1212,26 +1417,28 @@
 
 - id: t6_feast
   turn: 6
-  title: 哥安将同朝
-  summary: 哥舒翰、安禄山将同时入朝。二人素不相能，或请使高力士设宴，令其释怨。
+  title: 哥安交恶
+  # 史载十一载冬二人同时入朝、宴于城东；本局二人各在其镇（不经行程调入京师），故改为书信调停（见 FACT_CHECK）。
+  summary: 哥舒翰、安禄山素不相能，近日各上表互诋。二人各在其镇，或请使高力士致书二人、分赐御酒，令其释怨。
   region: jingji
   illustration: event.court_festival
   advisors:
-    - {character: gao_lishi, stance: neutral, line: 老奴可以设宴，只怕两位将军喝了酒，话就难听了。}
-    - {character: geshu_han, stance: oppose, line: 臣与胡儿同席？陛下饶了臣罢。}
+    - {character: gao_lishi, stance: neutral, line: 老奴可以写这封信，只怕两位将军看了信，话就更难听了。}
+    - {character: geshu_han, stance: oppose, line: 臣与胡儿讲和？陛下饶了臣罢。, option: apart}
+  proposal: feast
   options:
     - id: feast
-      label: 命高力士设宴和解
+      label: 命高力士致书二人，分赐御酒以和解
       ops:
         - {op: adjust_resource, resource: authority, delta: 1, reason: 示和}
-      hint: 君威 +1；宴席成败未卜（史事）
+      hint: 君威 +1；书信调停成败未卜（史事：二人十一载冬同朝，力士设宴城东；本局二人不入京，改为致书）
     - id: apart
-      label: 令二人各守其镇，不必同朝
-      memory: {character: geshu_han, text: 陛下令臣与禄山各守其镇，不必同朝}
+      label: 令二人各守其镇，勿相讦奏
+      memory: {character: geshu_han, text: 陛下令臣与禄山各守其镇，勿相讦奏}
       ops:
         - {op: set_flag, key: geshu_an_kept_apart, value: true}
-        - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 不得入朝}
-      hint: 免二人当面失和；异志（风闻）↑
+        - {op: adjust_resource, resource: an_ambition, delta: 1, reason: 朝廷不为其直}
+      hint: 免二人书辞相激；异志（风闻）↑
 
 - id: t6_tianchang
   turn: 6
@@ -1278,8 +1485,9 @@
   region: shuofang
   illustration: event.abusi_revolt
   advisors:
-    - {character: an_lushan, stance: support, line: 阿布思是臣的老对头，交给臣，一鼓可擒。}
-    - {character: guo_ziyi, stance: oppose, line: 朔方之寇，朔方当之。范阳兵远来，徒耗刍粮。}
+    - {character: an_lushan, stance: support, line: 阿布思是臣的老对头，交给臣，一鼓可擒。, option: an_pursue}
+    - {character: guo_ziyi, stance: oppose, line: 朔方之寇，朔方当之。范阳兵远来，徒耗刍粮。, option: shuofang}
+  proposal: an_pursue
   options:
     - id: an_pursue
       label: 许范阳兵追讨
@@ -1318,9 +1526,10 @@
   region: jiannan
   illustration: event.guozhong_chancellor
   advisors:
-    - {character: li_linfu, stance: support, line: 剑南边事须重臣坐镇，非国忠亲往不可。臣为国家计耳。, requires: {office: you_xiang}}
-    - {character: yang_guozhong, stance: oppose, line: 臣此去，必为右相所害！陛下……}
+    - {character: li_linfu, stance: support, line: 剑南边事须重臣坐镇，非国忠亲往不可。臣为国家计耳。, requires: {office: you_xiang}, option: exile}
+    - {character: yang_guozhong, stance: oppose, line: 臣此去，必为右相所害！陛下……, option: keep}
     - {character: gao_lishi, stance: neutral, line: 右相这一着，是要把杨侍郎支出京去。}
+  proposal: exile
   options:
     - id: brief
       label: 许其赴蜀之请，事毕即行召还（不改官职）
@@ -1413,8 +1622,9 @@
   region: anxi
   illustration: event.jiedu_appointment
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。}
-    - {character: bian_lingcheng, stance: oppose, line: 封判官貌陋，恐不足以服诸蕃。}
+    - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。, option: feng}
+    - {character: bian_lingcheng, stance: oppose, line: 封判官貌陋，恐不足以服诸蕃。, option: keep}
+  proposal: feng
   options:
     - id: feng
       label: 以封常清为安西节度
@@ -1422,8 +1632,8 @@
       ops:
         - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
         - {op: appoint, character: feng_changqing, office: anxi_jds, dispatch: true}   # 实授并启程赴任（兼统anxi_army）
-        - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
-      hint: 封常清实授安西节度、统安西军；边患 −2（史事：十一载十二月）
+        - {op: set_flag, key: anxi_commander_pending, value: true}
+      hint: 封常清实授安西节度、统安西军（人在安西，即日视事）；到镇之季结算时边患 −2（史事：十一载十二月）
     - id: keep
       label: 仍以仙芝遥领，补其兵额
       ops:
@@ -1447,8 +1657,9 @@
   region: anxi
   illustration: event.jiedu_appointment
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。}
-    - {character: bian_lingcheng, stance: oppose, line: 封判官貌陋，恐不足以服诸蕃。}
+    - {character: gao_xianzhi, stance: support, line: 常清是臣一手带出来的，安西交给他，臣放心。, option: feng}
+    - {character: bian_lingcheng, stance: oppose, line: 封判官貌陋，恐不足以服诸蕃。, option: keep}
+  proposal: feng
   options:
     - id: feng
       label: 以封常清为安西节度
@@ -1456,8 +1667,8 @@
       ops:
         - {op: dismiss, character: gao_xianzhi, office: anxi_jds}
         - {op: appoint, character: feng_changqing, office: anxi_jds, dispatch: true}   # 实授并启程赴任（兼统anxi_army）
-        - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
-      hint: 封常清实授安西节度、统安西军，不在安西则启程赴镇（行程按实际路线计；若其现统他军，该军改由副将暂摄）；边患 −2（史事：十一载十二月）
+        - {op: set_flag, key: anxi_commander_pending, value: true}
+      hint: 封常清实授安西节度、统安西军，不在安西则启程赴镇（行程按实际路线计；若其现统他军，该军改由副将暂摄）；边患 −2 待其到镇之季结算时落实（史事：十一载十二月）
     - id: keep
       label: 仍以仙芝遥领，补其兵额
       ops:
@@ -1472,8 +1683,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 宿卫是陛下身边的墙，墙薄了，风就进来了。}
-    - {character: an_sishun, stance: oppose, line: 边卒入京，臣恐河西、陇右边备因之而虚。, requires: {office: hexi_jds}}
+    - {character: gao_lishi, stance: support, line: 宿卫是陛下身边的墙，墙薄了，风就进来了。, option: draft}
+    - {character: an_sishun, stance: oppose, line: 边卒入京，臣恐河西、陇右边备因之而虚。, requires: {office: hexi_jds}, option: recruit}
+  proposal: draft
   options:
     - id: draft
       label: 简选边镇骁卒一万入宿卫
@@ -1483,7 +1695,7 @@
         - {op: adjust_army, army: hexi_army, delta: -5000, reason: 抽调}
         - {op: adjust_resource, resource: fanzhen_power, delta: -4, reason: 内重稍复}
         - {op: adjust_resource, resource: frontier_pressure, delta: 3, reason: 边备稍虚}
-      hint: 禁军 +1万，外重内轻 −4，边患 +3；此后养兵每季 +2.5 万贯、粮 +1.1 万石
+      hint: 禁军 +1万、陇右军 −5000、河西军 −5000：系调拨而非增兵，总兵额不变，养兵（诸军衣赐、粮料）不增；外重内轻 −4，边患 +3
     - id: recruit
       label: 京畿募兵
       ops:
@@ -1492,6 +1704,32 @@
         - {op: adjust_resource, resource: fanzhen_power, delta: -2, reason: 内地有兵}
       hint: 禁军 +8000，国库 −100，外重内轻 −2；此后养兵每季 +2 万贯、粮 +0.88 万石
 
+# 边镇加给的前置提示（gpt-06 #6 / gpt-07 #6）：T8 结算时度支另立「边镇加给」常年账目，本季先奏。
+- id: t7_border_notice
+  turn: 7
+  title: 度支预告边镇加给
+  keywords: [边镇加给, 边费, 赏格, 衣赐]
+  summary: >-
+    度支奏：诸镇屡言衣赐不足、赏格岁增，拟自下季（本季结算、入天宝十二载春时）起另立「边镇加给」一项，按镇计、不随兵额，
+    每季支国库 35 万贯，常年支给，入经常收支，不可撤。可核减其半，然诸镇不免怨望。
+  region: jingji
+  illustration: event.winter_clothing
+  advisors:
+    - {character: geshu_han, stance: support, option: approve, line: 赏格不足，边兵便不肯卖命。}
+    - {character: yang_guozhong, stance: oppose, option: halve, line: 边费年年加，度支哪有底？减他一半！, requires: {region: jingji}}
+  proposal: approve
+  options:
+    - id: approve
+      label: 依度支所拟
+      ops:
+        - {op: adjust_resource, resource: frontier_pressure, delta: -1, reason: 边兵得赏}
+      hint: 边患 −1；本季结算起每季国库 −35（「边镇加给」，常年，不可撤）
+    - id: halve
+      label: 核减其半
+      ops:
+        - {op: adjust_resource, resource: frontier_pressure, delta: 2, reason: 赏格不足}
+      hint: 边患 +2；本季结算起每季国库 −18（「边镇加给」核减其半，常年，不可撤）
+
 - id: t7_winter
   turn: 7
   title: 岁暮赏赉
@@ -1499,8 +1737,9 @@
   region: jingji
   illustration: event.yang_cavalcade
   advisors:
-    - {character: yang_guifei, stance: support, line: 姊姊们的宅子旧了，三郎就当疼妾一回。}
-    - {character: yan_zhenqing, stance: oppose, line: 赏不当功，则功臣解体。}
+    - {character: yang_guifei, stance: support, line: 姊姊们的宅子旧了，三郎就当疼妾一回。, option: yang}
+    - {character: yan_zhenqing, stance: oppose, line: 赏不当功，则功臣解体。, option: troops}
+  proposal: yang
   options:
     - id: yang
       label: 赐杨氏诸家宅第
@@ -1530,8 +1769,10 @@
   region: jingji
   illustration: event.tax_treasury
   advisors:
-    - {character: yang_guozhong, stance: support, line: 禁了恶钱，官钱便值钱了，臣好收息。}
-    - {character: yan_zhenqing, stance: neutral, line: 禁之须缓，骤禁则市肆萧然。}
+    - {character: yang_guozhong, stance: support, line: 禁了恶钱，官钱便值钱了，臣好收息。, requires: {region: jingji}, option: ban}
+    - {character: yang_guozhong, stance: support, line: 臣远在蜀中，闻京师恶钱充斥。禁之，官钱乃重。, requires: {region: jiannan}, option: ban}
+    - {character: yan_zhenqing, stance: neutral, line: 禁之须缓，骤禁则市肆萧然。, option: allow}
+  proposal: ban
   options:
     - id: ban
       label: 禁断恶钱，官钱收换
@@ -1560,8 +1801,9 @@
   region: hebei
   illustration: event.zhenqing_to_pingyuan
   advisors:
-    - {character: yang_guozhong, stance: support, line: 此人好议论，外放磨磨性子也好。}
+    - {character: yang_guozhong, stance: support, line: 此人好议论，外放磨磨性子也好。, option: send}
     - {character: yan_zhenqing, stance: neutral, line: 臣在朝在外，都是陛下之臣。}
+  proposal: send
   options:
     - id: keep
       label: 留真卿于御史台
@@ -1585,7 +1827,7 @@
 - id: t8_an_accuse
   turn: 8
   title: 国忠屡言禄山
-  summary: 杨国忠屡言禄山必反；禄山亦上表自诉，言国忠欲害之。
+  summary: 杨国忠屡言禄山必反（在京则面奏，出镇则驰表）；禄山亦上表自诉，言国忠欲害之。
   region: fanyang
   illustration: event.guozhong_chancellor
   proposal: cut
@@ -1627,7 +1869,7 @@
   proposal: expand
   advisors:
     - {character: bian_lingcheng, stance: support, option: expand, line: 宫中事多，奴婢们实在不够使唤。}
-    - {character: gao_lishi, stance: oppose, option: keep, line: 老奴斗胆：内官已多，再多便要生事了。}
+    - {character: gao_lishi, stance: oppose, option: cut, line: 老奴斗胆：内官已多，再多便要生事了。}
   options:
     - id: expand
       label: 准增员额，择其能者出使诸道
@@ -1659,8 +1901,9 @@
   region: jingji
   illustration: event.yang_cavalcade
   advisors:
-    - {character: yang_guifei, stance: neutral, line: 家奴无礼，妾替阿姊们赔罪。三郎莫气坏了身子。}
-    - {character: yan_zhenqing, stance: support, line: 法不阿贵。家奴犯公主，主人岂得无过？}
+    - {character: yang_guifei, stance: neutral, line: 家奴无礼，妾替阿姊们赔罪。三郎莫气坏了身子。, option: slave_only}
+    - {character: yan_zhenqing, stance: support, line: 法不阿贵。家奴犯公主，主人岂得无过？, option: punish_all}
+  proposal: punish_all
   options:
     - id: punish_all
       label: 杖杀家奴，并夺杨氏诸家恩赐
@@ -1723,9 +1966,10 @@
   region: jingji
   illustration: event.eunuch_overseer
   advisors:
-    - {character: bian_lingcheng, stance: support, line: 禁军近在宫闱，交给内侍，大家才睡得安稳。}
-    - {character: gao_lishi, stance: oppose, line: 老奴是内侍，可老奴也说：兵不该在内侍手里。}
-    - {character: guo_ziyi, stance: neutral, line: 将不知兵，兵不知将，此宿卫之大患。}
+    - {character: bian_lingcheng, stance: support, line: 禁军近在宫闱，交给内侍，大家才睡得安稳。, option: eunuch}
+    - {character: gao_lishi, stance: oppose, line: 老奴是内侍，可老奴也说：兵不该在内侍手里。, option: general}
+    - {character: guo_ziyi, stance: neutral, line: 将不知兵，兵不知将，此宿卫之大患。, option: general}
+  proposal: eunuch
   options:
     - id: eunuch
       label: 以内侍监掌禁军
@@ -1756,9 +2000,10 @@
   region: longyou
   illustration: event.frontier_raid
   advisors:
-    - {character: geshu_han, stance: support, line: 九曲水草最美。拿下来，吐蕃便少一处牧场！}
-    - {character: gao_lishi, stance: neutral, line: 哥舒将军的仗打得赢。只是赢了，又多一个功高的。}
-    - {character: an_sishun, stance: oppose, line: 得地易，守地难。屯兵九曲，河西诸胡亦须转饷。, requires: {office: hexi_jds}}
+    - {character: geshu_han, stance: support, line: 九曲水草最美。拿下来，吐蕃便少一处牧场！, option: strike}
+    - {character: gao_lishi, stance: neutral, line: 哥舒将军的仗打得赢。只是赢了，又多一个功高的。, option: hold}
+    - {character: an_sishun, stance: oppose, line: 得地易，守地难。屯兵九曲，河西诸胡亦须转饷。, requires: {office: hexi_jds}, option: hold}
+  proposal: strike
   options:
     - id: strike
       label: 许之，出师九曲
@@ -1832,9 +2077,10 @@
   region: hexi
   illustration: event.jiedu_appointment
   advisors:
-    - {character: yang_guozhong, stance: support, line: 用哥舒翰压一压范阳，正是时候。}
-    - {character: geshu_han, stance: support, line: 河西陇右本是一体，交给臣，吐蕃不敢东顾。}
-    - {character: gao_lishi, stance: oppose, line: 拿一个节度去压另一个，只会两个都更重。}
+    - {character: yang_guozhong, stance: support, line: 用哥舒翰压一压范阳，正是时候。, option: grant}
+    - {character: geshu_han, stance: support, line: 河西陇右本是一体，交给臣，吐蕃不敢东顾。, option: grant}
+    - {character: gao_lishi, stance: oppose, line: 拿一个节度去压另一个，只会两个都更重。, option: deny}
+  proposal: grant
   options:
     - id: grant
       label: 准兼河西，封西平郡王
@@ -1904,8 +2150,9 @@
   region: shuofang
   illustration: event.court_festival
   advisors:
-    - {character: guo_ziyi, stance: support, line: 回纥马壮。与之互市，朔方骑兵可足。}
-    - {character: an_lushan, stance: oppose, line: 马么，范阳多的是，何必向回纥买？}
+    - {character: guo_ziyi, stance: support, line: 回纥马壮。与之互市，朔方骑兵可足。, option: trade}
+    - {character: an_lushan, stance: oppose, line: 马么，范阳多的是，何必向回纥买？, option: reward}
+  proposal: trade
   options:
     - id: trade
       label: 厚赐来使，许朔方互市
@@ -1943,8 +2190,9 @@
   region: shuofang
   illustration: event.court_festival
   advisors:
-    - {character: guo_ziyi, stance: support, line: 回纥马壮。与之互市，朔方骑兵可足。}
-    - {character: an_lushan, stance: oppose, line: 马么，范阳多的是，何必向回纥买？}
+    - {character: guo_ziyi, stance: support, line: 回纥马壮。与之互市，朔方骑兵可足。, option: trade}
+    - {character: an_lushan, stance: oppose, line: 马么，范阳多的是，何必向回纥买？, option: reward}
+  proposal: trade
   options:
     - id: trade
       label: 厚赐来使，许朔方互市
@@ -1976,8 +2224,9 @@
   region: anxi
   illustration: event.anxi_triumph
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 葱岭以西，正可乘胜进取。}
-    - {character: feng_changqing, stance: neutral, line: 叙功宜速，进取宜缓。安西之粮，只够守。}
+    - {character: gao_xianzhi, stance: support, line: 葱岭以西，正可乘胜进取。, option: advance}
+    - {character: feng_changqing, stance: neutral, line: 叙功宜速，进取宜缓。安西之粮，只够守。, option: reward}
+  proposal: advance
   options:
     - id: reward
       label: 叙功厚赏，不许远略
@@ -2008,8 +2257,9 @@
   region: hebei
   illustration: event.city_walls
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 河北无备，一旦有警，将望风而靡。}
-    - {character: an_sishun, stance: oppose, line: 范阳在侧，河北修城，恐禄山生疑。}
+    - {character: yan_zhenqing, stance: support, line: 河北无备，一旦有警，将望风而靡。, option: militia}
+    - {character: an_sishun, stance: oppose, line: 范阳在侧，河北修城，恐禄山生疑。, option: fortify}
+  proposal: militia
   options:
     - id: fortify
       label: 缮治河北城池
@@ -2033,8 +2283,9 @@
   region: jingji
   illustration: event.yang_cavalcade
   advisors:
-    - {character: yang_guifei, stance: oppose, line: 都是一家人，三郎何必较真。}
-    - {character: yan_zhenqing, stance: support, line: 外戚之盛，汉之所以亡也。}
+    - {character: yang_guifei, stance: oppose, line: 都是一家人，三郎何必较真。, option: indulge}
+    - {character: yan_zhenqing, stance: support, line: 外戚之盛，汉之所以亡也。, option: curb}
+  proposal: curb
   options:
     - id: curb
       label: 裁抑杨氏车服
@@ -2059,8 +2310,9 @@
   region: jingji
   illustration: event.winter_clothing
   advisors:
-    - {character: yang_guozhong, stance: support, line: 让他们自己屯田，省下的都是钱。}
-    - {character: guo_ziyi, stance: oppose, line: 屯田之利归帅府，士卒只认给衣食的人。}
+    - {character: yang_guozhong, stance: support, line: 让他们自己屯田，省下的都是钱。, option: self}
+    - {character: guo_ziyi, stance: oppose, line: 屯田之利归帅府，士卒只认给衣食的人。, option: central}
+  proposal: self
   options:
     - id: self
       label: 令诸镇自筹
@@ -2086,8 +2338,9 @@
   region: jingji
   illustration: event.an_court_visit
   advisors:
-    - {character: yang_guozhong, stance: oppose, line: 他目不识丁，做了宰相，四夷要笑话大唐！}
-    - {character: yang_guifei, stance: support, line: 禄山那么忠心，给他个体面又何妨。}
+    - {character: yang_guozhong, stance: oppose, line: 他目不识丁，做了宰相，四夷要笑话大唐！, option: refuse}
+    - {character: yang_guifei, stance: support, line: 禄山那么忠心，给他个体面又何妨。, option: grant}
+  proposal: grant
   options:
     - id: refuse
       label: 从国忠之谏，不加平章事
@@ -2112,8 +2365,9 @@
   region: tongguan
   illustration: event.city_walls
   advisors:
-    - {character: gao_lishi, stance: support, line: 潼关是长安的门闩，门闩可不能朽了。}
-    - {character: chen_xilie, stance: oppose, line: 府库方紧，修关之费，臣请缓议。, requires: {office: [zuo_xiang, you_xiang]}}
+    - {character: gao_lishi, stance: support, line: 潼关是长安的门闩，门闩可不能朽了。, option: fortify}
+    - {character: chen_xilie, stance: oppose, line: 府库方紧，修关之费，臣请缓议。, requires: {office: [zuo_xiang, you_xiang]}, option: garrison}
+  proposal: fortify
   options:
     - id: fortify
       label: 增修关城，屯积粮械
@@ -2138,9 +2392,10 @@
   region: fanyang
   illustration: event.jiedu_appointment
   advisors:
-    - {character: an_lushan, stance: support, line: 将士们跟臣出生入死，求陛下给个名分。}
-    - {character: yang_guozhong, stance: oppose, line: 一口气要几百个将军，这是要另立朝廷！}
-    - {character: gao_lishi, stance: neutral, line: 告身从谁手里发，恩便记在谁头上。}
+    - {character: an_lushan, stance: support, line: 将士们跟臣出生入死，求陛下给个名分。, option: grant}
+    - {character: yang_guozhong, stance: oppose, line: 一口气要几百个将军，这是要另立朝廷！, option: deny}
+    - {character: gao_lishi, stance: neutral, line: 告身从谁手里发，恩便记在谁头上。, option: court}
+  proposal: grant
   options:
     - id: grant
       label: 照准，告身付其军中自授
@@ -2181,8 +2436,9 @@
   region: jiannan
   illustration: event.xier_defeat
   advisors:
-    - {character: yang_guozhong, stance: support, line: 两番小挫，此番必克。}
-    - {character: gao_lishi, stance: oppose, line: 老奴听说，剑南的兵，死在瘴气里的比死在阵上的多。}
+    - {character: yang_guozhong, stance: support, line: 两番小挫，此番必克。, option: approve}
+    - {character: gao_lishi, stance: oppose, line: 老奴听说，剑南的兵，死在瘴气里的比死在阵上的多。, option: deny}
+  proposal: approve
   options:
     - id: approve
       label: 准之
@@ -2237,15 +2493,17 @@
   region: fanyang
   illustration: event.an_court_visit
   advisors:
-    - {character: yang_guozhong, stance: support, line: 他推三阻四不肯来，便是心虚！, requires: {region: jingji}}
-    - {character: gao_lishi, stance: neutral, line: 老奴以为，再等一等，看看他怎么说。}
+    - {character: yang_guozhong, stance: support, line: 他推三阻四不肯来，便是心虚！, requires: {region: jingji}, option: press}
+    - {character: gao_lishi, stance: neutral, line: 老奴以为，再等一等，看看他怎么说。, option: excuse}
+  proposal: press
   options:
     - id: press
       label: 下诏切责，促其入觐
       ops:
+        - {op: set_flag, key: an_summoned, value: true}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 切责}
         - {op: adjust_resource, resource: an_ambition, delta: 2, reason: 惧罪}
-      hint: 君威 +1，异志（风闻）↑
+      hint: 君威 +1，异志（风闻）↑；即为宣召：鼙鼓 < 60 时多奉召入京（到京后见奏疏「禄山在京」，可留京夺镇），≥ 60 时多托辞不至（君威 −5，鼙鼓 +8）
     - id: excuse
       label: 优诏慰谕，许其缓朝
       ops:
@@ -2268,8 +2526,9 @@
   region: jingji
   illustration: event.gao_lishi_counsel
   advisors:
-    - {character: gao_lishi, stance: support, line: 老奴斗胆：云南数丧师，边将拥兵太盛，陛下将何以制之？}
-    - {character: yang_guozhong, stance: oppose, line: 内侍议边事，恐不合体统。, requires: {region: jingji}}
+    - {character: gao_lishi, stance: support, line: 老奴斗胆：云南数丧师，边将拥兵太盛，陛下将何以制之？, option: divide}
+    - {character: yang_guozhong, stance: oppose, line: 内侍议边事，恐不合体统。, requires: {region: jingji}, option: noted}
+  proposal: divide
   options:
     - id: divide
       label: 采纳，分割诸镇兵权：析范阳、陇右兵各万人归朝廷节制
@@ -2305,8 +2564,9 @@
   region: jingji
   illustration: event.gao_lishi_counsel
   advisors:
-    - {character: gao_lishi, stance: support, line: 老奴斗胆：如今边将拥兵太盛，十镇之兵多于禁旅，陛下将何以制之？}
-    - {character: yang_guozhong, stance: oppose, line: 内侍议边事，恐不合体统。, requires: {region: jingji}}
+    - {character: gao_lishi, stance: support, line: 老奴斗胆：如今边将拥兵太盛，十镇之兵多于禁旅，陛下将何以制之？, option: divide}
+    - {character: yang_guozhong, stance: oppose, line: 内侍议边事，恐不合体统。, requires: {region: jingji}, option: noted}
+  proposal: divide
   options:
     - id: divide
       label: 采纳，分割诸镇兵权：析范阳、陇右兵各万人归朝廷节制
@@ -2338,8 +2598,9 @@
   region: hedong
   illustration: event.hedong_grant
   advisors:
-    - {character: ji_wen, stance: oppose, line: 下官在河东，一向替陛下看着，从无差池。}
-    - {character: yang_guozhong, stance: support, line: 吉温是禄山的耳目，早该换了！}
+    - {character: ji_wen, stance: oppose, line: 下官在河东，一向替陛下看着，从无差池。, option: keep}
+    - {character: yang_guozhong, stance: support, line: 吉温是禄山的耳目，早该换了！, option: replace}
+  proposal: replace
   options:
     - id: replace
       label: 罢吉温，河东留后改由朝廷简派
@@ -2362,8 +2623,9 @@
   region: shuofang
   illustration: event.eunuch_overseer
   advisors:
-    - {character: guo_ziyi, stance: support, line: 兵籍多虚，核一核便知能战者几何。}
-    - {character: an_sishun, stance: neutral, line: 会操可也，核籍恐伤将士之心。}
+    - {character: guo_ziyi, stance: support, line: 兵籍多虚，核一核便知能战者几何。, option: drill}
+    - {character: an_sishun, stance: neutral, line: 会操可也，核籍恐伤将士之心。, option: self}
+  proposal: drill
   options:
     - id: drill
       label: 会操并核兵籍
@@ -2386,8 +2648,9 @@
   region: shuofang
   illustration: event.recruit_levy
   advisors:
-    - {character: guo_ziyi, stance: support, line: 朔方离京师最近，臣愿分精兵入卫，本道守备不敢稍弛。, requires: {office: shuofang_jds}}
-    - {character: an_sishun, stance: oppose, line: 朔方兵一动，北边恐有警。}
+    - {character: guo_ziyi, stance: support, line: 朔方离京师最近，臣愿分精兵入卫，本道守备不敢稍弛。, requires: {office: shuofang_jds}, option: move}
+    - {character: an_sishun, stance: oppose, line: 朔方兵一动，北边恐有警。, option: stay}
+  proposal: move
   options:
     - id: move
       label: 分朔方兵一万五千入屯京畿
@@ -2414,8 +2677,9 @@
   region: jingji
   illustration: event.gao_lishi_counsel
   advisors:
-    - {character: gao_lishi, stance: support, line: 自陛下以权假宰相，赏罚无章，老奴何敢再言？}
-    - {character: yang_guozhong, stance: oppose, line: 雨虽多，关中禾稼并无大碍。, requires: {region: jingji}}
+    - {character: gao_lishi, stance: support, line: 自陛下以权假宰相，赏罚无章，老奴何敢再言？, option: retake}
+    - {character: yang_guozhong, stance: oppose, line: 雨虽多，关中禾稼并无大碍。, requires: {region: jingji}, option: silent}
+  proposal: retake
   options:
     - id: retake
       label: 收回政柄，亲决大事
@@ -2450,8 +2714,9 @@
   region: jingji
   illustration: event.gao_lishi_counsel
   advisors:
-    - {character: gao_lishi, stance: support, line: 自陛下以权假宰相，赏罚无章，老奴何敢再言？}
-    - {character: yang_guozhong, stance: oppose, line: 政事堂奉行诏敕，并无专擅。, requires: {region: jingji}}
+    - {character: gao_lishi, stance: support, line: 自陛下以权假宰相，赏罚无章，老奴何敢再言？, option: retake}
+    - {character: yang_guozhong, stance: oppose, line: 政事堂奉行诏敕，并无专擅。, requires: {region: jingji}, option: silent}
+  proposal: retake
   options:
     - id: retake
       label: 收回政柄，亲决大事
@@ -2488,8 +2753,9 @@
   region: jiannan
   illustration: event.nanzhao_tubo
   advisors:
-    - {character: yang_guozhong, stance: support, line: 臣再筹兵饷，一定打下来。}
-    - {character: feng_changqing, stance: oppose, line: 再征无益，宜守险以待之。}
+    - {character: yang_guozhong, stance: support, line: 臣再筹兵饷，一定打下来。, option: reinforce}
+    - {character: feng_changqing, stance: oppose, line: 再征无益，宜守险以待之。, option: defend}
+  proposal: reinforce
   options:
     - id: defend
       label: 守险，许南诏通好
@@ -2524,8 +2790,9 @@
   region: jiannan
   illustration: event.nanzhao_tubo
   advisors:
-    - {character: yang_guozhong, stance: support, line: 南诏首鼠两端，宜增兵以慑之。}
-    - {character: feng_changqing, stance: oppose, line: 南诏未叛，增兵反促其叛。宜守险、重申旧好。}
+    - {character: yang_guozhong, stance: support, line: 南诏首鼠两端，宜增兵以慑之。, option: reinforce}
+    - {character: feng_changqing, stance: oppose, line: 南诏未叛，增兵反促其叛。宜守险、重申旧好。, option: defend}
+  proposal: reinforce
   options:
     - id: defend
       label: 守险，遣使重申与南诏之好
@@ -2549,8 +2816,9 @@
   region: jingji
   illustration: event.palace_exam
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 制举本为求贤。请严关节，不问门第。}
-    - {character: yang_guozhong, stance: oppose, line: 应举之人，臣这里早有一份名单。, requires: {region: jingji}}
+    - {character: yan_zhenqing, stance: oppose, line: 制举本为求贤。请严关节，不问门第。, option: strict}
+    - {character: yang_guozhong, stance: oppose, line: 应举之人，臣这里早有一份名单。, requires: {region: jingji}, option: favor}
+  proposal: poetry
   options:
     - id: strict
       label: 亲试，严防关节，拔寒素之士
@@ -2619,8 +2887,9 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: yang_guozhong, stance: support, line: 拔了这颗钉子，禄山在朝中便瞎了一只眼。}
-    - {character: an_lushan, stance: oppose, line: 吉温是好人，是有人看他不顺眼！}
+    - {character: yang_guozhong, stance: support, line: 拔了这颗钉子，禄山在朝中便瞎了一只眼。, option: demote}
+    - {character: an_lushan, stance: oppose, line: 吉温是好人，是有人看他不顺眼！, option: pardon}
+  proposal: demote
   options:
     - id: demote
       label: 贬吉温出京
@@ -2657,8 +2926,9 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: yang_guozhong, stance: support, line: 拔了这颗钉子，禄山在朝中便瞎了一只眼。}
-    - {character: an_lushan, stance: oppose, line: 吉温是好人，是有人看他不顺眼！}
+    - {character: yang_guozhong, stance: support, line: 拔了这颗钉子，禄山在朝中便瞎了一只眼。, option: demote}
+    - {character: an_lushan, stance: oppose, line: 吉温是好人，是有人看他不顺眼！, option: pardon}
+  proposal: demote
   options:
     - id: demote
       label: 贬吉温出京
@@ -2726,7 +2996,7 @@
   proposal: stock
   advisors:
     - {character: feng_changqing, stance: support, option: stock, line: 东都有粮有械，便有底气。}
-    - {character: yang_guozhong, stance: oppose, option: stock, line: 军兴用度方急，东都只宜固守，不宜再募。}
+    - {character: yang_guozhong, stance: support, option: stock, line: 军兴用度方急，东都只宜固守，不宜再募。}
   options:
     - id: stock
       label: 增储修械
@@ -2749,8 +3019,9 @@
   region: jingji
   illustration: event.court_festival
   advisors:
-    - {character: yang_guifei, stance: support, line: 四夷使者都来了，三郎正该厚赐，显我大唐体面。}
-    - {character: yan_zhenqing, stance: oppose, line: 内帑虚耗，宜节之。}
+    - {character: yang_guifei, stance: support, line: 四夷使者都来了，三郎正该厚赐，显我大唐体面。, option: grand}
+    - {character: yan_zhenqing, stance: oppose, line: 内帑虚耗，宜节之。, option: simple}
+  proposal: grand
   options:
     - id: grand
       label: 厚加宴赐
@@ -2777,15 +3048,16 @@
   region: longyou
   illustration: event.jiedu_appointment
   advisors:
-    - {character: geshu_han, stance: neutral, line: 臣……还能骑马。}
-    - {character: gao_lishi, stance: neutral, line: 西边的兵，总得有个能管住的人。}
+    - {character: geshu_han, stance: neutral, line: 臣……还能骑马。, option: wait}
+    - {character: gao_lishi, stance: neutral, line: 西边的兵，总得有个能管住的人。, option: li}
+  proposal: li
   options:
     - id: li
       label: 以李光弼摄陇右军务
       ops:
         - {op: set_army_commander, army: longyou_army, character: li_guangbi, dispatch: true}
-        - {op: adjust_resource, resource: frontier_pressure, delta: -2, reason: 得人}
-      hint: 李光弼统陇右军，不在陇右则启程赴任（行程按实际路线计；若其现统他军，该军改由副将暂摄）；边患 −2
+        - {op: set_flag, key: longyou_commander_pending, value: true}
+      hint: 李光弼统陇右军，不在陇右则启程赴任（行程按实际路线计，回执写明预计抵达回合；若其现统他军，该军改由副将暂摄）；到任之前陇右由副将暂摄，边患 −2 待其到镇之季结算时落实（自河北、河东赴陇右须数季，可能晚于终局）
     - id: wait
       label: 待哥舒翰病愈
       ops:
@@ -2799,8 +3071,9 @@
   region: tubo
   illustration: event.court_festival
   advisors:
-    - {character: geshu_han, stance: support, line: 收了苏毗，吐蕃西边便要乱。}
-    - {character: an_sishun, stance: neutral, line: 收之可也，只须防吐蕃报复。}
+    - {character: geshu_han, stance: support, line: 收了苏毗，吐蕃西边便要乱。, option: receive}
+    - {character: an_sishun, stance: neutral, line: 收之可也，只须防吐蕃报复。, option: guide}
+  proposal: receive
   options:
     - id: receive
       label: 厚礼安置，封以王爵
@@ -2836,12 +3109,13 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: yang_guozhong, stance: support, line: 臣早说得明白：范阳必反，宜早为之备！, requires: {region: jingji}}
-    - {character: gao_lishi, stance: neutral, line: 宰相们吵了一个月，陛下去听一回，便都不吵了。}
+    - {character: yang_guozhong, stance: support, line: 臣早说得明白：范阳必反，宜早为之备！, requires: {region: jingji}, option: attend}
+    - {character: gao_lishi, stance: neutral, line: 宰相们吵了一个月，陛下去听一回，便都不吵了。, option: attend}
+  proposal: attend
   options:
     - id: attend
       label: 亲临听议，令宰相同心
-      memory: {character: yang_guozhong, text: 陛下亲临政事堂听议范阳事，令宰相同心}
+      memory: {character: yang_guozhong, text: 闻陛下亲临政事堂听议范阳事，令宰相同心}
       ops:
         - {op: adjust_resource, resource: court_strife, delta: -3, reason: 天子临议}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 亲政}
@@ -2867,12 +3141,13 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: yang_guozhong, stance: support, line: 禄山虽在京，党与犹在范阳，须一一清理！, requires: {region: jingji}}
-    - {character: gao_lishi, stance: neutral, line: 宰相们吵了一个月，陛下去听一回，便都不吵了。}
+    - {character: yang_guozhong, stance: support, line: 禄山虽在京，党与犹在范阳，须一一清理！, requires: {region: jingji}, option: attend}
+    - {character: gao_lishi, stance: neutral, line: 宰相们吵了一个月，陛下去听一回，便都不吵了。, option: attend}
+  proposal: attend
   options:
     - id: attend
       label: 亲临听议，令宰相同心
-      memory: {character: yang_guozhong, text: 陛下亲临政事堂听议范阳善后，令宰相同心}
+      memory: {character: yang_guozhong, text: 闻陛下亲临政事堂听议范阳善后，令宰相同心}
       ops:
         - {op: adjust_resource, resource: court_strife, delta: -3, reason: 天子临议}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 亲政}
@@ -2898,12 +3173,13 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: yang_guozhong, stance: support, line: 贼势方张，宜速发诸道兵会讨，一举荡平！, requires: {region: jingji}}
-    - {character: gao_lishi, stance: neutral, line: 打与守，总得有个定准。宰相们各说各的，前头的将军便无所适从。}
+    - {character: yang_guozhong, stance: support, line: 贼势方张，宜速发诸道兵会讨，一举荡平！, requires: {region: jingji}, option: attend}
+    - {character: gao_lishi, stance: neutral, line: 打与守，总得有个定准。宰相们各说各的，前头的将军便无所适从。, option: attend}
+  proposal: attend
   options:
     - id: attend
       label: 亲临听议，定讨贼方略
-      memory: {character: yang_guozhong, text: 范阳兵起，陛下亲临政事堂定讨贼方略}
+      memory: {character: yang_guozhong, text: 范阳兵起，闻陛下亲临政事堂定讨贼方略}
       ops:
         - {op: adjust_resource, resource: court_strife, delta: -3, reason: 天子临议}
         - {op: adjust_resource, resource: authority, delta: 1, reason: 亲政}
@@ -2925,8 +3201,9 @@
   region: jingji
   illustration: event.refugees_granary
   advisors:
-    - {character: gao_lishi, stance: support, line: 老奴听说，城外有人卖儿女了。}
-    - {character: yang_guozhong, stance: oppose, line: 太仓之粟，臣另有安排。, requires: {office: [duzhi, you_xiang]}}
+    - {character: gao_lishi, stance: support, line: 老奴听说，城外有人卖儿女了。, option: relief}
+    - {character: yang_guozhong, stance: oppose, line: 太仓之粟，臣另有安排。, requires: {office: [duzhi, you_xiang], region: jingji}, option: none}
+  proposal: relief
   options:
     - id: relief
       label: 出太仓粟减价粜之
@@ -2955,8 +3232,9 @@
   region: jingji
   illustration: event.refugees_granary
   advisors:
-    - {character: gao_lishi, stance: support, line: 老奴听说，城外已有人乞食了。}
-    - {character: yang_guozhong, stance: oppose, line: 太仓之粟，臣另有安排。, requires: {office: [duzhi, you_xiang]}}
+    - {character: gao_lishi, stance: support, line: 老奴听说，城外已有人乞食了。, option: relief}
+    - {character: yang_guozhong, stance: oppose, line: 太仓之粟，臣另有安排。, requires: {office: [duzhi, you_xiang], region: jingji}, option: none}
+  proposal: relief
   options:
     - id: relief
       label: 出太仓粟减价粜之
@@ -2986,7 +3264,7 @@
   proposal: strike
   advisors:
     - {character: yang_guozhong, stance: support, option: strike, line: 陛下还要等吗？发兵讨之！}
-    - {character: gao_lishi, stance: neutral, line: 老奴听说，范阳近来不许外人出入了。}
+    - {character: gao_lishi, stance: neutral, line: 老奴听说，范阳近来不许外人出入了。, option: prepare}
     - {character: an_sishun, stance: oppose, option: envoy, line: 臣请再遣使谕之，或可回心。}
   options:
     - id: prepare
@@ -3021,9 +3299,10 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 有备无患，老奴愿督办。}
-    - {character: yang_guozhong, stance: neutral, line: 京师有臣在，万无一失。, requires: {region: jingji}}
-    - {character: yang_guozhong, stance: neutral, line: 臣远在蜀中，京师宿卫之事，伏望陛下自择重臣督办。, requires: {region: jiannan}}
+    - {character: gao_lishi, stance: support, line: 有备无患，老奴愿督办。, option: levy}
+    - {character: yang_guozhong, stance: neutral, line: 京师有臣在，万无一失。, requires: {region: jingji}, option: calm}
+    - {character: yang_guozhong, stance: neutral, line: 臣远在蜀中，京师宿卫之事，伏望陛下自择重臣督办。, requires: {region: jiannan}, option: calm}
+  proposal: levy
   options:
     - id: levy
       label: 京畿团练
@@ -3045,8 +3324,9 @@
   region: tubo
   illustration: event.frontier_raid
   advisors:
-    - {character: geshu_han, stance: support, line: 乘他新丧，正好再取几座城。}
-    - {character: an_sishun, stance: oppose, line: 乘丧伐人，诸胡耻之。}
+    - {character: geshu_han, stance: support, line: 乘他新丧，正好再取几座城。, option: strike}
+    - {character: an_sishun, stance: oppose, line: 乘丧伐人，诸胡耻之。, option: condole}
+  proposal: strike
   options:
     - id: condole
       label: 遣使吊祭，册立新赞普
@@ -3083,9 +3363,10 @@
   region: jingji
   illustration: event.princess_wedding
   advisors:
-    - {character: yang_guozhong, stance: support, line: 召他来观礼！不来，便是反形已露。}
-    - {character: gao_lishi, stance: neutral, line: 儿子成亲，做父亲的不来，那便什么都清楚了。}
-    - {character: yang_guifei, stance: support, line: 好事一桩，禄山定是欢喜的。}
+    - {character: yang_guozhong, stance: support, line: 召他来观礼！不来，便是反形已露。, option: invite}
+    - {character: gao_lishi, stance: neutral, line: 儿子成亲，做父亲的不来，那便什么都清楚了。, option: invite}
+    - {character: yang_guifei, stance: support, line: 好事一桩，禄山定是欢喜的。, option: invite}
+  proposal: invite
   options:
     - id: invite
       label: 手诏召禄山观礼
@@ -3123,8 +3404,9 @@
   region: jingji
   illustration: event.princess_wedding
   advisors:
-    - {character: yang_guifei, stance: support, line: 禄山就在京里，三郎给他个体面罢。}
-    - {character: yan_zhenqing, stance: oppose, line: 边将结姻宗室，礼宜从简。}
+    - {character: yang_guifei, stance: support, line: 禄山就在京里，三郎给他个体面罢。, option: lavish}
+    - {character: yan_zhenqing, stance: oppose, line: 边将结姻宗室，礼宜从简。, option: plain}
+  proposal: lavish
   options:
     - id: lavish
       label: 厚其仪注，赐第京师
@@ -3153,9 +3435,10 @@
   region: fanyang
   illustration: event.an_court_visit
   advisors:
-    - {character: yang_guifei, stance: support, line: 给他个定心丸，他便不闹了。}
-    - {character: yang_guozhong, stance: oppose, line: 许他世镇？那范阳便不是大唐的了！}
+    - {character: yang_guifei, stance: support, line: 给他个定心丸，他便不闹了。, option: hereditary}
+    - {character: yang_guozhong, stance: oppose, line: 许他世镇？那范阳便不是大唐的了！, option: preempt}
     - {character: gao_lishi, stance: neutral, line: 这一步，陛下得自己拿主意。}
+  proposal: hereditary
   options:
     - id: hereditary
       label: 手诏许其世镇
@@ -3188,8 +3471,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 臣已阴为之备，请陛下许臣便宜行事。, requires: {office: pingyuan_taishou}}
-    - {character: chen_xilie, stance: oppose, line: 河北一动，范阳必疑，恐打草惊蛇。, requires: {office: [zuo_xiang, you_xiang]}}
+    - {character: yan_zhenqing, stance: support, line: 臣已阴为之备，请陛下许臣便宜行事。, requires: {office: pingyuan_taishou}, option: permit}
+    - {character: chen_xilie, stance: oppose, line: 河北一动，范阳必疑，恐打草惊蛇。, requires: {office: [zuo_xiang, you_xiang]}, option: wait}
+  proposal: permit
   options:
     - id: permit
       label: 许河北诸郡便宜城守
@@ -3221,8 +3505,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 河北守令多忠义之士，许其便宜城守，有事时可为朝廷屏障。}
-    - {character: chen_xilie, stance: oppose, line: 河北一动，范阳必疑，恐打草惊蛇。, requires: {office: [zuo_xiang, you_xiang]}}
+    - {character: yan_zhenqing, stance: support, line: 河北守令多忠义之士，许其便宜城守，有事时可为朝廷屏障。, option: permit}
+    - {character: chen_xilie, stance: oppose, line: 河北一动，范阳必疑，恐打草惊蛇。, requires: {office: [zuo_xiang, you_xiang]}, option: wait}
+  proposal: permit
   options:
     - id: permit
       label: 许河北诸郡便宜城守
@@ -3250,8 +3535,9 @@
   region: tongguan
   illustration: event.city_walls
   advisors:
-    - {character: gao_lishi, stance: support, line: 门闩要插紧。}
-    - {character: yang_guozhong, stance: oppose, line: 兵一动，范阳便有了借口。}
+    - {character: gao_lishi, stance: support, line: 门闩要插紧。, option: jinjun}
+    - {character: yang_guozhong, stance: oppose, line: 兵一动，范阳便有了借口。, option: hold}
+  proposal: jinjun
   options:
     - id: hedong
       label: 河东军入屯潼关，罢禄山河东兵柄
@@ -3291,8 +3577,9 @@
   region: tongguan
   illustration: event.city_walls
   advisors:
-    - {character: gao_lishi, stance: support, line: 门闩要插紧。}
-    - {character: yang_guozhong, stance: oppose, line: 兵一动，范阳便有了借口。}
+    - {character: gao_lishi, stance: support, line: 门闩要插紧。, option: jinjun}
+    - {character: yang_guozhong, stance: oppose, line: 兵一动，范阳便有了借口。, option: hold}
+  proposal: jinjun
   options:
     - id: hedong
       label: 河东军入屯潼关
@@ -3356,8 +3643,9 @@
   region: duji
   illustration: event.fanyang_uprising
   advisors:
-    - {character: feng_changqing, stance: support, line: 臣请赴东都，开府库募兵，据河阳以拒贼。}
-    - {character: gao_xianzhi, stance: support, line: 臣愿领兵为后继。}
+    - {character: feng_changqing, stance: support, line: 臣请赴东都，开府库募兵，据河阳以拒贼。, option: recruit}
+    - {character: gao_xianzhi, stance: support, line: 臣愿领兵为后继。, option: recruit}
+  proposal: recruit
   options:
     - id: recruit
       label: 遣封常清募兵守东都
@@ -3388,8 +3676,9 @@
   region: tongguan
   illustration: event.tongguan_battle
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 潼关一失，长安无险可守。}
-    - {character: geshu_han, stance: support, line: 臣虽病，守关还守得住。}
+    - {character: gao_xianzhi, stance: neutral, line: 潼关一失，长安无险可守。, option: jinjun}
+    - {character: geshu_han, stance: support, line: 臣虽病，守关还守得住。, option: hedong}
+  proposal: hedong
   options:
     - id: jinjun
       label: 禁军出屯潼关
@@ -3445,8 +3734,9 @@
   region: duji
   illustration: event.eunuch_overseer
   advisors:
-    - {character: bian_lingcheng, stance: support, line: 奴婢在军中，替大家盯着，谁也不敢有二心。}
-    - {character: feng_changqing, stance: oppose, line: 阃外之事，将军裁之。监军掣肘，兵家大忌。}
+    - {character: bian_lingcheng, stance: support, line: 奴婢在军中，替大家盯着，谁也不敢有二心。, option: supervise}
+    - {character: feng_changqing, stance: oppose, line: 阃外之事，将军裁之。监军掣肘，兵家大忌。, option: trust}
+  proposal: supervise
   options:
     - id: trust
       label: 专任将帅，不遣监军
@@ -3476,8 +3766,9 @@
   region: shuofang
   illustration: event.jiedu_appointment
   advisors:
-    - {character: guo_ziyi, stance: support, line: 臣愿出单于府，东取云中，再与河东合兵。}
-    - {character: li_guangbi, stance: support, line: 臣请守太原。}
+    - {character: guo_ziyi, stance: support, line: 臣愿出单于府，东取云中，再与河东合兵。, option: march}
+    - {character: li_guangbi, stance: support, line: 臣请守太原。, option: march}
+  proposal: march
   options:
     - id: march
       label: 授郭子仪朔方节度，东出河东
@@ -3509,8 +3800,9 @@
   region: shuofang
   illustration: event.jiedu_appointment
   advisors:
-    - {character: guo_ziyi, stance: support, line: 朔方之兵，可东取云中，再与河东合兵。}
-    - {character: yang_guozhong, stance: oppose, line: 京师要紧，边兵当先入卫。}
+    - {character: guo_ziyi, stance: support, line: 朔方之兵，可东取云中，再与河东合兵。, option: march}
+    - {character: yang_guozhong, stance: oppose, line: 京师要紧，边兵当先入卫。, option: defend}
+  proposal: march
   options:
     - id: march
       label: 朔方军东出河东
@@ -3538,8 +3830,9 @@
   region: hebei
   illustration: event.changshan_rising
   advisors:
-    - {character: guo_ziyi, stance: support, line: 河北一复，贼之巢穴便与前锋隔断。}
-    - {character: yan_zhenqing, stance: support, line: 河北义士引领西望，日夜以待王师。}
+    - {character: guo_ziyi, stance: support, line: 河北一复，贼之巢穴便与前锋隔断。, option: hebei}
+    - {character: yan_zhenqing, stance: support, line: 河北义士引领西望，日夜以待王师。, option: hebei}
+  proposal: hebei
   options:
     - id: hebei
       label: 东出井陉，收复河北
@@ -3563,8 +3856,9 @@
   region: longyou
   illustration: event.frontier_raid
   advisors:
-    - {character: gao_xianzhi, stance: support, line: 西兵精锐，调来守关，胜过新募十倍。}
-    - {character: an_sishun, stance: oppose, line: 河西兵一走，吐蕃明日便到。, requires: {office: hexi_jds}}
+    - {character: gao_xianzhi, stance: support, line: 西兵精锐，调来守关，胜过新募十倍。, option: call}
+    - {character: an_sishun, stance: oppose, line: 河西兵一走，吐蕃明日便到。, requires: {office: hexi_jds}, option: part}
+  proposal: call
   options:
     - id: call
       label: 征陇右、河西兵入援
@@ -3594,9 +3888,10 @@
   region: tongguan
   illustration: event.tongguan_battle
   advisors:
-    - {character: yang_guozhong, stance: support, line: 守关坐视，贼势日长！宜出关决战。}
-    - {character: guo_ziyi, stance: oppose, line: 贼利速战，我利坚守。潼关宜守不宜出。}
-    - {character: geshu_han, stance: oppose, line: 贼利速战，臣据险扼之，彼不能久。}
+    - {character: yang_guozhong, stance: support, line: 守关坐视，贼势日长！宜出关决战。, option: sortie}
+    - {character: guo_ziyi, stance: oppose, line: 贼利速战，我利坚守。潼关宜守不宜出。, option: hold}
+    - {character: geshu_han, stance: oppose, line: 贼利速战，臣据险扼之，彼不能久。, option: hold}
+  proposal: sortie
   options:
     - id: hold
       label: 据险不出
@@ -3629,8 +3924,9 @@
   region: jingji
   illustration: event.zhengshi_hall
   advisors:
-    - {character: yang_guozhong, stance: support, line: 蜀道险固，仓储尚足，请陛下幸蜀。}
+    - {character: yang_guozhong, stance: support, line: 蜀道险固，仓储尚足，请陛下幸蜀。, option: west}
     - {character: gao_lishi, stance: neutral, line: 走与不走，都要快。}
+  proposal: west
   options:
     - id: west
       label: 车驾西幸
@@ -3659,8 +3955,9 @@
   region: henan
   illustration: event.refugees_granary
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 民心即城池。}
-    - {character: yang_guozhong, stance: oppose, line: 军需尚且不足，哪有余粮？}
+    - {character: yan_zhenqing, stance: support, line: 民心即城池。, option: relief}
+    - {character: yang_guozhong, stance: oppose, line: 军需尚且不足，哪有余粮？, option: enlist}
+  proposal: relief
   options:
     - id: relief
       label: 发仓赈给
@@ -3720,8 +4017,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 江淮租米改由襄汉转运
@@ -3747,8 +4045,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -3774,8 +4073,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -3800,8 +4100,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 开江淮和籴，溯汉水西上
@@ -3827,8 +4128,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -3854,8 +4156,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -3880,8 +4183,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 发剑南、山南仓粟济军
@@ -3907,8 +4211,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -3934,8 +4239,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -3960,8 +4266,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 江淮租米改由襄汉转运
@@ -3987,8 +4294,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4014,8 +4322,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4040,8 +4349,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 开江淮和籴，溯汉水西上
@@ -4067,8 +4377,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4094,8 +4405,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4120,8 +4432,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 发剑南、山南仓粟济军
@@ -4147,8 +4460,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4174,8 +4488,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4200,8 +4515,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 江淮租米改由襄汉转运
@@ -4227,8 +4543,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4254,8 +4571,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4280,8 +4598,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 开江淮和籴，溯汉水西上
@@ -4307,8 +4626,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4334,8 +4654,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4360,8 +4681,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 发剑南、山南仓粟济军
@@ -4387,8 +4709,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4414,8 +4737,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4440,8 +4764,9 @@
   region: shannan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。}
-    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。}
+    - {character: yang_guozhong, stance: support, line: 富商之家，借其十一，军用立足。, option: levy}
+    - {character: yan_zhenqing, stance: oppose, line: 括率急则民心去，民心去则城不可守。, option: route}
+  proposal: levy
   options:
     - id: route
       label: 江淮租米改由襄汉转运
@@ -4467,8 +4792,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？}
-    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。}
+    - {character: gao_lishi, stance: support, line: 内帑的钱，此时不用，留给谁？, option: hire}
+    - {character: bian_lingcheng, stance: neutral, line: 囚徒奴仆，给口饭吃便肯拼命。, option: convicts}
+  proposal: hire
   options:
     - id: hire
       label: 出内帑募关辅子弟
@@ -4494,8 +4820,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。}
-    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？}
+    - {character: yan_zhenqing, stance: support, line: 一纸告身，可抵万兵。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 远郡守令，谁知真伪？, option: wait}
+  proposal: honor
   options:
     - id: honor
       label: 遣使间道授官加赏
@@ -4519,8 +4846,9 @@
   region: jingji
   illustration: event.recruit_levy
   advisors:
-    - {character: gao_lishi, stance: support, line: 兵在京里久了，便要生事。放回去种地是正经。}
-    - {character: guo_ziyi, stance: neutral, line: 放归可以，只是要给足了路粮，莫教他们流散为盗。}
+    - {character: gao_lishi, stance: support, line: 兵在京里久了，便要生事。放回去种地是正经。, option: release}
+    - {character: guo_ziyi, stance: neutral, line: 放归可以，只是要给足了路粮，莫教他们流散为盗。, option: release}
+  proposal: release
   options:
     - id: release
       label: 放还新募之兵，给路粮遣归
@@ -4546,8 +4874,9 @@
   region: hebei
   illustration: event.loyalist_courier
   advisors:
-    - {character: gao_lishi, stance: support, line: 死了的人，朝廷记着，活着的人才肯再拼。}
-    - {character: yang_guozhong, stance: oppose, line: 府库方空，抚恤从缓可也。}
+    - {character: gao_lishi, stance: support, line: 死了的人，朝廷记着，活着的人才肯再拼。, option: honor}
+    - {character: yang_guozhong, stance: oppose, line: 府库方空，抚恤从缓可也。, option: token}
+  proposal: honor
   options:
     - id: honor
       label: 旌表死节，给复阵亡之家三年
@@ -4572,8 +4901,9 @@
   region: henan
   illustration: event.canal_cut
   advisors:
-    - {character: yang_guozhong, stance: support, line: 漕路一通，太仓便满。臣愿督办。, requires: {office: [duzhi, you_xiang]}}
-    - {character: gao_lishi, stance: neutral, line: 修是要修的，只别又累坏了河南百姓。}
+    - {character: yang_guozhong, stance: support, line: 漕路一通，太仓便满。臣愿督办。, requires: {office: [duzhi, you_xiang], region: jingji}, option: repair}
+    - {character: gao_lishi, stance: neutral, line: 修是要修的，只别又累坏了河南百姓。, option: repair}
+  proposal: repair
   options:
     - id: repair
       label: 发丁修复汴洛漕路
@@ -4603,8 +4933,9 @@
   region: jingji
   illustration: event.tax_treasury
   advisors:
-    - {character: yang_guozhong, stance: oppose, line: 府库方空，骤罢诸税，拿什么养兵？}
-    - {character: gao_lishi, stance: support, line: 乱时的法子，乱后还用，百姓便要问：这乱到底平了没有？}
+    - {character: yang_guozhong, stance: oppose, line: 府库方空，骤罢诸税，拿什么养兵？, option: keep}
+    - {character: gao_lishi, stance: support, line: 乱时的法子，乱后还用，百姓便要问：这乱到底平了没有？, option: abolish}
+  proposal: abolish
   options:
     - id: abolish
       label: 罢军兴诸税，停鬻官爵
@@ -4628,8 +4959,9 @@
   region: jingji
   illustration: event.court_festival
   advisors:
-    - {character: guo_ziyi, stance: neutral, line: 将士之功，请陛下厚赏；臣一身之爵，不敢多求。}
-    - {character: gao_lishi, stance: support, line: 赏要厚，兵要收。前一个禄山，就是赏了兵权出来的。}
+    - {character: guo_ziyi, stance: neutral, line: 将士之功，请陛下厚赏；臣一身之爵，不敢多求。, option: honor_recall}
+    - {character: gao_lishi, stance: support, line: 赏要厚，兵要收。前一个禄山，就是赏了兵权出来的。, option: honor_recall}
+  proposal: honor_recall
   options:
     - id: honor_recall
       label: 厚赏将士，赐爵加阶，兵权归朝
@@ -4655,8 +4987,9 @@
   region: hebei
   illustration: event.refugees_granary
   advisors:
-    - {character: gao_lishi, stance: support, line: 河北的百姓吃过一回苦了，朝廷先给口饭，人心便回来了。}
-    - {character: yang_guozhong, stance: neutral, line: 蠲免一年，度支便少一年的租调，陛下须想好。}
+    - {character: gao_lishi, stance: support, line: 河北的百姓吃过一回苦了，朝廷先给口饭，人心便回来了。, option: relief}
+    - {character: yang_guozhong, stance: neutral, line: 蠲免一年，度支便少一年的租调，陛下须想好。, option: officials}
+  proposal: relief
   options:
     - id: relief
       label: 遣使宣抚，蠲免河北租调一年
@@ -4681,8 +5014,9 @@
   region: longyou
   illustration: event.frontier_raid
   advisors:
-    - {character: gao_lishi, stance: neutral, line: 东边的火刚灭，西边可别再烧起来。}
-    - {character: yang_guozhong, stance: oppose, line: 府库方空，修好便是，何必增戍？}
+    - {character: gao_lishi, stance: neutral, line: 东边的火刚灭，西边可别再烧起来。, option: garrison}
+    - {character: yang_guozhong, stance: oppose, line: 府库方空，修好便是，何必增戍？, option: envoy}
+  proposal: garrison
   options:
     - id: garrison
       label: 增戍陇右、河西
@@ -4705,8 +5039,9 @@
   region: jingji
   illustration: event.censorate_inquiry
   advisors:
-    - {character: gao_lishi, stance: support, line: 都杀了，河北便没人做官了。}
-    - {character: yang_guozhong, stance: oppose, line: 受了伪命的，一个也不能放过！}
+    - {character: gao_lishi, stance: support, line: 都杀了，河北便没人做官了。, option: lenient}
+    - {character: yang_guozhong, stance: oppose, line: 受了伪命的，一个也不能放过！, option: strict}
+  proposal: lenient
   options:
     - id: lenient
       label: 宽赦胁从，止诛首恶

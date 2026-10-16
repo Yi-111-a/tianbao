@@ -19,6 +19,11 @@
 - half_wise：每条 wise 选择以 50% 概率采纳，用来看难度梯度。
 - defender / purge / chaos：结局可达性探针，分别瞄准 E3、E2、E5。它们不是玩家画像。
 - bankrupt / mawei_refuse：失败结局探针，分别瞄准「帑竭兵变」「龙驭宾天」。
+- detain_early：开局禄山在京即留京夺镇（奏疏「禄山在京未归」），其余同 detain。用来确认早夺镇不比召而后夺更省事。
+- ops_disarm（仅 engine 后端）：不经奏疏，以通用诏令把禄山调入京畿、免其范阳 / 平卢节度、以郭子仪接范阳，
+  验证事件「禄山留京解镇」把这一局面并入留京路线（gpt-07）。model 后端不模拟玩家 ops，此策略退化为 wise。
+
+输出另附「E1 类」合计（e1_* 结局，含按朝争分段的同名结局）。
 
 --difficulty yanyi|shishi|diyu 选难度档（scenario.yaml 的 difficulties）；引擎未原生支持时由本脚本改写剧本。
 
@@ -567,7 +572,9 @@ def _eval(expr: str, values: dict[str, Any]) -> float:
 # ============================================================================
 # 策略
 # ============================================================================
-Decision = tuple[list[tuple[str, str]], dict[str, str]]  # ([(memorial_id, option_id)], {choice_id: option_id})
+Decision = tuple[list[tuple[str, Any]], dict[str, str]]  # ([(memorial_id, option_id)], {choice_id: option_id})
+# 特例：(OPS, [op, ...]) 表示玩家自拟的诏令 ops（只有 engine 后端执行；model 后端忽略）
+OPS = "__ops__"
 
 
 # 同一奏疏的状态分支（剧本按局势写的不同版本，选项 id 相同）：策略表只写主条目，分支沿用其选择。
@@ -577,7 +584,7 @@ VARIANT_BASE = {
     "t15_luoyang_war": "t15_luoyang", "t16_court_war": "t16_court", "t16_famine_plain": "t16_famine",
     "t18_hebei_watch_far": "t18_hebei_watch", "t18_tongguan_safe": "t18_tongguan", "r_tongguan_jinjun": "r_tongguan",
     "t7_anxi_away": "t7_anxi", "t10_geshu_title": "t10_geshu", "p_gaoqing_away": "p_gaoqing",
-    "t16_court_detained": "t16_court", "t15_jiwen_court": "t15_jiwen",
+    "t16_court_detained": "t16_court", "t15_jiwen_court": "t15_jiwen", "t5_jingzhao_held": "t5_jingzhao",
 }
 
 
@@ -793,6 +800,40 @@ def _detain(m: Model, visible: list[dict], pending: list[dict], careful: bool) -
     return picks, choices
 
 
+def detain_early(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
+    """开局即留京夺镇（奏疏「禄山在京未归」→ 郭子仪接范阳），此后三策安抚，同 detain。"""
+    picks, choices = _detain(m, visible, pending, careful=True)
+    for memo in visible:
+        if memo["id"] == "p_an_in_capital":
+            picks.append((memo["id"], DETAIN_PICK))
+    return picks, choices
+
+
+def ops_disarm(m: Any, visible: list[dict], pending: list[dict]) -> Decision:
+    """通用诏令夺镇（engine 后端）：T10 起若禄山在范阳，诏其移驻京畿；到京后免范阳、平卢节度，以郭子仪接范阳（赴任）。
+    不用「禄山在京」系列奏疏与华清宫抉择的留京选项；「范阳旧部可虑」出现后行三策。"""
+    picks, choices = wise(m, visible, pending)
+    picks = [(mid, oid) for mid, oid in picks if mid not in ("p_summon", "p_an_capital", "p_an_in_capital", "t17_fanyang")]
+    for memo in visible:
+        if memo["id"] == "p_fanyang_warn":
+            picks = [(mid, oid) for mid, oid in picks if mid != "p_fanyang_warn"] + [("p_fanyang_warn", "all_three")]
+    choices = {k: v for k, v in choices.items() if v not in ("detain", "detain_guo", "detain_feng")}
+    st = getattr(m, "st", None)
+    if st is None:
+        return picks, choices
+    an = st.characters["an_lushan"]
+    holds = set(an.offices or [])
+    if m.turn >= 10 and an.region == "fanyang" and not an.in_transit and "fanyang_jds" in holds and not st.flags.get("an_detained"):
+        picks.append((OPS, [{"op": "move_character", "character": "an_lushan", "to_region": "jingji"}]))
+    elif m.turn >= 10 and an.region == "jingji" and not an.in_transit and "fanyang_jds" in holds:
+        ops = [{"op": "dismiss", "character": "an_lushan", "office": office} for office in ("fanyang_jds", "pinglu_jds") if office in holds]
+        guo = st.characters["guo_ziyi"]
+        ops += [{"op": "dismiss", "character": "guo_ziyi", "office": office} for office in (guo.offices or [])]
+        ops.append({"op": "appoint", "character": "guo_ziyi", "office": "fanyang_jds", "dispatch": True})
+        picks.append((OPS, ops))
+    return picks, choices
+
+
 def detain(m: Model, visible: list[dict], pending: list[dict]) -> Decision:
     """夺镇弭兵：召禄山入朝即留京解兵，郭子仪接范阳，三策安抚旧部。目标：E1 类结局 ≥ 60%。"""
     return _detain(m, visible, pending, careful=True)
@@ -831,7 +872,7 @@ def mawei_refuse(m: Model, visible: list[dict], pending: list[dict]) -> Decision
 POLICIES: dict[str, Callable[[Model, list, list], Decision]] = {
     "do_nothing": do_nothing, "historical": historical, "wise": wise, "half_wise": half_wise,
     "defender": defender, "purge": purge, "chaos": chaos, "bankrupt": bankrupt, "mawei_refuse": mawei_refuse,
-    "detain": detain, "detain_careless": detain_careless,
+    "detain": detain, "detain_careless": detain_careless, "detain_early": detain_early, "ops_disarm": ops_disarm,
 }
 
 
@@ -885,6 +926,8 @@ def play_model(pack: dict, policy: Callable, seed: int, trace: bool = False, on_
             on_turn(m.turn, visible)
         memos, choices = policy(m, visible, list(m.pending))
         for mid, oid in memos:
+            if mid == OPS:
+                continue  # 参考模型不模拟玩家自拟的 ops
             memo = next(x for x in m.pack["memorials"] if x["id"] == mid)
             m.adopt(memo, oid)
         for cid, oid in choices.items():
@@ -967,6 +1010,14 @@ def play_engine(pack: dict, policy: Callable, seed: int, trace: bool = False, on
         pending = [{"id": p.id, "event_id": p.event_id} for p in state.pending_choices]
         memos, choices = policy(EngineView(state, seed, main), visible, pending)
         for mid, oid in memos:
+            if mid == OPS:
+                for op in oid:
+                    try:
+                        state, _ = apply(op, state)
+                    except ValueError as exc:
+                        if trace:
+                            print(f"   T{state.turn} 拒绝 ops {op.get('op')}: {exc}")
+                continue
             for op in adopted_ops(scenario, state, mid, oid):
                 try:
                     state, _ = apply(op, state)
@@ -1053,6 +1104,8 @@ def main() -> None:
         print(f"\n== {name}（{len(seeds)} 局，后端 {args.backend}，难度 {args.difficulty or '默认'}）")
         for k, v in dist.most_common():
             print(f"   {k:<18} {v:>4}  {v / len(seeds):6.1%}")
+        e1 = sum(v for k, v in dist.items() if k.startswith("e1_"))
+        print(f"   E1 类合计           {e1:>4}  {e1 / len(seeds):6.1%}")
         print(f"   起兵 {rebel / len(seeds):.0%}；T19 鼙鼓 均值 {statistics.mean(risks):.1f}，"
               f"中位 {statistics.median(risks):.1f}，范围 {min(risks):.1f}–{max(risks):.1f}；"
               f"T1–T18 峰值 均值 {statistics.mean(peaks):.1f}")
