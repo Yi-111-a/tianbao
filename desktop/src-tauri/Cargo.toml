@@ -1,6 +1,6 @@
 [package]
 name = "tianbao"
-version = "0.1.0"
+version = "0.1.1"
 description = "天宝 desktop shell"
 authors = ["yi111a"]
 edition = "2021"
