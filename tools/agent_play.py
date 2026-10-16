@@ -59,6 +59,8 @@ def run_codex(run_dir: Path, model: str) -> list[str]:
         "-c", f'{server}.args=["-m","cli.main","mcp"]',
         "-c", f'{server}.cwd={json.dumps(str(ENGINE / "backend"))}',
         "-c", f"{server}.env={{{', '.join(f'{k}={json.dumps(v)}' for k, v in env.items())}}}",
+        # Cold start can take tens of seconds while antivirus scans the venv (gpt-09 never mounted the server).
+        "-c", f"{server}.startup_timeout_sec=60",
         "-c", f"{server}.tool_timeout_sec=120",
         "-c", f'{server}.default_tools_approval_mode="approve"',
     ]
@@ -115,7 +117,9 @@ def main() -> int:
 
     started = time.time()
     stdin_prompt = prompt.encode("utf-8") if args.agent == "codex" else None
-    proc = subprocess.run(cmd, cwd=run_dir, input=stdin_prompt, capture_output=True)
+    # Claude Code has no per-server startup timeout in --mcp-config; MCP_TIMEOUT (ms) raises it for all servers.
+    env = {**os.environ, "MCP_TIMEOUT": os.environ.get("MCP_TIMEOUT", "60000")}
+    proc = subprocess.run(cmd, cwd=run_dir, input=stdin_prompt, capture_output=True, env=env)
     # On a Chinese-locale Windows, codex writes its JSON stream in the ANSI code page (cp936),
     # not UTF-8; decode each line with whichever codec is valid.
     (run_dir / "events.jsonl").write_text(_decode(proc.stdout), encoding="utf-8")

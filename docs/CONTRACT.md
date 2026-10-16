@@ -36,12 +36,15 @@
 | 剧本 `offices[]` | 可选 `army`（此职所统军队 id：任命即兼统该军，免职即罢其统帅）、`seat`（任所地区 id；未写时取所统军队的驻地）。二者都未写的为京官 / 虚衔，任命不涉行程。开局写入 `rules.office_postings`（`Office` 模型本身不变，旧存档状态哈希不变）；`validate_scenario` 检查军队与地区存在 |
 | `LedgerLine` | `group: str = ""`：经常收支明细的归类名（收入公式的 label、账目名、「X施工」、「X漂移」、养兵「X（兵 N，每 P 兵 A）」） |
 
+**地区指标量程**（第 8 轮）：剧本 `scenario.stats: [{id, name, range: [下限, 上限]}]`。开局拷入 `rules.stat_ranges`；开局值与一切 `adjust_region` 都截入范围，截到边时事实写「河北治安 +2（已至上限 100，原拟 +6）」，`before/after` 为实际值。`range` 不是两个数或下限 > 上限时 `validate_scenario` 报错。briefing 国势段末列「地区指标量程：繁荣 0–100、治安 0–100……」。旧存档（rules 无 stat_ranges）不截。
+
 ### 1.3 新 StateOp
 
 | op | 字段 | 校验要点 |
 |---|---|---|
 | `adjust_army` | `army, delta, reason` | 兵力下限为 0 |
 | `set_army_faction` | `army, faction` | 势力必须存在 |
+| `set_character_faction` | `character, faction` | 人物、势力必须存在（剧本层；如兵变首领随叛军改属叛方）。事实 `kind: character_faction`「史思明改属大燕」 |
 | `set_army_commander` | `army, character \| null` | 人物须在世 |
 | `adjust_trait` | `character, trait, delta` | 人物须存在 |
 | `adjust_counter` | `key, delta` | — |
@@ -77,10 +80,13 @@
 | 剧本层 | 奏疏选项（adopted）、事件效果、事件抉择（choose）、工程竣工、常设令执行、存档重放 | 全部 StateOp |
 | 玩家层 | `draft_edict` 的 `ops`（MCP / REST / 前端客户端模型模式）与诏令文本经 LLM 解释得到的 ops | 默认白名单：`appoint`、`dismiss`、`move_character`、`move_army`、`march`、`detach`、`set_army_commander`、`start_project`、`add_standing_order`、`cancel_standing_order`、`cancel_ledger`、`remember`、`set_character_status` |
 
-- 不在白名单的操作（`adjust_resource`、`adjust_region`、`adjust_relation`、`adjust_army`、`adjust_trait`、`set_flag`、`adjust_counter`、`set_counter`、`set_region_controller`、`set_army_faction`、`add_ledger`、`choose_event_option`）在回执中为 `rejected`，`code: "OP_NOT_PERMITTED"`，`reason` 为中文说明（含操作名与正确途径）。
+- 不在白名单的操作（`adjust_resource`、`adjust_region`、`adjust_relation`、`adjust_army`、`adjust_trait`、`set_flag`、`adjust_counter`、`set_counter`、`set_region_controller`、`set_army_faction`、`set_character_faction`、`add_ledger`、`choose_event_option`）在回执中为 `rejected`，`code: "OP_NOT_PERMITTED"`，`reason` 为中文说明（含操作名与正确途径）。
 - 白名单内另有限制（同样 `OP_NOT_PERMITTED`）：
   - 人物、军队须属玩家势力（`rules.player_faction`）；不能调遣、分兵、任帅他方军队，不能以他方人物为帅（`detach` 的 commander 同）。
   - `set_character_status` 只能用 `imprisoned` / `exiled` / `retired`（赐死、赦免须经奏疏或事件），对象不能是君主本人，须为本朝臣属或身在本朝控制之地。
+  - `set_character_status` 另以 `code: "HOSTILE_TARGET"` 拒绝：对象属与玩家势力敌对的势力（关系 < 0 或同在 wars 中），或统领敌对势力的军队；
+    `imprisoned`（拘拿）与 `dead` 还要求对象身在玩家势力控制的地区（无主地区不限），且当地没有（不在途的）敌军——敌军在场即视为护卫。
+    延期执行的处置条款在结算时按同样规则复核，不满足则不执行并记入 warnings。
   - `start_project`：地区须为本方控制；每季花费须为正；`on_complete` 只能是本地区的 `adjust_region`（每项 0 < delta ≤ `player_project_max_gain`，且 增益合计 × `player_project_cost_per_point` ≤ 总花费）或其他玩家层操作。
   - `add_standing_order` 所含 ops 同样按玩家层检查；`cancel_ledger` 不能撤销 `cancellable: false` 的账目。
 - 剧本 `settings.player_ops`：列表 = 整体替换白名单；`{allow: [...], deny: [...], statuses: [...]}` = 追加 / 移除 / 指定可用处置（加 `dead` 即允许赐死）。`validate_scenario` 检查操作名与状态名。
@@ -177,6 +183,7 @@
 - 统帅不在军中时由副将暂摄（见 1.3），只记入战报与事实，不改战力。
 - 区域 `defense ≥ 80` 时，攻方需要 2 倍战力才能胜，否则相持一季。
 - 攻方获胜且该区域无守军时，`controller` 变更。
+- 战报因素（第 8 轮）：`battles[]` 另带 `factors: {luck_spread: 0.15, defense_bonus, winner_loss, loser_loss, attacker: [{army, name, strength（开战时）, quality, commander, command: present|acting|none}], defender: [...]}`、`routed: {army: 溃散兵数}`、`retreat_names: {army: 地区名}`；公开报告再给 `detail`（`visibility.battle_breakdown`）一段：「攻：禁军20000（主帅郭将军在军）；守：叛军主力3000（无主帅），城防+30%。战力=兵×素质×(1+城防%)×天时±15%。伤亡（胜方各折1成、败方各折3成）：禁军−2000；叛军主力−900，无路可退，余2100溃散。」天时只示幅度，不示掷值。end_turn 的「## 战报」与 briefing 的上季战报、export_log 的 battles 都用它；旧存档无 factors 时照旧只列损失。
 
 **AI 行军**：scenario `ai_routes: [{faction, route: [region...], hold_if_outnumbered: true}]`。每季，该势力不在途的军队沿 route 前进一格。
 
@@ -280,7 +287,7 @@ default_difficulty: normal
 |---|---|---|
 | GET | `/scenarios` | 每项另含 `difficulties: [{id, label, description, default}]`、`default_difficulty` |
 | POST | `/sessions` | body `{scenario, seed, difficulty?}` → `{id, scenario, difficulty: {id,label,description} \| null, state}` |
-| GET | `/sessions/{id}/view` | 前端主数据：`{state: public_view, calendar_label, objectives: [{id,title,status,detail}], crisis: {value_or_estimate, band, terms: [{label, value}]}, memorials: [...], pending_choices: [...], outcome, review, last_report, can_advance, difficulty: {id,label,description} \| null, scenario_changed: {...} \| null, warnings: [{code, message, ...}], command_table, final_notice}`（见 1.13）。`command_table`（`domain/command.py`）：玩家势力的「官职—所在—所统—指挥状态」总表 `{columns, rows: [{character, name, offices: [{id, name, station?, station_name?, status?}], location: {region, name, in_transit, display}, commands: [{army, name, strength, station, station_name, status: present\|en_route\|remote, label}]}], vacancies: {offices: [{id, name, army?}], armies: [{army, name, strength, station, station_name, status: "acting", label: "无统帅（副将暂摄）"}]}, alerts: [中文]}`（玩家本人不列；alerts 列遥领、兼统数军、出缺、无统帅）。`final_notice` 见 1.8。终局后 `memorials` / `pending_choices` 为空、`review` 为终局复盘（见 1.8），否则 `review: null`。`last_report.reconciliation` 为分段对账（见 1.6），`last_report.crisis` 与 `crisis` 在结算后未再下诏时完全相同 |
+| GET | `/sessions/{id}/view` | 前端主数据：`{state: public_view, calendar_label, objectives: [{id,title,status,detail}], crisis: {value_or_estimate, band, terms: [{label, value}]}, memorials: [...], pending_choices: [...], outcome, review, last_report, can_advance, difficulty: {id,label,description} \| null, scenario_changed: {...} \| null, warnings: [{code, message, ...}], command_table, final_notice}`（见 1.13）。`command_table`（`domain/command.py`）：玩家势力的「官职—所在—所统—指挥状态」总表 `{columns, rows: [{character, name, offices: [{id, name, station?, station_name?, status?}], location: {region, name, in_transit, display}, commands: [{army, name, strength, station, station_name, region, region_name, in_transit, whereabouts, status: present\|en_route\|remote, label}]}], vacancies: {offices: [{id, name, army?}], armies: [{army, name, strength, station, station_name, region, region_name, in_transit, whereabouts, status: "acting", label: "无统帅（副将暂摄）"}]}, alerts: [中文]}`（玩家本人不列；alerts 列遥领、兼统数军、出缺、无统帅）。`station` 是落脚地（在途时为目的地，用于判断统帅是否到任），**不是现驻地**：现驻地看 `region`（在途时为出发地），`in_transit` 为「在途：A→B，约n季后到」或 null，`whereabouts` 为显示用的「驻A」或在途说明——界面与简报一律显示 `whereabouts`，不得把在途军队写成「驻目的地」。`final_notice` 见 1.8。终局后 `memorials` / `pending_choices` 为空、`review` 为终局复盘（见 1.8），否则 `review: null`。`last_report.reconciliation` 为分段对账（见 1.6），`last_report.crisis` 与 `crisis` 在结算后未再下诏时完全相同 |
 | GET | `/sessions/{id}/op_reference` | query `op?`、`entity_kind?`、`ids?`（逗号分隔），同 MCP `op_reference`（见 3） |
 | POST | `/sessions/{id}/edicts/draft` | body `{sections: {category: text}, adopted: [{memorial_id, option_id}], ops: [...]}`。ops 用于客户端模型模式。回执中每一条 clause 都带 `source: memorial\|text\|client`；client / text 条款按玩家层校验（1.3.1），越权为 `rejected` + `code: OP_NOT_PERMITTED`。`delayed` 条款另带 `delay_reason`（由 `formulas.execution` 各项推出，如「吏治积弊高（55），有司稽迟；君威（68）尚能督责（本季延期概率约 2%）」）与 `due_turn`（执行回合） |
 | POST | `/sessions/{id}/edicts/{edict_id}/confirm` | 已有，补写 memorial flag。回执另带 `new_memorials: [{id, title}]`（因本次确认而新出现的本季奏疏）。草案不存在 → 404 `EDICT_NOT_FOUND`，message 列出本季可确认的草案编号（「本季待确认的草案：edict-…」）；已在结算时放弃的草案 → 409 `EDICT_STALE` |
@@ -307,8 +314,8 @@ default_difficulty: normal
   "scenarios_dir": "...",
   "codex": {
     "add": "codex mcp add tianbao -- \"C:\\...\\tianbao-server.exe\" mcp",
-    "toml": "[mcp_servers.tianbao]\ncommand = '...'\nargs = [\"mcp\"]\nstartup_timeout_sec = 30\ntool_timeout_sec = 120\ndefault_tools_approval_mode = \"approve\"\n",
-    "exec_flags": ["mcp_servers.tianbao.command=\"...\"", "mcp_servers.tianbao.args=[\"mcp\"]", "mcp_servers.tianbao.default_tools_approval_mode=\"approve\""],
+    "toml": "[mcp_servers.tianbao]\ncommand = '...'\nargs = [\"mcp\"]\nstartup_timeout_sec = 60\ntool_timeout_sec = 120\ndefault_tools_approval_mode = \"approve\"\n",
+    "exec_flags": ["mcp_servers.tianbao.command=\"...\"", "mcp_servers.tianbao.args=[\"mcp\"]", "mcp_servers.tianbao.startup_timeout_sec=60", "mcp_servers.tianbao.tool_timeout_sec=120", "mcp_servers.tianbao.default_tools_approval_mode=\"approve\""],
     "note": "codex mcp add 不写 default_tools_approval_mode；codex exec 需要它……"
   },
   "claude": {

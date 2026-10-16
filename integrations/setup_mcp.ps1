@@ -116,12 +116,18 @@ function Set-CodexApproval {
     if ($start -lt 0) { Write-Warning "config.toml 中没有 $header"; return }
     $end = $lines.Count
     for ($i = $start + 1; $i -lt $lines.Count; $i++) { if ($lines[$i].TrimStart().StartsWith('[')) { $end = $i; break } }
-    $want = [ordered]@{ 'startup_timeout_sec' = '30'; 'tool_timeout_sec' = '120'; 'default_tools_approval_mode' = '"approve"' }
+    $want = [ordered]@{ 'startup_timeout_sec' = '60'; 'tool_timeout_sec' = '120'; 'default_tools_approval_mode' = '"approve"' }
     $added = @()
     foreach ($k in $want.Keys) {
         $has = $false
         for ($i = $start + 1; $i -lt $end; $i++) { if ($lines[$i] -match "^\s*$k\s*=") { $has = $true; break } }
         if (-not $has) { $lines.Insert($start + 1 + $added.Count, "$k = $($want[$k])"); $end++; $added += $k }
+    }
+    # an older registration may carry a too-short startup timeout (e.g. 30)
+    for ($i = $start + 1; $i -lt $end; $i++) {
+        if ($lines[$i] -match '^\s*startup_timeout_sec\s*=\s*(\d+(\.\d+)?)\s*$' -and [double]$Matches[1] -lt [double]$want['startup_timeout_sec']) {
+            $lines[$i] = "startup_timeout_sec = $($want['startup_timeout_sec'])"; $added += 'startup_timeout_sec（调高）'
+        }
     }
     if ($added.Count) {
         Copy-Item -LiteralPath $cfg -Destination "$cfg.bak-tianbao" -Force

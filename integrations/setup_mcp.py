@@ -96,11 +96,16 @@ def ensure_codex_approval(name: str) -> None:
         print(f"警告：config.toml 中没有 [mcp_servers.{name}]")
         return
     end = next((i for i in range(start + 1, len(lines)) if lines[i].lstrip().startswith("[")), len(lines))
-    want = {"startup_timeout_sec": "30", "tool_timeout_sec": "120", "default_tools_approval_mode": '"approve"'}
+    want = {"startup_timeout_sec": "60", "tool_timeout_sec": "120", "default_tools_approval_mode": '"approve"'}
     added = [k for k in want if not any(re.match(rf"\s*{k}\s*=", lines[i]) for i in range(start + 1, end))]
+    for i in range(start + 1, end):  # an older registration may carry a too-short startup timeout (e.g. 30)
+        match = re.match(r"\s*startup_timeout_sec\s*=\s*(\d+(?:\.\d+)?)\s*$", lines[i])
+        if match and float(match.group(1)) < float(want["startup_timeout_sec"]):
+            lines[i] = f"startup_timeout_sec = {want['startup_timeout_sec']}"
+            added.append("startup_timeout_sec（调高）")
     if added:
         shutil.copyfile(cfg, cfg.with_name("config.toml.bak-tianbao"))
-        lines[start + 1:start + 1] = [f"{k} = {want[k]}" for k in added]
+        lines[start + 1:start + 1] = [f"{k} = {want[k]}" for k in added if k in want]
         cfg.write_text("\n".join(lines) + "\n", encoding="utf-8")
         print(f"已在 {cfg} 的 [mcp_servers.{name}] 中补上：{', '.join(added)}（备份：config.toml.bak-tianbao）")
 

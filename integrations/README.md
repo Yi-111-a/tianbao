@@ -50,7 +50,7 @@ codex mcp add tianbao -- "$env:LOCALAPPDATA\天宝\server\tianbao-server.exe" mc
 [mcp_servers.tianbao]
 command = 'C:\Users\<你>\AppData\Local\天宝\server\tianbao-server.exe'
 args = ["mcp"]
-startup_timeout_sec = 30
+startup_timeout_sec = 60
 tool_timeout_sec = 120
 default_tools_approval_mode = "approve"
 ```
@@ -105,5 +105,7 @@ $OutputEncoding = [Text.UTF8Encoding]::new($false)   # Windows PowerShell 5.1 �
 - `codex mcp list` / `claude mcp list` 能看到 `tianbao` 且状态为已连接。
 - 手动试服务：`"%LOCALAPPDATA%\天宝\server\tianbao-server.exe" mcp` 会停在那里等 JSON-RPC（Ctrl+C 退出）。
   源码版自检：`.venv\Scripts\python.exe scripts\mcp_selftest.py --source --home <临时目录>`。
-- 首次启动可能要几秒（杀毒软件扫描新文件），Codex 的 `startup_timeout_sec = 30` 足够。
+- 服务先秒回 MCP 握手、再在后台加载引擎，正常 1 秒内就能连上；但杀毒软件扫描新文件时 Python 冷启动可能拖到几十秒，
+  所以 Codex 配置一律写 `startup_timeout_sec = 60`（脚本会补上或把更小的值调到 60）。Claude Code 没有按服务器的启动超时，
+  需要时设环境变量 `MCP_TIMEOUT=60000`（毫秒）再启动 `claude`。
 - 模型和桌面版看到的存档不一致：检查两边的 `LLM_SIM_HOME` 是否相同（桌面版「设置」里的命令会写明）。
