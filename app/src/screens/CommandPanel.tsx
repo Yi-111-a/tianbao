@@ -61,6 +61,7 @@ export function CommandPanel() {
                             <div key={c.army} className={cls('command-army', `command-army--${c.status ?? 'present'}`)}>
                               {c.name}
                               {c.strength != null && <span className="t-num">　{fmtWan(c.strength)}</span>}
+                              {c.whereabouts && <span className="command-whereabouts">（{c.whereabouts}）</span>}
                               <em>{c.label ?? STATUS[c.status ?? ''] ?? ''}</em>
                             </div>
                           ))}
@@ -80,7 +81,7 @@ export function CommandPanel() {
                 {vacantArmies.map((a) => (
                   <li key={a.army}>
                     {a.name}
-                    {a.station_name && `（驻${a.station_name}）`}　{a.label ?? STATUS[a.status ?? ''] ?? '无统帅'}
+                    {a.whereabouts ? `（${a.whereabouts}）` : a.station_name && `（驻${a.station_name}）`}　{a.label ?? STATUS[a.status ?? ''] ?? '无统帅'}
                   </li>
                 ))}
               </ul>

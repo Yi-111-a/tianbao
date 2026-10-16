@@ -306,11 +306,11 @@ export interface CommandTable {
     name: string;
     offices: { id: ID; name: string; station?: ID; station_name?: string; status?: string }[];
     location: { region?: ID; name?: string; in_transit?: unknown; display?: string };
-    commands: { army: ID; name: string; strength?: number; station?: ID; station_name?: string; status?: 'present' | 'en_route' | 'remote' | string; label?: string }[];
+    commands: { army: ID; name: string; strength?: number; station?: ID; station_name?: string; whereabouts?: string; status?: 'present' | 'en_route' | 'remote' | string; label?: string }[];
   }[];
   vacancies?: {
     offices?: { id: ID; name: string; army?: ID }[];
-    armies?: { army: ID; name: string; strength?: number; station_name?: string; status?: string; label?: string }[];
+    armies?: { army: ID; name: string; strength?: number; station_name?: string; whereabouts?: string; status?: string; label?: string }[];
   };
   alerts?: string[];
 }
