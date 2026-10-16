@@ -18,8 +18,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao_0.1.0_x64-setup.exe"><img alt="下载 Windows 桌面版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20%E6%A1%8C%E9%9D%A2%E7%89%88%20v0.1.0-c0392b?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <br><sub>60.6 MB · 无需管理员权限 · 不配模型也能玩 · <a href="https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0">发布说明</a></sub>
+  <a href="https://github.com/Yi-111-a/tianbao/releases/download/v0.1.1/tianbao_0.1.1_x64-setup.exe"><img alt="下载 Windows 桌面版" src="https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20%E6%A1%8C%E9%9D%A2%E7%89%88%20v0.1.1-c0392b?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <br><sub>60.6 MB · 无需管理员权限 · 可用本机 Claude / Codex 当大臣，免 API key · <a href="https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.1">发布说明</a></sub>
 </p>
 
 ---
@@ -39,7 +39,7 @@
   </tr>
 </table>
 
-画面全部来自真实对局。视频与安装包一起放在 [v0.1.0 发布页](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)。
+画面全部来自真实对局。视频文件在 [v0.1.0 发布页](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)。
 
 ## 这是什么游戏
 
@@ -73,11 +73,11 @@
 
 ### 桌面版（Windows，推荐）
 
-1. 下载 [`tianbao_0.1.0_x64-setup.exe`](https://github.com/Yi-111-a/tianbao/releases/download/v0.1.0/tianbao_0.1.0_x64-setup.exe)（[发布说明](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.0)）。
+1. 下载 [`tianbao_0.1.1_x64-setup.exe`](https://github.com/Yi-111-a/tianbao/releases/download/v0.1.1/tianbao_0.1.1_x64-setup.exe)（[发布说明](https://github.com/Yi-111-a/tianbao/releases/tag/v0.1.1)）。
 2. 双击安装：装到当前用户（`%LOCALAPPDATA%\天宝`），不需要管理员权限。安装包没有代码签名，Windows 若弹出 SmartScreen，点「更多信息」→「仍要运行」。
 3. 打开「天宝」，点「开始新局」。存档在 `%APPDATA%\tianbao`。
 
-游戏本身不需要联网，不配模型也能完整玩一局；想让大臣由大模型扮演，在「设置 · 模型路由」里填任意 OpenAI 兼容接口。
+游戏本身不需要联网，不配模型也能完整玩一局。想让大臣由 AI 扮演，在「设置 · 模型路由」里选「Claude（本机）」或「Codex（本机）」——直接用你电脑上已登录的 Claude Code / Codex，免 API key（先点「测试连接」，未登录会提示怎么登录）；也可以填任意 OpenAI 兼容接口。
 
 ### 在 Codex / Claude Code 里玩
 
